@@ -180,7 +180,8 @@ describe('Connection Serialization & Deserialization', () => {
         expect.objectContaining(
           isRunningNewDriverWithBD('BD#85')
             ? {
-                name: 'Error',
+                name: 'InvalidParameterError',
+                code: undefined,
                 message:
                   "Configuration error: Configuration validation failed (2 issue(s)): account: Missing required parameter 'account'; host: Missing required parameter 'host' (or 'server_url')",
               }

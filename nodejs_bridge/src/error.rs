@@ -64,7 +64,7 @@ impl ClientError {
             return Self::of_network_unreachable(error.root_cause());
         }
         Self {
-            name: error_name(error.kind()),
+            name: error_name(error),
             message: error.to_string(),
             code: error.vendor_code().map(ErrorCode::Server),
             sql_state: error.sql_state(),
@@ -246,9 +246,19 @@ fn construct_js_error_fail(err: napi::Error) -> napi::Error {
     napi::Error::from_reason(format!("failed to construct JS error: {err}"))
 }
 
-fn error_name(kind: ErrorKind) -> Option<&'static str> {
+fn error_name(error: &ApiError) -> Option<&'static str> {
+    name_for_kind(error.kind(), error.vendor_code().is_some())
+}
+
+fn name_for_kind(kind: ErrorKind, has_server_code: bool) -> Option<&'static str> {
     match kind {
         ErrorKind::QueryFailed => Some("OperationFailedError"),
+        ErrorKind::LoginError | ErrorKind::AuthenticationError if has_server_code => {
+            Some("OperationFailedError")
+        }
+        ErrorKind::MissingParameter | ErrorKind::InvalidParameterValue => {
+            Some("InvalidParameterError")
+        }
         _ => None,
     }
 }
@@ -382,6 +392,36 @@ mod tests {
         assert_eq!(error.sql_state, None);
         assert_eq!(error.cause, None);
         assert!(!error.is_fatal);
+    }
+
+    #[test]
+    fn a_login_rejected_by_snowflake_is_an_operation_failed_error() {
+        assert_eq!(
+            name_for_kind(ErrorKind::LoginError, true),
+            Some("OperationFailedError")
+        );
+        assert_eq!(
+            name_for_kind(ErrorKind::AuthenticationError, true),
+            Some("OperationFailedError")
+        );
+    }
+
+    #[test]
+    fn an_authentication_failure_inside_the_driver_has_no_name() {
+        assert_eq!(name_for_kind(ErrorKind::LoginError, false), None);
+        assert_eq!(name_for_kind(ErrorKind::AuthenticationError, false), None);
+    }
+
+    #[test]
+    fn missing_and_invalid_settings_are_invalid_parameter_errors() {
+        assert_eq!(
+            name_for_kind(ErrorKind::MissingParameter, false),
+            Some("InvalidParameterError")
+        );
+        assert_eq!(
+            name_for_kind(ErrorKind::InvalidParameterValue, false),
+            Some("InvalidParameterError")
+        );
     }
 
     #[test]

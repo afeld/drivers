@@ -121,13 +121,19 @@ describe('toCoreConnectionOptions', () => {
     ).toThrow("Expected type Int for parameter 'browserActionTimeout'");
   });
 
-  it('throws on a key that is not in the alias map', () => {
+  it('should reject a key that is not in the alias map', () => {
     expect(() =>
       toCoreConnectionOptions({
         account: 'sfctest0',
         notARealOption: 'x',
       }),
-    ).toThrow('Unknown connection option: notARealOption');
+    ).toThrow(
+      expect.objectContaining({
+        name: 'InvalidParameterError',
+        code: undefined,
+        message: 'Unknown connection option: notARealOption',
+      }),
+    );
   });
 
   it('returns an empty object for empty input', () => {

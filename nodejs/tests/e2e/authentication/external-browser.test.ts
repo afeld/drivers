@@ -20,7 +20,6 @@ import {
   connectAsyncWithErrorBD,
   destroyConnectionAsync,
   isRunningNewDriverWithBD,
-  NOT_IMPLEMENTED_IN_NEW_DRIVER,
 } from '../utils/index.js';
 import { verifySimpleQuery } from '../utils/query.js';
 import {
@@ -259,8 +258,7 @@ describe('EXTERNALBROWSER authentication', () => {
 
           // Then Connection fails with login error
           await expect(connectionAttempt).rejects.toMatchObject({
-            // TODO(SNOW-3894966)
-            name: NOT_IMPLEMENTED_IN_NEW_DRIVER ? 'Error' : 'OperationFailedError',
+            name: 'OperationFailedError',
             message: isRunningNewDriverWithBD('BD#67')
               ? 'Failed to login: Login error: Invalid credentials, code: 390100'
               : 'Invalid credentials',
@@ -457,8 +455,7 @@ describe('EXTERNALBROWSER authentication', () => {
       const connectionAttempt = connectAsyncWithErrorBD(connection);
 
       await expect(connectionAttempt).rejects.toMatchObject({
-        // TODO(SNOW-3894966)
-        name: NOT_IMPLEMENTED_IN_NEW_DRIVER ? 'Error' : 'OperationFailedError',
+        name: 'OperationFailedError',
         message: isRunningNewDriverWithBD('BD#67')
           ? 'Failed to login: Login error: The user you were trying to authenticate as differs from the user currently logged in at the IDP., code: 390191'
           : 'The user you were trying to authenticate as differs from the user currently logged in at the IDP.',
@@ -521,7 +518,10 @@ describe('EXTERNALBROWSER authentication', () => {
     } satisfies ConnectionOptions;
     if (isRunningNewDriverWithBD('BD#63')) {
       expect(() => snowflake.createConnection(options)).toThrow(
-        'Unknown connection option: disableConsoleLogin',
+        expect.objectContaining({
+          name: 'InvalidParameterError',
+          message: 'Unknown connection option: disableConsoleLogin',
+        }),
       );
     } else {
       expect(() => snowflake.createConnection(options)).not.toThrow();

@@ -1,7 +1,7 @@
 import type { ConnectionTokenInfo } from './core/binary-types.generated.js';
-import type { SnowflakeError } from './error.js';
 import ErrorCode from './constants/ErrorCode.js';
 import ErrorMessage from './constants/ErrorMessage.js';
+import { invalidParameterError } from './error.js';
 
 export function serializeTokenInfo(info: ConnectionTokenInfo | null): string {
   return JSON.stringify({
@@ -62,8 +62,5 @@ function isOptionalNumber(value: unknown): value is number | undefined {
 function throwDeserializeError(): never {
   // TODO: We don't want InvalidParameterError to have error codes.
   const code = ErrorCode.ERR_CONN_DESERIALIZE_INVALID_CONFIG_FORM;
-  const error = new Error(ErrorMessage[code]) as SnowflakeError;
-  error.name = 'InvalidParameterError';
-  error.code = code;
-  throw error;
+  throw invalidParameterError(ErrorMessage[code], code);
 }

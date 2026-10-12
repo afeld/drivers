@@ -64,7 +64,7 @@ describe('queryTag', () => {
     if (isRunningNewDriverWithBD('BD#69')) {
       const connection = createConnection({ queryTag });
       await expect(connection.connectAsync()).rejects.toMatchObject({
-        name: 'Error',
+        name: 'OperationFailedError',
         code: '001008',
         message: expect.stringContaining("parameter 'QUERY_TAG'"),
       });

@@ -7,7 +7,7 @@ describe('account parameter', () => {
     if (isRunningNewDriverWithBD('BD#87')) {
       const connection = createConnection({ account: undefined, host: undefined });
       await expect(connection.connectAsync()).rejects.toMatchObject({
-        name: 'Error',
+        name: 'InvalidParameterError',
         code: undefined,
         message: expect.stringContaining("Missing required parameter 'account'"),
       });
@@ -26,7 +26,7 @@ describe('account parameter', () => {
     if (isRunningNewDriverWithBD('BD#87')) {
       const connection = createConnection({ account: '' });
       await expect(connection.connectAsync()).rejects.toMatchObject({
-        name: 'Error',
+        name: 'InvalidParameterError',
         code: undefined,
         message: expect.stringContaining("Missing required parameter 'account'"),
       });
@@ -45,7 +45,7 @@ describe('account parameter', () => {
     if (isRunningNewDriverWithBD('BD#87')) {
       const connection = createConnection({ account: 'acct/x' });
       await expect(connection.connectAsync()).rejects.toMatchObject({
-        name: 'Error',
+        name: 'InvalidParameterError',
         code: undefined,
         message: expect.stringContaining('Invalid character'),
       });
@@ -82,7 +82,7 @@ describe('accessUrl parameter', () => {
     if (isRunningNewDriverWithBD('BD#88')) {
       const connection = snowflake.createConnection(options);
       await expect(connection.connectAsync()).rejects.toMatchObject({
-        name: 'Error',
+        name: 'InvalidParameterError',
         code: undefined,
         message: expect.stringContaining("Missing required parameter 'account'"),
       });

@@ -117,8 +117,10 @@ Review when working on structured-types support in the new driver:
   `nodejs/tests/e2e/connection.test.ts`; the new driver reaches the same `POST /session/heartbeat`
   through the core's `connection_heartbeat`. Still parked: `.heartbeat()` / `.heartbeatAsync()`,
   which should be removed rather than migrated — they are not part of the public documentation.
-- `integration/testConnectionNegative.ts` — once connection creation lands in the new driver,
-  rewrite this as a single test that asserts a generic "invalid connection parameters" error code.
+- `integration/testConnectionNegative.ts` — removed. The single generic test lives in
+  `nodejs/tests/e2e/connection.test.ts` ("should reject a connection without a user name"). The
+  per-option `ERR_CONN_CREATE_*` cases are not carried over: the new driver validates settings at
+  connect and reports InvalidParameterError without a code (BD#101).
 - `integration/testEasyLoggingOnConnecting.js` — figure out what "easy logger" is, what its public
   API surface looks like, and decide what coverage it needs.
 - `integration/testManualConnection.js`:
@@ -255,7 +257,8 @@ called out explicitly.
   currently `String()`s those values.
   - JWT-named negatives (`missing/invalid username with SNOWFLAKE_JWT`, `invalid private key` /
     `privateKeyPath` / `privateKeyPass`) assert `ERR_CONN_CREATE_*` on `new ConnectionConfig`.
-    Revisit when the new Errors hierarchy lands.
+    The new driver reports these at connect as InvalidParameterError without a code (BD#101), so
+    no case here migrates as written.
 - `unit/connection/normalize_connection_options_test.ts` — migrated and deleted. Its cases live in
   `nodejs/tests/unit/normalize-connection-options.test.ts`, with
   `nodejs/tests/e2e/normalize-connection-options.test.ts` connecting through the normalized options.

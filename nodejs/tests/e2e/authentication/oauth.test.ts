@@ -110,7 +110,7 @@ describe('tests/definitions/shared/authentication/oauth.feature', () => {
       await expect(connectAsyncWithErrorBD(connection)).rejects.toMatchObject(
         isRunningNewDriverWithBD('BD#100')
           ? {
-              name: 'Error',
+              name: 'InvalidParameterError',
               code: undefined,
               message:
                 "Configuration error: Configuration validation failed (1 issue(s)): token: Missing required parameter 'token' (or 'token_file_path') for OAuth authentication",
@@ -158,7 +158,7 @@ describe('tests/definitions/shared/authentication/oauth.feature', () => {
       await expect(connectAsyncWithErrorBD(connection)).rejects.toMatchObject(
         isRunningNewDriverWithBD('BD#99')
           ? {
-              name: 'Error',
+              name: 'InvalidParameterError',
               code: undefined,
               message:
                 "Configuration error: Configuration validation failed (1 issue(s)): authenticator: Invalid authenticator 'OAUTH_AUTHORIZATION_TYPO'. Allowed values are snowflake, snowflake_jwt, snowflake_password, programmatic_access_token, pat_with_external_session, username_password_mfa, externalbrowser, oauth, oauth_client_credentials, oauth_authorization_code, workload_identity or an https:// URL for native Okta SSO (case-insensitive)",
@@ -263,7 +263,7 @@ describe('tests/definitions/shared/authentication/oauth.feature', () => {
       await expect(connecting).rejects.toMatchObject(
         isRunningNewDriverWithBD('BD#98')
           ? {
-              name: 'Error',
+              name: 'OperationFailedError',
               code: '390309',
               message: expect.stringMatching(
                 /^Failed to login: Login error: The user you were trying to authenticate as differs from the user tied to the access token\. \[[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\], code: 390309$/,

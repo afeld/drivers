@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { createConnection } from './utils/fixtures.js';
 import {
   createTestConnection,
   destroyConnectionAsync,
-  NOT_IMPLEMENTED_IN_NEW_DRIVER,
   isRunningNewDriverWithBD,
+  snowflake,
 } from './utils/index.js';
 
 describe('Connection', () => {
@@ -19,20 +20,19 @@ describe('Connection', () => {
     }
   });
 
-  // New driver doesn't have proper error mapping yet
-  it.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)(
-    '.connect() surfaces an error on invalid parameters',
-    async () => {
-      const connection = createTestConnection({
-        username: 'incorrect-username',
-      });
-      const error = await new Promise<Error | undefined>((resolve) => {
-        connection.connect((err) => resolve(err));
-      });
-      expect(error).toBeInstanceOf(Error);
-      expect(error!.message).toMatch(/JWT token is invalid/);
-    },
-  );
+  it('should surface a rejected login through the .connect() callback', async () => {
+    const connection = createConnection({
+      username: 'incorrect-username',
+    });
+    const error = await new Promise<Error | undefined>((resolve) => {
+      connection.connect((err) => resolve(err));
+    });
+    expect(error).toMatchObject({
+      name: 'OperationFailedError',
+      code: '390144',
+      message: expect.stringContaining('JWT token is invalid'),
+    });
+  });
 
   it('.connectAsync() connects on valid parameters', async () => {
     const connection = createTestConnection();
@@ -43,24 +43,45 @@ describe('Connection', () => {
       await destroyConnectionAsync(connection);
     }
   });
-  // New driver doesn't have proper error mapping yet
-  it.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)(
-    '.connectAsync() surfaces an error on invalid parameters',
-    async () => {
-      const connection = createTestConnection({
-        username: 'incorrect-username',
+  it('should surface a rejected login from .connectAsync()', async () => {
+    const connection = createConnection({
+      username: 'incorrect-username',
+    });
+    const expectedError = {
+      name: 'OperationFailedError',
+      code: '390144',
+      message: expect.stringContaining('JWT token is invalid'),
+    };
+    if (isRunningNewDriverWithBD('BD#11')) {
+      await expect(connection.connectAsync()).rejects.toMatchObject(expectedError);
+    } else {
+      const error = await new Promise<Error | undefined>((resolve) => {
+        void connection.connectAsync((err) => resolve(err));
       });
-      if (isRunningNewDriverWithBD('BD#11')) {
-        await expect(connection.connectAsync()).rejects.toThrow(/JWT token is invalid/);
-      } else {
-        const error = await new Promise<Error | undefined>((resolve) => {
-          void connection.connectAsync((err) => resolve(err));
-        });
-        expect(error).toBeInstanceOf(Error);
-        expect(error!.message).toMatch(/JWT token is invalid/);
-      }
-    },
-  );
+      expect(error).toMatchObject(expectedError);
+    }
+  });
+
+  it('should reject a connection without a user name', async () => {
+    const options = { account: 'a', password: 'p' };
+    if (isRunningNewDriverWithBD('BD#101')) {
+      const connection = snowflake.createConnection(options);
+      await expect(connection.connectAsync()).rejects.toMatchObject({
+        name: 'InvalidParameterError',
+        code: undefined,
+        message:
+          "Configuration error: Configuration validation failed (1 issue(s)): user: Missing required parameter 'user'",
+      });
+    } else {
+      expect(() => snowflake.createConnection(options)).toThrow(
+        expect.objectContaining({
+          name: 'MissingParameterError',
+          code: 404003,
+          message: 'A user name must be specified.',
+        }),
+      );
+    }
+  });
 
   it('destroys the connection and transitions to a disconnected state', async () => {
     const connection = createTestConnection();

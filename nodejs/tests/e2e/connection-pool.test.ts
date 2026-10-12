@@ -156,18 +156,20 @@ describe('Connection Pool', () => {
     it('should reject acquire when connecting with invalid credentials', async () => {
       const failingPool = createTestPool({ max: 1, min: 0 }, { username: 'incorrect-username' });
       await expect(failingPool.acquire()).rejects.toMatchObject({
-        name: 'Error',
         message: expect.stringContaining('JWT token is invalid'),
-        ...(isRunningNewDriverWithBD('BD#55') ? { code: '390144', sqlState: '28000' } : {}),
+        ...(isRunningNewDriverWithBD('BD#55')
+          ? { name: 'OperationFailedError', code: '390144', sqlState: '28000' }
+          : { name: 'Error' }),
       } satisfies Partial<SnowflakeError>);
     });
 
     it('should reject use when connecting with invalid credentials', async () => {
       const failingPool = createTestPool({ max: 1, min: 0 }, { username: 'incorrect-username' });
       await expect(failingPool.use(async () => undefined)).rejects.toMatchObject({
-        name: 'Error',
         message: expect.stringContaining('JWT token is invalid'),
-        ...(isRunningNewDriverWithBD('BD#55') ? { code: '390144', sqlState: '28000' } : {}),
+        ...(isRunningNewDriverWithBD('BD#55')
+          ? { name: 'OperationFailedError', code: '390144', sqlState: '28000' }
+          : { name: 'Error' }),
       } satisfies Partial<SnowflakeError>);
     });
   });

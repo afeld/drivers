@@ -1,3 +1,5 @@
+import { invalidParameterError } from './error.js';
+
 // TODO: In future we should register an alias in core for each parameter. This map then becomes a
 // set: the Node driver's whitelist of connection options, even when core
 // accepts more.
@@ -62,7 +64,7 @@ export function toCoreConnectionOptions(options: Record<string, unknown>): Recor
     }
     const sfCoreKey = CONNECTION_OPTION_ALIASES[key];
     if (sfCoreKey === undefined) {
-      throw new Error(`Unknown connection option: ${key}`);
+      throw invalidParameterError(`Unknown connection option: ${key}`);
     }
     normalized[sfCoreKey] = String(value);
   }

@@ -1102,8 +1102,9 @@ behavior_differences:
       `Error` whose message is the connect error message. Vendor code and SQLSTATE from the
       original error are dropped.
     new_driver_behavior: |
-      The same calls reject with the error `connectAsync()` rejected with, including vendor
-      code and SQLSTATE when the driver supplies them.
+      The same calls reject with the error `connectAsync()` rejected with, including its
+      name (for example OperationFailedError for a rejected login), vendor code and
+      SQLSTATE when the driver supplies them.
 
   56:
     name: 'describeOnly multi-statement throws instead of returning the wrapper result'
@@ -1243,8 +1244,8 @@ behavior_differences:
     old_driver_behavior: |
       createConnection accepts disableConsoleLogin (boolean; default true).
     new_driver_behavior: |
-      disableConsoleLogin is rejected as an unknown connection option. The key is
-      not going to be added.
+      disableConsoleLogin is rejected as an unknown connection option
+      (InvalidParameterError, see BD#102). The key is not going to be added.
 
   64:
     name: 'EXTERNALBROWSER authenticator-request uses connection protocol and port'
@@ -1358,7 +1359,8 @@ behavior_differences:
       createConnection throws InvalidParameterError 404063 when queryTag is longer than
       2000 characters.
     new_driver_behavior: |
-      createConnection accepts the string. connect fails with server error 001008.
+      createConnection accepts the string. connect fails with OperationFailedError, server
+      error 001008.
     status_rationale: |
       Login rejects a SESSION_PARAMETERS.QUERY_TAG string longer than 2000 characters with
       001008 (invalid value for parameter 'QUERY_TAG'). The new driver does not repeat that
@@ -1659,7 +1661,7 @@ behavior_differences:
       We should consider removing the expiration times from the payload completely.
 
   85:
-    name: 'deserializeConnection without account and host throws a plain configuration Error'
+    name: 'deserializeConnection without account and host throws InvalidParameterError with no code'
     status: unknown
     type: unknown
     reviewed: false
@@ -1669,7 +1671,7 @@ behavior_differences:
       deserializeConnection with neither `account` nor `host` throws MissingParameterError
       404007 ("An account must be specified.").
     new_driver_behavior: |
-      The same call throws a plain Error with no `code`. The message lists both missing
+      The same call throws InvalidParameterError with no `code`. The message lists both missing
       parameters: "Configuration error: Configuration validation failed (2 issue(s)): account:
       Missing required parameter 'account'; host: Missing required parameter 'host' (or
       'server_url')".
@@ -1736,7 +1738,7 @@ behavior_differences:
     new_driver_behavior: |
       accessUrl does not fill account. account is required. With accessUrl and no
       account, connectAsync fails with "Missing required parameter 'account'". The
-      error name is "Error" and code is undefined.
+      error name is "InvalidParameterError" and code is undefined (BD#101).
 
   89:
     name: 'a non-URL accessUrl is not rejected at createConnection'
@@ -1823,8 +1825,8 @@ behavior_differences:
       the user tied to the access token. [<request id>]". The request id changes
       on every login.
     new_driver_behavior: |
-      The rejection is a plain Error. error.name is "Error" and error.code is
-      the string "390309". The message is "Failed to login: Login error: The
+      The rejection is OperationFailedError. error.code is the string
+      "390309". The message is "Failed to login: Login error: The
       user you were trying to authenticate as differs from the user tied to the
       access token. [<request id>], code: 390309". The request id changes on
       every login.
@@ -1861,3 +1863,47 @@ behavior_differences:
     new_driver_behavior: |
       sf_core connection validation rejects with a missing-parameter error citing the missing token
       before any network attempt.
+
+  101:
+    name: 'Missing or invalid connection settings reject connect() with InvalidParameterError and no code'
+    status: allowed
+    type: api_incompatibility
+    reviewed: false
+    is_breaking_change: true
+    impact: medium
+    old_driver_behavior: |
+      createConnection throws as soon as a required setting is missing or a value is
+      invalid. A missing setting is MissingParameterError with a 404xxx code (404007
+      "An account must be specified.", 404003 "A user name must be specified."). An
+      invalid value is InvalidParameterError with a 404xxx code.
+    new_driver_behavior: |
+      createConnection accepts the options. connect() and connectAsync() reject with
+      InvalidParameterError, `error.code` undefined, and a message that lists every
+      failing setting, for example "Configuration error: Configuration validation failed
+      (1 issue(s)): user: Missing required parameter 'user'". There is no
+      MissingParameterError. Unknown options still throw from createConnection (BD#102).
+    description: |
+      Settings are validated once, by the core, when the connection logs in. Repeating
+      that validation in createConnection would keep a second copy of the rules in the
+      wrapper.
+
+  102:
+    name: 'Unknown connection options are rejected with InvalidParameterError'
+    status: allowed
+    type: api_incompatibility
+    reviewed: false
+    is_breaking_change: true
+    impact: medium
+    old_driver_behavior: |
+      createConnection ignores an option it does not know. With validateDefaultParameters
+      set it also logs "'<key>' is an unknown connection parameter. Did you mean '<name>'?".
+    new_driver_behavior: |
+      createConnection throws InvalidParameterError "Unknown connection option: <key>",
+      `error.code` undefined. This includes old-driver options the new driver does not
+      support: clientRequestMFAToken, disableConsoleLogin (BD#63), forceStageBindError,
+      gcsUseDownscopedCredential, includeRetryReason, oauthChallengeMethod,
+      oauthHttpAllowed, passcodeInPassword, resultPrefetch, serviceName,
+      sfRetryMaxLoginRetries (BD#90) and validateDefaultParameters.
+    description: |
+      An option that is silently ignored leaves the application believing it took effect,
+      so the new driver fails instead.
