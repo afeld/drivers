@@ -43,13 +43,26 @@ Feature: HTTP proxy support
   #                    Environment-variable-driven routing
   # ===========================================================================
 
-  @python_e2e @odbc_e2e
+  # Python defaults use_proxy_env to true. ODBC keeps the core default of false.
+  @python_e2e
+  Scenario: should route request through proxy when proxy env vars are set
+    Given HTTP_PROXY env var points at a forward-proxy WireMock
+    When the driver connects without an explicit proxy
+    Then the connect succeeds and the proxy received the login request
+
+  @odbc_e2e
   Scenario: should route request through proxy when proxy env vars are enabled
     Given HTTP_PROXY env var points at a forward-proxy WireMock
     When the driver connects with proxy env vars enabled
     Then the connect succeeds and the proxy received the login request
 
-  @python_e2e @odbc_e2e
+  @python_e2e
+  Scenario: should ignore proxy env vars when use_proxy_env is false
+    Given HTTP_PROXY env var points at a forward-proxy WireMock
+    When the driver connects with env-var proxy detection disabled
+    Then the connect fails and the proxy received no requests
+
+  @odbc_e2e
   Scenario: should ignore proxy env vars by default
     Given HTTP_PROXY env var points at a forward-proxy WireMock
     When the driver connects without proxy env vars enabled

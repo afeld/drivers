@@ -283,16 +283,15 @@ class TestFromKwargs:
         assert config.no_proxy == "internal.example.com"
 
     def test_odbc_only_proxy_dsn_keys_are_not_python_kwargs(self):
-        # `PROXYWITHENV` / `ALLOWEMPTYPROXY` are legacy ODBC DSN keys and
-        # `NOPROXY` was never a key of any old driver (legacy ODBC uses
-        # `NO_PROXY`, legacy Python `no_proxy`). None of them is a legacy
-        # connector kwarg, so none resolves here; the canonical spellings do.
-        config = ConnectionConfig.from_kwargs(PROXYWITHENV=True, ALLOWEMPTYPROXY=False, NOPROXY="*.corp")
-        assert config.use_proxy_env is False
+        # `PROXYWITHENV` / `ALLOWEMPTYPROXY` are ODBC DSN keys and `NOPROXY`
+        # is not a Python kwarg, so none is applied. `PROXYWITHENV=False`
+        # stays in `_extra`; `use_proxy_env` stays at its default.
+        config = ConnectionConfig.from_kwargs(PROXYWITHENV=False, ALLOWEMPTYPROXY=False, NOPROXY="*.corp")
+        assert config.use_proxy_env is True
         assert config.allow_empty_proxy is True
         assert config.no_proxy is None
         assert config._extra == {
-            "PROXYWITHENV": True,
+            "PROXYWITHENV": False,
             "ALLOWEMPTYPROXY": False,
             "NOPROXY": "*.corp",
         }
@@ -663,12 +662,18 @@ class TestToOptions:
         opts = config.to_options()
         assert opts["proxy"] == "http://user:pass@proxy.example.com:8080"
 
-    def test_use_proxy_env_forwarded_with_default_false(self):
-        config = ConnectionConfig()
-        opts = config.to_options()
-        # Default is False — forwarded so sf_core sees the explicit choice.
-        assert opts["use_proxy_env"] is False
-        assert opts["allow_empty_proxy"] is True
+    def test_omitted_use_proxy_env_forwards_true(self):
+        for config in (ConnectionConfig(), ConnectionConfig.from_kwargs()):
+            opts = config.to_options()
+            assert opts["use_proxy_env"] is True
+        assert ConnectionConfig().to_options()["allow_empty_proxy"] is True
+
+    def test_explicit_false_use_proxy_env_forwards_false(self):
+        for config in (
+            ConnectionConfig(use_proxy_env=False),
+            ConnectionConfig.from_kwargs(use_proxy_env=False),
+        ):
+            assert config.to_options()["use_proxy_env"] is False
 
     def test_includes_extra(self):
         config = ConnectionConfig(user="u")

@@ -130,16 +130,12 @@ class TestProxyConnectionParams:
 class TestProxyEnvVars:
     """Environment-variable-driven proxy routing.
 
-    Universal driver: ``HTTP_PROXY``/``HTTPS_PROXY``/``NO_PROXY`` are ignored
-    by default; ``use_proxy_env=True`` opts in to env detection. Legacy
-    connector: env vars are always honoured. The precedence test below makes
-    this divergence explicit.
+    Both drivers consult ``HTTP_PROXY``/``HTTPS_PROXY``/``NO_PROXY`` when no
+    explicit proxy is set. ``use_proxy_env=False`` is a universal-driver opt-out.
+    The precedence test below covers explicit parameters winning over env vars.
     """
 
-    @pytest.mark.skip_reference(
-        reason="use_proxy_env is a universal-driver-only opt-in; reference connector always reads env vars"
-    )
-    def test_should_route_request_through_proxy_when_proxy_env_vars_are_enabled(
+    def test_should_route_request_through_proxy_when_proxy_env_vars_are_set(
         self, connector_adapter, wiremock, monkeypatch
     ):
         # Given HTTP_PROXY env var points at a forward-proxy WireMock
@@ -147,8 +143,8 @@ class TestProxyEnvVars:
 
         monkeypatch.setenv("HTTP_PROXY", wiremock.http_url())
 
-        # When the driver connects with proxy env vars enabled
-        conn = _build_connection(connector_adapter, use_proxy_env=True)
+        # When the driver connects without an explicit proxy
+        conn = _build_connection(connector_adapter)
         try:
             # WiremockClient admin queries use the requests library, which
             # also honours HTTP_PROXY. Unset before asserting so the admin
@@ -157,31 +153,30 @@ class TestProxyEnvVars:
 
             # Then the connect succeeds and the proxy received the login request
             assert len(_login_requests(wiremock)) >= 1, (
-                "use_proxy_env=True with HTTP_PROXY env var should route through proxy"
+                "HTTP_PROXY env var should route through proxy when no explicit proxy is set"
             )
         finally:
             conn.close(retry=False)
 
-    @pytest.mark.skip_reference(reason="Reference connector always reads env vars; default-deny is universal-only")
-    def test_should_ignore_proxy_env_vars_by_default(self, connector_adapter, wiremock, monkeypatch):
-        """Default ``use_proxy_env=False``: env vars are NOT consulted, so the
-        login attempt fails on direct DNS resolution rather than transiting
-        the proxy."""
+    @pytest.mark.skip_reference(
+        reason="Reference connector always reads env vars; use_proxy_env=False is universal-only"
+    )
+    def test_should_ignore_proxy_env_vars_when_use_proxy_env_is_false(self, connector_adapter, wiremock, monkeypatch):
+        """``use_proxy_env=False``: env vars are not consulted, so the login
+        attempt fails on direct DNS resolution rather than transiting the proxy."""
         # Given HTTP_PROXY env var points at a forward-proxy WireMock
         wiremock.add_mapping("auth/login_success_jwt.json")
 
         monkeypatch.setenv("HTTP_PROXY", wiremock.http_url())
 
-        # When the driver connects without proxy env vars enabled
+        # When the driver connects with env-var proxy detection disabled
         with pytest.raises(Exception):  # noqa: B017 — driver-specific class varies
-            _build_connection(connector_adapter)
+            _build_connection(connector_adapter, use_proxy_env=False)
 
         monkeypatch.delenv("HTTP_PROXY")
 
         # Then the connect fails and the proxy received no requests
-        assert len(_login_requests(wiremock)) == 0, (
-            "Default-deny: HTTP_PROXY env var must not be picked up without use_proxy_env=True"
-        )
+        assert len(_login_requests(wiremock)) == 0, "use_proxy_env=False must not pick up the HTTP_PROXY env var"
 
 
 class TestProxyPrecedence:
@@ -191,9 +186,9 @@ class TestProxyPrecedence:
 
     - Legacy connector ≥3.17.0: ``HTTP_PROXY`` env var overrides explicit
       ``proxy_host`` connection parameters.
-    - Universal driver: explicit ``proxy_host`` always wins. Env vars are only
-      consulted as a fallback when no explicit param is set, AND the customer
-      has opted in via ``use_proxy_env=True``.
+    - Universal driver: explicit ``proxy_host`` always wins. Env vars are
+      consulted only as a fallback when no explicit param is set
+      (``use_proxy_env`` defaults to true).
     """
 
     def test_should_prefer_explicit_proxy_host_over_http_proxy_env_var(self, connector_adapter, wiremock, monkeypatch):

@@ -62,6 +62,25 @@ fn to_python_field(canonical: &str) -> String {
     result
 }
 
+/// Python field default, which may differ from the registry default.
+///
+/// The registry default is what JDBC and ODBC inherit through sf_core.
+/// `use_proxy_env` stays false there. Python consults
+/// `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` unless the caller passes
+/// `use_proxy_env=False`.
+fn python_wrapper_default_literal(
+    canonical_name: &str,
+    registry_default: Option<&DefaultValue>,
+) -> String {
+    if canonical_name == "use_proxy_env" {
+        return "True".to_string();
+    }
+    match registry_default {
+        Some(default) => default_value_to_py_literal(default),
+        None => "None".to_string(),
+    }
+}
+
 /// Format a [`DefaultValue`] as a Python literal that is safe to paste into
 /// generated source code.
 ///
@@ -338,12 +357,7 @@ __all__ = ["ConnectionConfig", "OptionsModifier"]
             format!("{} | None", py_type(p.value_type))
         };
 
-        // Use actual default from the registry when available, otherwise None
-        let default_literal = if let Some(default) = p.default {
-            default_value_to_py_literal(&default)
-        } else {
-            "None".to_string()
-        };
+        let default_literal = python_wrapper_default_literal(p.canonical_name, p.default.as_ref());
         out.push_str(&format!(
             "    {}: {} = {}\n",
             py_field, type_ann, default_literal
@@ -351,11 +365,8 @@ __all__ = ["ConnectionConfig", "OptionsModifier"]
 
         // Docstring with description and metadata
         let mut doc_parts = vec![p.description.to_string()];
-        if let Some(default) = p.default {
-            doc_parts.push(format!(
-                "Default: {}",
-                default_value_to_py_literal(&default)
-            ));
+        if p.default.is_some() {
+            doc_parts.push(format!("Default: {default_literal}"));
         }
         let req_str = required_to_str(&p.required);
         if req_str != "never" {

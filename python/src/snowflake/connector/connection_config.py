@@ -388,8 +388,8 @@ class ConnectionConfig(ConnectionConfigMixin):
     Default: False
     """
 
-    use_proxy_env: bool | None = False
-    """Honour HTTP_PROXY/HTTPS_PROXY/NO_PROXY env vars when no explicit proxy is set. Default: False"""
+    use_proxy_env: bool | None = True
+    """Honour HTTP_PROXY/HTTPS_PROXY/NO_PROXY env vars when no explicit proxy is set. Default: True"""
 
     user: str | None = None
     """Login username. Required"""

@@ -52,6 +52,7 @@ New features:
 
 Changes:
 
+- Changed the Python connector so it reads `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` unless `use_proxy_env` is set to false. (snowflakedb/drivers#2579)
 - Changed a `fips-tls` build to reject a private key encrypted with 3DES-CBC and to name `openssl pkcs8 -topk8 -v2 aes-256-cbc` as the conversion, while a standard build still unwraps those keys (snowflakedb/drivers#2488).
 - Changed platform detection to run by default, once per driver in the background, and to report the result as in-band `platform_detection_status` telemetry when a session closes instead of in the login request. Connect never waits for detection, and a session that closes before detection finishes reports nothing. Each probe is limited to 2 seconds, so `platform_detection_timeout_seconds` is still accepted but no longer has an effect. `SNOWFLAKE_EXPERIMENTAL_ENABLE_PLATFORM_DETECTION` is removed; `SNOWFLAKE_DISABLE_PLATFORM_DETECTION` still turns detection off. (snowflakedb/drivers#2399)
 - Changed verified connection and cloud-storage TLS clients to select the configured crypto module's rustls provider explicitly, including CRL-enabled clients, instead of depending on process-global provider initialization order. Inverted TLS version bounds now fail rather than restoring default protocols. (snowflakedb/drivers#1356)
