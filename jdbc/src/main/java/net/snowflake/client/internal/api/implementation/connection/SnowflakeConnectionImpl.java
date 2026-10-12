@@ -11,8 +11,12 @@ import static net.snowflake.client.api.exception.ErrorCode.CONNECTION_CLOSED;
 import static net.snowflake.client.api.exception.ErrorCode.FEATURE_UNSUPPORTED;
 import static net.snowflake.client.api.exception.ErrorCode.INVALID_PARAMETER_VALUE;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -198,7 +202,28 @@ public class SnowflakeConnectionImpl implements InternalSnowflakeConnection, Del
     if (runtimeVersion != null && !runtimeVersion.trim().isEmpty()) {
       identityBuilder.setLanguageVersion(runtimeVersion);
     }
+    String applicationPath = applicationPath();
+    if (applicationPath != null) {
+      identityBuilder.setApplicationPath(applicationPath);
+    }
     return identityBuilder.build();
+  }
+
+  private static String applicationPath() {
+    try {
+      ProtectionDomain protectionDomain = SnowflakeConnectionImpl.class.getProtectionDomain();
+      if (protectionDomain == null) {
+        return null;
+      }
+      CodeSource codeSource = protectionDomain.getCodeSource();
+      if (codeSource == null || codeSource.getLocation() == null) {
+        return null;
+      }
+      return new File(codeSource.getLocation().toURI()).getPath();
+    } catch (SecurityException | URISyntaxException | IllegalArgumentException e) {
+      logger.debug("Could not resolve application path for client environment", e);
+      return null;
+    }
   }
 
   private SQLWarning setOptions(

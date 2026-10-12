@@ -20,6 +20,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.sql.ClientInfoStatus;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -1675,6 +1676,14 @@ class SnowflakeConnectionImplTest {
       // which are always populated on a HotSpot/OpenJDK test runtime.
       assertEquals(System.getProperty("java.vm.name"), identity.getLanguageRuntime());
       assertEquals(System.getProperty("java.version"), identity.getLanguageVersion());
+    }
+
+    @Test
+    void shouldSendExistingDriverLocationAsApplicationPathToCore() throws Exception {
+      WrapperIdentity identity = captureIdentitySentToCore();
+
+      assertTrue(identity.hasApplicationPath());
+      assertTrue(new File(identity.getApplicationPath()).exists());
     }
   }
 
