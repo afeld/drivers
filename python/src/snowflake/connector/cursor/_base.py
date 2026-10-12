@@ -449,6 +449,7 @@ class SnowflakeCursorBase(CursorBaseMixin, abc.ABC):
         operation: str,
         seq_of_parameters: Sequence[Sequence[Any] | dict[str, Any]],
         _force_qmark_paramstyle: bool = False,
+        num_statements: int | None = None,
     ) -> None:
         """Execute each parameter set individually and aggregate rowcount.
 
@@ -456,6 +457,12 @@ class SnowflakeCursorBase(CursorBaseMixin, abc.ABC):
         paramstyles, dict parameters, or statements the server reports as not
         array-bindable (e.g. UPDATE, DELETE, MERGE).
         """
+        statement_parameters = None
+        if num_statements is not None:
+            statement_parameters = self._collect_statement_params(
+                skip_upload_on_content_match=False,
+                num_statements=num_statements,
+            )
         self.reset()
         total_rowcount = 0
         unknown_rowcount = False
@@ -464,6 +471,7 @@ class SnowflakeCursorBase(CursorBaseMixin, abc.ABC):
                 operation,
                 params,
                 _force_qmark_paramstyle=_force_qmark_paramstyle,
+                statement_parameters=statement_parameters,
             )  # no reset between calls
             rc = self._query_result.rowcount
             if rc is None or rc == -1:
@@ -481,6 +489,7 @@ class SnowflakeCursorBase(CursorBaseMixin, abc.ABC):
         self,
         operation: str,
         seq_of_parameters: Iterable[Sequence[Any] | dict[str, Any]] | None = None,
+        num_statements: int | None = None,
         *,
         seqparams: Iterable[Sequence[Any] | dict[str, Any]] | None = None,
         _force_qmark_paramstyle: bool = False,
@@ -506,6 +515,8 @@ class SnowflakeCursorBase(CursorBaseMixin, abc.ABC):
             seq_of_parameters: Iterable of parameter sequences or dicts. Generators
                 and other one-shot iterators are materialized so the first row can
                 be inspected and array-binding can walk the collection more than once.
+            num_statements (int, optional): Number of statements in a
+                multistatement query. Forwarded to each ``execute()`` call.
             seqparams: Legacy alias for ``seq_of_parameters`` (kwarg-only).
                 Cannot be supplied together with ``seq_of_parameters``.
             _force_qmark_paramstyle: If True, treat as qmark even when the
@@ -534,15 +545,33 @@ class SnowflakeCursorBase(CursorBaseMixin, abc.ABC):
         # - Client-side binding (pyformat/format)
         # - Dict parameters (server-side doesn't support named binding)
         if paramstyle.is_client_side() or isinstance(first_params, dict):
-            if paramstyle.is_client_side():
+            # A caller-supplied count other than 1 is a multi-statement batch.
+            # Rewriting that into one INSERT would drop the later statements.
+            if paramstyle.is_client_side() and num_statements in (None, 1):
                 # INSERT with client-side binding: rewrite into a single
                 # multi-row INSERT to avoid one HTTP request per row.
                 rewritten = self._rewrite_multirow_insert(operation, seq_of_parameters)
                 if rewritten is not None:
                     # Values were already interpolated and escaped by
                     # ClientSideBindingConverter.interpolate_query — no further binding needed.
-                    return self.execute(rewritten)
-            self._executemany_per_row(operation, seq_of_parameters, _force_qmark_paramstyle)
+                    return self.execute(rewritten, num_statements=num_statements)
+            self._executemany_per_row(
+                operation,
+                seq_of_parameters,
+                _force_qmark_paramstyle,
+                num_statements=num_statements,
+            )
+            return self
+
+        # A caller-supplied count other than 1 is a multi-statement batch.
+        # Array binding sends one statement, so each row is executed on its own.
+        if num_statements not in (None, 1):
+            self._executemany_per_row(
+                operation,
+                seq_of_parameters,
+                _force_qmark_paramstyle,
+                num_statements=num_statements,
+            )
             return self
 
         # Validate row widths and pre-compute column-major layout before the server
@@ -558,11 +587,21 @@ class SnowflakeCursorBase(CursorBaseMixin, abc.ABC):
         if prepare_result is None or not prepare_result.array_bind_supported:
             # Per-row fallback: server does not support array binding for this
             # statement type (e.g. UPDATE, DELETE, MERGE).
-            self._executemany_per_row(operation, seq_of_parameters, _force_qmark_paramstyle)
+            self._executemany_per_row(
+                operation,
+                seq_of_parameters,
+                _force_qmark_paramstyle,
+                num_statements=num_statements,
+            )
             return self
 
         # Server confirmed array binding: use pre-computed column-major params.
-        return self.execute(operation, transposed, _force_qmark_paramstyle=_force_qmark_paramstyle)
+        return self.execute(
+            operation,
+            transposed,
+            _force_qmark_paramstyle=_force_qmark_paramstyle,
+            num_statements=num_statements,
+        )
 
     @api_telemetry
     @requires_open

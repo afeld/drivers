@@ -67,6 +67,7 @@ Changes:
 
 Bug fixes:
 
+- Fixed Python `cursor.executemany()` so it accepts `num_statements` and applies that count to each statement, matching the v4 driver. (snowflakedb/drivers#2541)
 - Fixed JDBC I/O errors so a failed stage upload, a failed stage download, a full local disk during a transfer, and a network failure each report the vendor code and SQLState the previous JDBC driver uses for that failure. A disabled file transfer still reports no vendor code. (snowflakedb/drivers#2507)
 - Improved configuration errors for PAT with external session so an invalid `external_session_id` is reported without echoing the supplied identifier. (snowflakedb/drivers#1996)
 - Fixed Python `cursor.description` reporting GEOGRAPHY and GEOMETRY columns as OBJECT when the server sent those names in a separate extended type field. (snowflakedb/drivers#2326)

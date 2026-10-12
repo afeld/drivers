@@ -3152,6 +3152,32 @@ class TestExecuteNumStatements:
             f"second call must NOT inherit MULTI_STATEMENT_COUNT=3 from the first call; got options={captured_options}"
         )
 
+    def test_executemany_forwards_num_statements_on_each_row(self, cursor, mock_connection):
+        mock_connection.paramstyle = ParamStyle.PYFORMAT
+        seen: list[dict] = []
+
+        def side_effect(*args, **kwargs):
+            seen.append(kwargs.get("statement_parameters") or {})
+            return MagicMock()
+
+        with (
+            patch.object(cursor, "_execute", side_effect=side_effect),
+            patch.object(cursor, "reset"),
+        ):
+            cursor.executemany("UPDATE t SET x = %s", [(1,), (2,)], num_statements=2)
+        assert [row.get(StatementParameterName.MULTI_STATEMENT_COUNT) for row in seen] == [2, 2]
+        assert StatementParameterName.MULTI_STATEMENT_COUNT not in cursor._statement_parameters
+
+    def test_executemany_without_num_statements_passes_nothing(self, cursor, mock_connection):
+        mock_connection.paramstyle = ParamStyle.PYFORMAT
+        captured, side_effect = self._capture_per_call(cursor)
+        with (
+            patch.object(cursor, "_execute", side_effect=side_effect),
+            patch.object(cursor, "reset"),
+        ):
+            cursor.executemany("UPDATE t SET x = %s", [(1,)])
+        assert StatementParameterName.MULTI_STATEMENT_COUNT not in captured
+
 
 class TestStatementParameterCollection:
     """The per-call collection helper and the merged options builder that the
@@ -3284,6 +3310,32 @@ class TestAsyncExecuteNumStatements:
         ):
             asyncio.run(cursor.execute("SELECT 99"))
         assert StatementParameterName.MULTI_STATEMENT_COUNT not in captured, "second call must NOT inherit the count"
+
+    def test_executemany_forwards_num_statements_on_each_row(self, cursor):
+        cursor._connection.paramstyle = ParamStyle.PYFORMAT
+        seen: list[dict] = []
+
+        async def side_effect(*args, **kwargs):
+            seen.append(kwargs.get("statement_parameters") or {})
+            return MagicMock()
+
+        with (
+            patch.object(cursor, "_execute", side_effect=side_effect),
+            patch.object(cursor, "reset", new=MagicMock()),
+        ):
+            asyncio.run(cursor.executemany("UPDATE t SET x = %s", [(1,), (2,)], num_statements=2))
+        assert [row.get(StatementParameterName.MULTI_STATEMENT_COUNT) for row in seen] == [2, 2]
+        assert StatementParameterName.MULTI_STATEMENT_COUNT not in cursor._statement_parameters
+
+    def test_executemany_without_num_statements_passes_nothing(self, cursor):
+        cursor._connection.paramstyle = ParamStyle.PYFORMAT
+        captured, side_effect = self._capture_per_call()
+        with (
+            patch.object(cursor, "_execute", side_effect=side_effect),
+            patch.object(cursor, "reset", new=MagicMock()),
+        ):
+            asyncio.run(cursor.executemany("UPDATE t SET x = %s", [(1,)]))
+        assert StatementParameterName.MULTI_STATEMENT_COUNT not in captured
 
 
 class TestBareDescRewrite:
