@@ -43,15 +43,17 @@ Feature: VECTOR type support
   @python_e2e @jdbc_e2e @odbc_e2e @nodejs_e2e
   Scenario Outline: should select <subtype> vector boundary values
     # VECTOR(INT) stores 32-bit signed integers: [-2147483648, 2147483647]
-    # VECTOR(FLOAT) stores IEEE 754 single-precision floats (~3.4e38 max magnitude)
+    # VECTOR(FLOAT) stores IEEE 754 binary32. The maximum finite value is
+    # (2^24 - 1) * 2^104. The 8-digit form 3.4028235e38 is larger than that,
+    # and Snowflake rejects that cast as overflow today.
     Given Snowflake client is logged in
     When Query "SELECT <expected_value>::VECTOR(<vec_type>, ...)" is executed
     Then Result should preserve <subtype> boundary values
 
     Examples:
-      | subtype | vec_type | expected_value                      |
-      | INT     | INT      | [-2147483648, 2147483647, 0]        |
-      | FLOAT   | FLOAT    | [3.4028235e38, -3.4028235e38, 0.0]  |
+      | subtype | vec_type | expected_value                                                                                 |
+      | INT     | INT      | [-2147483648, 2147483647, 0]                                                                   |
+      | FLOAT   | FLOAT    | [3.4028234663852885981170418348451692544e38, -3.4028234663852885981170418348451692544e38, 0.0] |
 
   @python_e2e @jdbc_e2e @odbc_e2e
   Scenario: should preserve FLOAT smallest-normal

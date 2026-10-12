@@ -37,7 +37,10 @@ MAX_DIMENSION_SIZE = 4096
 # VECTOR(INT) is 32-bit signed; VECTOR(FLOAT) is IEEE 754 single-precision.
 INT32_MIN = -2_147_483_648
 INT32_MAX = 2_147_483_647
-FLOAT32_MAX = 3.4028235e38
+# Exact binary32 maximum, (2**24 - 1) * 2**104. The 8-digit spelling
+# 3.4028235e38 is larger than this value, and Snowflake rejects that cast today.
+FLOAT32_MAX_SQL = "3.4028234663852885981170418348451692544e38"
+FLOAT32_MAX = float(FLOAT32_MAX_SQL)
 FLOAT32_SMALLEST_NORMAL = 1.1754944e-38
 
 # =============================================================================
@@ -130,7 +133,8 @@ class TestVectorLiteral:
         pass
 
         # When Query "SELECT <expected_value>::VECTOR(<vec_type>, ...)" is executed
-        sql = f"SELECT {expected_value}::VECTOR({vec_type}, {len(expected_value)})"
+        literal = f"[{FLOAT32_MAX_SQL}, -{FLOAT32_MAX_SQL}, 0.0]" if vec_type == "FLOAT" else expected_value
+        sql = f"SELECT {literal}::VECTOR({vec_type}, {len(expected_value)})"
         result = execute_query(sql, single_row=True)
 
         # Then Result should preserve <subtype> boundary values

@@ -150,7 +150,12 @@ class VectorTests extends SnowflakeIntegrationTestBase implements WithQueryUtils
         Arguments.of(
             "INT", "INT", "[-2147483648, 2147483647, 0]", 3, "[-2147483648,2147483647,0]", true),
         Arguments.of(
-            "FLOAT", "FLOAT", "[3.4028235e38, -3.4028235e38, 0.0]", 3, "[3.402823", false));
+            "FLOAT",
+            "FLOAT",
+            "[3.4028234663852885981170418348451692544e38, -3.4028234663852885981170418348451692544e38, 0.0]",
+            3,
+            "[3.402823",
+            false));
   }
 
   @ParameterizedTest

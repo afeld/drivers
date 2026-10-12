@@ -110,7 +110,9 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select <subtype> vector boundary val
 
   // When Query "SELECT <expected_value>::VECTOR(<vec_type>, ...)" is executed
   auto stmt1 = conn.execute_fetch("SELECT [-2147483648, 2147483647, 0]::VECTOR(INT, 3)");
-  auto stmt2 = conn.execute_fetch("SELECT [3.4028235e38, -3.4028235e38, 0.0]::VECTOR(FLOAT, 3)");
+  auto stmt2 = conn.execute_fetch(
+      "SELECT [3.4028234663852885981170418348451692544e38, "
+      "-3.4028234663852885981170418348451692544e38, 0.0]::VECTOR(FLOAT, 3)");
 
   // Then Result should preserve <subtype> boundary values
   auto json1 = parse_json_text(get_data<SQL_C_CHAR>(stmt1, 1));

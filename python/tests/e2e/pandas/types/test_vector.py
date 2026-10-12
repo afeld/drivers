@@ -34,7 +34,10 @@ FLOAT_VEC_5D_B = [10.5, 20.5, 30.5, 40.5, 50.5]
 MAX_DIMENSION_SIZE = 4096
 INT32_MIN = -2_147_483_648
 INT32_MAX = 2_147_483_647
-FLOAT32_MAX = 3.4028235e38
+# Exact binary32 maximum, (2**24 - 1) * 2**104. The 8-digit spelling
+# 3.4028235e38 is larger than this value, and Snowflake rejects that cast today.
+FLOAT32_MAX_SQL = "3.4028234663852885981170418348451692544e38"
+FLOAT32_MAX = float(FLOAT32_MAX_SQL)
 FLOAT32_SMALLEST_NORMAL = 1.1754944e-38
 LARGE_RESULT_SET_SIZE = 20_000
 
@@ -122,9 +125,10 @@ class TestFetchPandasVectorLiteral:
         pass
 
         # When Query "SELECT <expected_value>::VECTOR(<vec_type>, ...)" is executed
+        literal = f"[{FLOAT32_MAX_SQL}, -{FLOAT32_MAX_SQL}, 0.0]" if vec_type == "FLOAT" else expected_value
         df = execute_and_fetch(
             cursor,
-            f"SELECT {expected_value}::VECTOR({vec_type}, {len(expected_value)})",
+            f"SELECT {literal}::VECTOR({vec_type}, {len(expected_value)})",
         )
 
         # Then Result should preserve <subtype> boundary values
