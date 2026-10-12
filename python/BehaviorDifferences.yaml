@@ -1582,7 +1582,7 @@ behavior_differences:
     type: api_incompatibility
     reviewed: true
     is_breaking_change: true
-    impact: medium
+    impact: high
     old_driver_behavior: |
       Certificate revocation uses OCSP, controlled by parameters such as
       `ocsp_fail_open`, `ocsp_response_cache_filename`, and `insecure_mode`.
