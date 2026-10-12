@@ -18,6 +18,10 @@ class SnowflakeColumnTypesTest {
     "INTEGER, INTEGER",
     "timestamp_ntz, TIMESTAMP_NTZ",
     "TIMESTAMP_NTZ, TIMESTAMP_NTZ",
+    "timestamp_ltz, TIMESTAMP_LTZ",
+    "TIMESTAMP_LTZ, TIMESTAMP_LTZ",
+    "timestamp_tz, TIMESTAMP_TZ",
+    "TIMESTAMP_TZ, TIMESTAMP_TZ",
     "fixed, FIXED",
     "unknown_type, ",
     "'', "

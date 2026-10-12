@@ -203,6 +203,19 @@ public class SnowflakeStatementImplTest {
   }
 
   @Test
+  void shouldReportConnectionClosedWhenConnectionIsClosedButStatementStaysOpen() throws Exception {
+    when(mockConnection.isClosed()).thenReturn(true);
+    Statement stmt = createDecoratedStatement();
+    assertFalse(stmt.isClosed());
+
+    SQLException ex = assertThrows(SQLException.class, () -> stmt.execute("SELECT 1"));
+
+    assertEquals("Connection is closed", ex.getMessage());
+    assertEquals(ErrorCode.CONNECTION_CLOSED.getSqlState(), ex.getSQLState());
+    assertEquals(ErrorCode.CONNECTION_CLOSED.getMessageCode(), ex.getErrorCode());
+  }
+
+  @Test
   void executeBatchReturnsUpdateCountsForEachAddedSql() throws Exception {
     Statement stmt = createStatement();
     when(mockCoreApi.statementExecuteQuery(any(), isNull()))

@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import net.snowflake.client.api.exception.ErrorCode;
 import net.snowflake.client.internal.api.decorator.Telemetry;
 import net.snowflake.client.internal.api.implementation.connection.InternalSnowflakeConnection;
 import net.snowflake.client.internal.api.implementation.connection.SnowflakeClob;
@@ -478,6 +479,30 @@ public class SnowflakePreparedStatementImplTest {
   @Test
   void shouldBindBareTimestampWhenSessionMappingUsesLowercaseWireName() throws Exception {
     assertBareTimestampBindType("timestamp_ntz", "TIMESTAMP_NTZ");
+  }
+
+  @Test
+  void shouldBindBareTimestampAsLtzWhenSessionMappingUsesLowercaseWireName() throws Exception {
+    assertBareTimestampBindType("timestamp_ltz", "TIMESTAMP_LTZ");
+  }
+
+  @Test
+  void shouldBindBareTimestampAsTzWhenSessionMappingUsesLowercaseWireName() throws Exception {
+    assertBareTimestampBindType("timestamp_tz", "TIMESTAMP_TZ");
+  }
+
+  @Test
+  void shouldReportConnectionClosedWhenConnectionIsClosedButPreparedStatementStaysOpen()
+      throws Exception {
+    when(mockConnection.isClosed()).thenReturn(true);
+    PreparedStatement ps = createDecoratedPreparedStatement("SELECT ?");
+    assertFalse(ps.isClosed());
+
+    SQLException ex = assertThrows(SQLException.class, () -> ps.executeQuery());
+
+    assertEquals("Connection is closed", ex.getMessage());
+    assertEquals(ErrorCode.CONNECTION_CLOSED.getSqlState(), ex.getSQLState());
+    assertEquals(ErrorCode.CONNECTION_CLOSED.getMessageCode(), ex.getErrorCode());
   }
 
   @Test
