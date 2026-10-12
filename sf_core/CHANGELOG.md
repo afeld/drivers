@@ -2,6 +2,10 @@
 
 ## Upcoming Release
 
+Bug fixes:
+
+- Fixed PAT_WITH_EXTERNAL_SESSION connections always failing `connection_heartbeat` / `isValid` checks because the driver sent a Snowflake session-token heartbeat instead of `Authorization: Bearer` and `X-Snowflake-External-Session-ID`. (snowflakedb/drivers#2600)
+
 New features:
 
 - Added `workload_identity_azure_client_id` so Azure WIF can select a user-assigned managed identity from a connection option, with `MANAGED_IDENTITY_CLIENT_ID` as fallback. (snowflakedb/drivers#2226)

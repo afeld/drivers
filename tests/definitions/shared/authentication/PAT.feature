@@ -48,3 +48,9 @@ Feature: Personal Access Token Authentication
     Given Authentication is set to Programmatic Access Token and valid PAT token is provided
     When Trying to Connect without user
     Then Login is successful and simple query can be executed
+
+  @python_e2e
+  Scenario: should report a PAT with external session as valid
+    Given Authentication is set to PAT with external session and a valid token is provided
+    When Trying to Connect
+    Then is_valid returns true for the new driver and false for the old driver

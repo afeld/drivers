@@ -1675,3 +1675,21 @@ behavior_differences:
       Chunk download, retry budgets, and SSE-C handling moved into the new driver. The
       Python `ResultBatch` surface is limited to iteration / Arrow / pandas conversion, so
       the old download-metrics and SSE constants have no Python-side consumer.
+
+  109:
+    name: "Connection.is_valid() returns True for live PAT_WITH_EXTERNAL_SESSION connections"
+    status: allowed
+    type: bugfix
+    reviewed: false
+    is_breaking_change: false
+    impact: low
+    old_driver_behavior: |
+      With `authenticator=PAT_WITH_EXTERNAL_SESSION`, `Connection.is_valid()` always returns
+      `False`, even while the connection can run queries. Pool health checks or reconnect logic
+      built on `is_valid()` discard or recreate working connections.
+    new_driver_behavior: |
+      `Connection.is_valid()` returns `True` while the external session is accepted by the
+      server, and `False` once it is not, the same as other authenticators.
+    description: |
+      The heartbeat behind `is_valid()` now uses the same credentials as query requests
+      (Bearer PAT plus the external session ID header) instead of the legacy session-token header.

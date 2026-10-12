@@ -1196,8 +1196,9 @@ pub struct Connection {
     pub(crate) session_id: Option<i64>,
     /// Handle to the per-connection heartbeat background task (if keep-alive is enabled).
     pub(crate) heartbeat_handle: Option<HeartbeatHandle>,
-    /// Set for `PAT_WITH_EXTERNAL_SESSION`. Query headers use Bearer + this
-    /// id; session refresh, heartbeat, and HTTP logout are skipped.
+    /// Set for `PAT_WITH_EXTERNAL_SESSION`. Query headers and
+    /// `connection_heartbeat` send Bearer plus this id. Session refresh,
+    /// background keep-alive, and HTTP logout are skipped.
     pub(crate) external_session_id: Option<SensitiveString>,
 
     /// Lifecycle state of the per-session `SYSTEM$BIND` stage.
@@ -1697,6 +1698,7 @@ pub struct RefreshContext {
     session_terminated: Arc<AtomicBool>,
     xp_backend: Option<Arc<dyn SnowflakeBackend>>,
     skip_session_refresh: bool,
+    external_session_id: Option<SensitiveString>,
 }
 
 /// Whether `err` is an ordinary failed query or heartbeat whose GS code means
@@ -1753,6 +1755,7 @@ impl RefreshContext {
             session_terminated,
             xp_backend,
             skip_session_refresh: false,
+            external_session_id: None,
         }
     }
 
@@ -1781,6 +1784,7 @@ impl RefreshContext {
             session_terminated: conn.session_terminated.clone(),
             xp_backend: conn.xp_backend_arc().context(QuerySnafu)?,
             skip_session_refresh: conn.external_session_id.is_some(),
+            external_session_id: conn.external_session_id.clone(),
         })
     }
 
@@ -2706,7 +2710,9 @@ impl DatabaseDriverV1 {
     /// Send a heartbeat to validate that the connection and session are still alive.
     ///
     /// Returns `true` if the session is valid, `false` otherwise.
-    /// Automatically attempts one token refresh on 401 (session expired).
+    /// Automatically attempts one token refresh on 401 (session expired),
+    /// except when the connection has an external session id. There is no
+    /// master token to renew, so a 401 is reported as invalid.
     pub async fn connection_heartbeat(&self, conn_handle: Handle) -> Result<bool, ApiError> {
         self.connection_heartbeat_with_timeout(conn_handle, None)
             .await
@@ -2755,6 +2761,10 @@ impl DatabaseDriverV1 {
                     &refresh_ctx.client_info,
                     token.reveal(),
                     timeout,
+                    refresh_ctx
+                        .external_session_id
+                        .as_ref()
+                        .map(|id| id.reveal().as_str()),
                 )
                 .await
                 {
@@ -4724,6 +4734,83 @@ mod tests {
             err.to_string().contains("must be 'ISSUE' or 'RENEW'"),
             "unexpected error: {err}"
         );
+        ds.connection_release(handle).unwrap();
+    }
+
+    #[tokio::test]
+    async fn heartbeat_uses_bearer_for_pat_with_external_session() {
+        use serde_json::json;
+        use wiremock::matchers::{header, method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/session/heartbeat"))
+            .and(header("Authorization", "Bearer pat-token"))
+            .and(header("X-Snowflake-External-Session-ID", "ext-session-1"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({"success": true})))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let ds = DatabaseDriverV1::new();
+        let handle = ds.connection_new();
+        {
+            let conn_ptr = ds.connections.get_obj(handle).expect("new handle");
+            let mut conn = conn_ptr.lock().await;
+            conn.http_client = Some(reqwest::Client::new());
+            conn.server_url = Some(server.uri());
+            conn.client_info =
+                Some(crate::config::rest_parameters::test_fixtures::test_client_info());
+            conn.external_session_id = Some("ext-session-1".into());
+            *conn.tokens.write().await = Some(SessionTokens {
+                session_token: "pat-token".into(),
+                master_token: SensitiveString::from(""),
+                session_id: None,
+                session_expires_at: None,
+                master_expires_at: None,
+                master_validity: None,
+            });
+        }
+
+        assert!(ds.connection_heartbeat(handle).await.unwrap());
+        ds.connection_release(handle).unwrap();
+    }
+
+    #[tokio::test]
+    async fn heartbeat_reports_invalid_pat_external_session() {
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/session/heartbeat"))
+            .respond_with(ResponseTemplate::new(401))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let ds = DatabaseDriverV1::new();
+        let handle = ds.connection_new();
+        {
+            let conn_ptr = ds.connections.get_obj(handle).expect("new handle");
+            let mut conn = conn_ptr.lock().await;
+            conn.http_client = Some(reqwest::Client::new());
+            conn.server_url = Some(server.uri());
+            conn.client_info =
+                Some(crate::config::rest_parameters::test_fixtures::test_client_info());
+            conn.external_session_id = Some("ext-session-1".into());
+            *conn.tokens.write().await = Some(SessionTokens {
+                session_token: "pat-token".into(),
+                master_token: SensitiveString::from(""),
+                session_id: None,
+                session_expires_at: None,
+                master_expires_at: None,
+                master_validity: None,
+            });
+        }
+
+        assert!(!ds.connection_heartbeat(handle).await.unwrap());
         ds.connection_release(handle).unwrap();
     }
 

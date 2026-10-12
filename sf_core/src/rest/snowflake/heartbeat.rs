@@ -5,8 +5,8 @@ use url::Url;
 
 use crate::config::rest_parameters::ClientInfo;
 use crate::rest::snowflake::{
-    HeartbeatSnafu, RestError, UrlJoinSnafu, apply_query_headers, parse_gs_code_or_unavailable,
-    read_response_json,
+    HeartbeatSnafu, RestError, UrlJoinSnafu, apply_query_headers, parse_external_session_header,
+    parse_gs_code_or_unavailable, read_response_json,
 };
 
 const HEARTBEAT_PATH: &str = "/session/heartbeat";
@@ -24,30 +24,37 @@ pub async fn send_heartbeat(
     client_info: &ClientInfo,
     session_token: &str,
 ) -> Result<(), RestError> {
-    send_heartbeat_with_timeout(client, server_url, client_info, session_token, None).await
+    send_heartbeat_with_timeout(client, server_url, client_info, session_token, None, None).await
 }
 
 /// Like [`send_heartbeat`] but with an optional timeout override.
 ///
 /// When `timeout` is `None`, the default 300 s HTTP request timeout is used.
-#[tracing::instrument(skip(client, client_info, session_token))]
+#[tracing::instrument(skip(client, client_info, session_token, external_session_id))]
 pub async fn send_heartbeat_with_timeout(
     client: &reqwest::Client,
     server_url: &Url,
     client_info: &ClientInfo,
     session_token: &str,
     timeout: Option<Duration>,
+    external_session_id: Option<&str>,
 ) -> Result<(), RestError> {
     let url = server_url.join(HEARTBEAT_PATH).context(UrlJoinSnafu {
         path: HEARTBEAT_PATH,
     })?;
 
-    let request = apply_query_headers(client.post(url), client_info, session_token, None)
-        .timeout(timeout.unwrap_or(DEFAULT_HEARTBEAT_TIMEOUT))
-        .build()
-        .context(crate::rest::snowflake::RequestConstructionSnafu {
-            request: "heartbeat",
-        })?;
+    let external_session_header = parse_external_session_header(external_session_id)?;
+    let request = apply_query_headers(
+        client.post(url),
+        client_info,
+        session_token,
+        external_session_header.as_ref(),
+    )
+    .timeout(timeout.unwrap_or(DEFAULT_HEARTBEAT_TIMEOUT))
+    .build()
+    .context(crate::rest::snowflake::RequestConstructionSnafu {
+        request: "heartbeat",
+    })?;
 
     let response =
         client

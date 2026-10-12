@@ -1,5 +1,9 @@
+import os
+import uuid
+
 import pytest
 
+from ...compatibility import is_new_driver, is_old_driver
 from ...config import get_test_parameters
 from .auth_helpers import verify_login_error, verify_simple_query_execution
 
@@ -7,7 +11,7 @@ from .auth_helpers import verify_login_error, verify_simple_query_execution
 @pytest.fixture(scope="session")
 def pat_token():
     params = get_test_parameters()
-    token = params.get("SNOWFLAKE_TEST_PAT")
+    token = params.get("SNOWFLAKE_TEST_PAT") or os.environ.get("SNOWFLAKE_TEST_PAT")
     assert token, "SNOWFLAKE_TEST_PAT must be set in parameters.json"
     return token
 
@@ -75,6 +79,26 @@ class TestPATAuthentication:
 
         # Then There is error returned
         verify_login_error(exception, keywords=["token", "invalid"])
+
+    def test_should_report_a_pat_with_external_session_as_valid(self, connection_factory, pat_token):
+        # Given Authentication is set to PAT with external session and a valid token is provided
+        authenticator = "PAT_WITH_EXTERNAL_SESSION"
+        token = pat_token
+        external_session_id = str(uuid.uuid4())
+
+        # When Trying to Connect
+        connection = connection_factory(
+            authenticator=authenticator,
+            token=token,
+            external_session_id=external_session_id,
+        )
+
+        # Then is_valid returns true for the new driver and false for the old driver
+        with connection:
+            if is_new_driver():
+                assert connection.is_valid() is True
+            if is_old_driver():
+                assert connection.is_valid() is False
 
 
 def get_invalid_pat_token() -> str:
