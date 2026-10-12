@@ -10,6 +10,7 @@ Usage:
   python ci/test_matrix/generate_matrix.py --driver python
   python ci/test_matrix/generate_matrix.py --driver core
   python ci/test_matrix/generate_matrix.py --driver core_fips
+  python ci/test_matrix/generate_matrix.py --driver odbc_reference
   python ci/test_matrix/generate_matrix.py --all
   python ci/test_matrix/generate_matrix.py --driver odbc \\
       --event pull_request --emit-active                         # for use in CI workflows
@@ -54,6 +55,7 @@ TRIGGER_LEVELS = ["pr", "merge_queue", "merge", "nightly"]
 #   - mappings/python.py  → PYTHON_PLATFORM, SDIST_PY
 #   - mappings/core.py    → CORE_PLATFORM
 #   - mappings/core_fips.py → CORE_FIPS_PLATFORM
+#   - mappings/odbc_reference.py → ODBC_REFERENCE_PLATFORM
 # ---------------------------------------------------------------------------
 
 # Make `from mappings import …` resolvable both when this file is run as a
@@ -70,6 +72,7 @@ from mappings import (  # noqa: E402
     CORE_FIPS_PLATFORM,
     DOTNET_PLATFORM,
     DOTNET_TFM,
+    ODBC_REFERENCE_PLATFORM,
 )
 
 
@@ -137,7 +140,7 @@ def pairwise(
 # exposing PARAMS / CONSTRAINTS / PR_CELLS / JSON_CELLS. See
 # `models/__init__.py` for the schema.
 
-_TRIGGER_LEVELS_FOR_JSON = ("pr", "merge", "nightly")
+_TRIGGER_LEVELS_FOR_JSON = ("pr", "merge_queue", "merge", "nightly")
 
 
 def load_model(
@@ -324,6 +327,12 @@ def validate_mappings(driver: str, all_combos: list[dict[str, str]]) -> None:
                 f"from DOTNET_PLATFORM in mappings/dotnet.py — add a row there or "
                 f"constrain the model."
             )
+        if driver == "odbc_reference" and pair not in ODBC_REFERENCE_PLATFORM:
+            raise RuntimeError(
+                f"({pair[0]}, {pair[1]}) is allowed by the odbc_reference model but "
+                f"missing from ODBC_REFERENCE_PLATFORM in mappings/odbc_reference.py — "
+                f"add a row there or constrain the model."
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -331,7 +340,7 @@ def validate_mappings(driver: str, all_combos: list[dict[str, str]]) -> None:
 # ---------------------------------------------------------------------------
 #
 # JSON variants live in each model file's `JSON_CELLS` dict, keyed by
-# trigger level ("pr"/"merge"/"nightly"). Each row is duplicated after
+# trigger level ("pr"/"merge_queue"/"merge"/"nightly"). Each row is duplicated after
 # pairwise generation with result_format="json" appended; the dict key
 # selects the trigger level. Core has no JSON axis (sf_core's
 # result-format coverage is exercised by ODBC and Python).
@@ -484,6 +493,28 @@ def _build_core_fips_row(combo: dict[str, str], trigger: str) -> dict[str, Any]:
     return row
 
 
+# Display suffix per non-default driver manager. Job names are
+# `odbc_reference_tests (<name>)`, so the rendered name must stay stable for
+# dashboards that key on it.
+_ODBC_REFERENCE_DM_LABEL = {"iodbc": "iODBC"}
+
+
+def _build_odbc_reference_row(combo: dict[str, str], trigger: str) -> dict[str, Any]:
+    """Build a row for the ODBC reference-driver test job."""
+    os_, arch, dm = combo["OS"], combo["Arch"], combo["DM"]
+    platform = ODBC_REFERENCE_PLATFORM[(os_, arch)]
+    name = platform["label"]
+    if dm in _ODBC_REFERENCE_DM_LABEL:
+        name = f"{name} + {_ODBC_REFERENCE_DM_LABEL[dm]}"
+    return {
+        "name": name,
+        "os": GHA_RUNNER[(os_, arch)],
+        "driver_lib": platform["driver_lib"],
+        "driver_manager": dm,
+        "trigger_level": trigger,
+    }
+
+
 def _build_dotnet_row(combo: dict[str, str], trigger: str) -> dict[str, Any] | None:
     """
     Build a row for the .NET driver test job.
@@ -551,6 +582,7 @@ def generate(model_path: Path, driver: str) -> list[dict]:
     is_core = driver == "core"
     is_core_fips = driver == "core_fips"
     is_dotnet = driver == "dotnet"
+    is_odbc_reference = driver == "odbc_reference"
 
     # Precompute the MERGE_QUEUE_CELLS key set so _routing_valid can exclude
     # them from the pairwise candidate pool. This prevents the greedy solver
@@ -598,6 +630,8 @@ def generate(model_path: Path, driver: str) -> list[dict]:
             return _build_core_fips_row(combo, "merge") is not None
         if is_dotnet:
             return _build_dotnet_row(combo, "merge") is not None
+        if is_odbc_reference:
+            return _build_odbc_reference_row(combo, "merge") is not None
         return _build_gha_row(combo, "merge", is_python) is not None
 
     pairwise_keys: set[tuple] = {
@@ -655,6 +689,8 @@ def generate(model_path: Path, driver: str) -> list[dict]:
             row = _build_core_fips_row(combo, trigger)
         elif is_dotnet:
             row = _build_dotnet_row(combo, trigger)
+        elif is_odbc_reference:
+            row = _build_odbc_reference_row(combo, trigger)
         else:
             row = _build_gha_row(combo, trigger, is_python)
         if row is not None:
@@ -668,9 +704,10 @@ def generate(model_path: Path, driver: str) -> list[dict]:
 
     # Append result_format=json reference variants. Core has no JSON variants —
     # sf_core's result-format coverage is exercised by ODBC and Python.
-    # Variants are declared in the model file under [json_pr] / [json_merge] /
-    # [json_nightly] sections; each row is duplicated with result_format="json".
-    if is_core or is_core_fips:
+    # Variants are declared in the model file's JSON_CELLS dict, keyed by
+    # trigger level; each row is duplicated with result_format="json".
+    # The reference driver is the released connector, so it has no JSON axis.
+    if is_core or is_core_fips or is_odbc_reference:
         return gha_rows
 
     valid_keys = {tuple(combo.get(p) for p in param_names) for combo in all_combos}
@@ -686,6 +723,10 @@ def generate(model_path: Path, driver: str) -> list[dict]:
                 continue
             row = _build_gha_row(dict(cell), trigger, is_python, result_format="json")
             if row is not None:
+                # filter_active("merge_queue") selects on merge_queue_cell, not
+                # on trigger_level, so JSON merge-queue rows need the marker too.
+                if trigger == "merge_queue":
+                    row["merge_queue_cell"] = True
                 gha_rows.append(row)
 
     return gha_rows
@@ -989,7 +1030,7 @@ def emit_build_matrix(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Pairwise CI matrix generator")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--driver", choices=["odbc", "python", "core", "core_fips", "dotnet"], help="Generate for a single driver")
+    group.add_argument("--driver", choices=["odbc", "python", "core", "core_fips", "dotnet", "odbc_reference"], help="Generate for a single driver")
     group.add_argument("--all", action="store_true", help="Regenerate all drivers")
     parser.add_argument(
         "--event",
@@ -1060,7 +1101,7 @@ def main() -> None:
         emit_build_matrix(args.driver, args.event, labels, level_override=args.level)
         return
 
-    drivers = ["odbc", "python", "core", "core_fips", "dotnet"] if args.all else [args.driver]
+    drivers = ["odbc", "python", "core", "core_fips", "dotnet", "odbc_reference"] if args.all else [args.driver]
     ok = True
     for driver in drivers:
         if not run_driver(driver):

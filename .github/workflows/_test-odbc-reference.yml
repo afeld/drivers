@@ -9,27 +9,36 @@ on:
   workflow_call:
 
 jobs:
+  # Lanes are generated from ci/test_matrix/models/odbc_reference.py. The
+  # merge queue runs only that model's MERGE_QUEUE_CELLS; every other event
+  # runs every lane.
+  load-odbc-reference-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: matrix
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          LEVEL_ARG=""
+          # Same level selection as load-odbc-matrix in _test-odbc.yml.
+          if [[ "$GITHUB_EVENT_NAME" == "schedule" ]] || \
+             [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]] || \
+             [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" == refs/heads/release/* ]]; then
+            LEVEL_ARG="--level nightly"
+          fi
+          python ci/test_matrix/generate_matrix.py \
+            --driver odbc_reference --event "$GITHUB_EVENT_NAME" --labels "$LABELS" --emit-active $LEVEL_ARG \
+            >> "$GITHUB_OUTPUT"
+
   odbc_tests_reference:
+    needs: load-odbc-reference-matrix
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            name: Linux x64
-            driver_lib: libsfodbc.so
-            driver_manager: unixodbc
-          - os: macos-latest
-            name: macOS Universal
-            driver_lib: libSnowflake.dylib
-            driver_manager: unixodbc
-          - os: windows-latest
-            name: Windows x64
-            driver_lib: sfodbc.dll
-            driver_manager: unixodbc
-          - os: macos-latest
-            name: macOS Universal + iODBC
-            driver_lib: libSnowflake.dylib
-            driver_manager: iodbc
+        include: ${{ fromJSON(needs.load-odbc-reference-matrix.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     name: odbc_reference_tests (${{ matrix.name }})
     # Stopgap: the ~2942 live-Snowflake reference tests overran the 60-min cap on

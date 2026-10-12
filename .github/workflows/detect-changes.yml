@@ -223,6 +223,8 @@ jobs:
               - '.github/actions/vcpkg-version/**'
               - 'ci/test_matrix/models/odbc.py'
               - 'ci/test_matrix/mappings/odbc.py'
+              - 'ci/test_matrix/models/odbc_reference.py'
+              - 'ci/test_matrix/mappings/odbc_reference.py'
             odbc_e2e_integ:
               - 'odbc_tests/tests/e2e/**'
               - 'odbc_tests/tests/integration/**'
@@ -239,6 +241,8 @@ jobs:
               - 'ci/reference-odbc-checksums'
               - 'ci/test_matrix/models/odbc.py'
               - 'ci/test_matrix/mappings/odbc.py'
+              - 'ci/test_matrix/models/odbc_reference.py'
+              - 'ci/test_matrix/mappings/odbc_reference.py'
             odbc_packaging:
               - 'odbc/installer/**'
               - 'ci/Dockerfile.rocky-rpm-build'

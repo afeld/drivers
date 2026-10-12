@@ -1,7 +1,7 @@
 # CI Test Matrix
 
-Pairwise test matrix generation for ODBC, Python, rust-core (`sf_core`), and
-rust-core FIPS smoke-test CI.
+Pairwise test matrix generation for ODBC, ODBC reference-driver, Python,
+rust-core (`sf_core`), and rust-core FIPS smoke-test CI.
 
 The generator combines a coverage **model** (which combinations exist) with a
 **mapping** (CI metadata for each combination) consumed by the
@@ -16,12 +16,14 @@ ci/test_matrix/
 ├── models/                Python coverage modules (one per driver)
 │   ├── __init__.py        schema documentation
 │   ├── odbc.py
+│   ├── odbc_reference.py  released ODBC driver lanes (_test-odbc-reference.yml)
 │   ├── python.py
 │   ├── core.py
 │   └── core_fips.py
 ├── mappings/              (OS, Arch) → CI metadata lookups
 │   ├── shared.py          GHA_RUNNER (used by all drivers)
 │   ├── odbc.py            ODBC_PLATFORM
+│   ├── odbc_reference.py  ODBC_REFERENCE_PLATFORM
 │   ├── python.py          PYTHON_PLATFORM, SDIST_PY
 │   ├── core.py            CORE_PLATFORM
 │   └── core_fips.py       CORE_FIPS_PLATFORM
@@ -104,6 +106,10 @@ Labels can only upgrade scope — they never downgrade an event's level.
 `detect-changes` still gates which drivers run, so labeling a Python-only
 PR with `ci:scope-merge` runs Python tests at merge scope and leaves the
 ODBC and core test jobs skipped.
+
+The `odbc_reference` model has no cloud or JSON axis. Every lane is a PR cell,
+so PR, push-to-main and nightly run all four lanes; the merge queue runs only
+`MERGE_QUEUE_CELLS` (macOS + iODBC).
 
 The `core_fips` model runs smoke tests on Linux GNU x86_64/aarch64, macOS
 x86_64/arm64, and Windows x64 MSVC. All five hosts are PR cells and therefore
@@ -242,9 +248,12 @@ shuffle it without a reason.
 
 ### Add a JSON `result_format` variant
 
-Append a dict to `JSON_CELLS["pr"]` / `JSON_CELLS["merge"]` /
-`JSON_CELLS["nightly"]` in the model file. Each listed row gets duplicated
-with `result_format="json"` at the named trigger level. `core.py` has no
+Append a dict to `JSON_CELLS["pr"]` / `JSON_CELLS["merge_queue"]` /
+`JSON_CELLS["merge"]` / `JSON_CELLS["nightly"]` in the model file. Each
+listed row gets duplicated with `result_format="json"` at the named trigger
+level. `merge_queue` JSON rows follow the `MERGE_QUEUE_CELLS` semantics: they
+run at `merge_group` and, cumulatively, at push-to-main and nightly, but not
+on PRs. `core.py` has no
 JSON axis (sf_core's JSON coverage runs through ODBC and Python). The total
 merge-level JSON count is pinned by `JsonVariantRegressionTests`.
 
@@ -284,7 +293,7 @@ merge-level JSON count is pinned by `JsonVariantRegressionTests`.
 ## CLI
 
 ```
-python ci/test_matrix/generate_matrix.py [--driver odbc|python|core|core_fips|dotnet | --all]
+python ci/test_matrix/generate_matrix.py [--driver odbc|odbc_reference|python|core|core_fips|dotnet | --all]
 python ci/test_matrix/generate_matrix.py --driver <D> --event <NAME> --emit-active
 ```
 

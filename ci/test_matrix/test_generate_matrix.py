@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import io
 import itertools
+import json
 import sys
 import tempfile
 import tomllib
@@ -77,7 +78,7 @@ class LoadModelTests(unittest.TestCase):
             self.assertTrue(constraints[0]({"OS": "macos", "Arch": "arm"}))
             self.assertFalse(constraints[0]({"OS": "macos", "Arch": "x64"}))
             self.assertEqual(pr_cells, [{"OS": "ubuntu", "Arch": "x64"}])
-            self.assertEqual(json_cells, {"pr": [], "merge": [], "nightly": []})
+            self.assertEqual(json_cells, {"pr": [], "merge_queue": [], "merge": [], "nightly": []})
         finally:
             path.unlink(missing_ok=True)
 
@@ -809,7 +810,7 @@ class BlockListShapeTests(unittest.TestCase):
     next-CPython-release time.
     """
 
-    MODELS = ["core", "core_fips", "odbc", "python"]
+    MODELS = ["core", "core_fips", "odbc", "odbc_reference", "python"]
 
     def _is_valid_function(self, model_name: str):
         import ast
@@ -926,6 +927,7 @@ ODBC_PATH = gm.MODELS_DIR / "odbc.py"
 PYTHON_PATH = gm.MODELS_DIR / "python.py"
 CORE_PATH = gm.MODELS_DIR / "core.py"
 CORE_FIPS_PATH = gm.MODELS_DIR / "core_fips.py"
+ODBC_REFERENCE_PATH = gm.MODELS_DIR / "odbc_reference.py"
 SF_CORE_CARGO_TOML = gm.REPO_ROOT / "sf_core" / "Cargo.toml"
 
 
@@ -980,14 +982,39 @@ class OdbcMatrixTests(unittest.TestCase):
         # ubuntu-x64-aws is the MERGE_QUEUE_CELLS cell — same as PR_CELLS,
         # most common path. Gets trigger_level="pr" + merge_queue_cell=True.
         mq_rows = gm.filter_active(self.gha, "merge_queue")
-        linux_mq = [r for r in mq_rows if r.get("driver_artifact") == "Linux x64"]
+        linux_mq = [
+            r for r in mq_rows
+            if r.get("driver_artifact") == "Linux x64" and not r.get("result_format")
+        ]
         self.assertEqual(
             len(linux_mq), 1,
-            "expected exactly one Linux x64 row in filter_active('merge_queue'); "
-            f"got: {[r['name'] for r in mq_rows]}",
+            "expected exactly one default-format Linux x64 row in "
+            f"filter_active('merge_queue'); got: {[r['name'] for r in mq_rows]}",
         )
         self.assertEqual(linux_mq[0]["cloud_provider"], "aws")
         self.assertTrue(linux_mq[0].get("merge_queue_cell"))
+
+    def test_merge_queue_rows(self) -> None:
+        # One Linux and one Windows lane on aws, plus the Linux json variant.
+        mq_names = sorted(r["name"] for r in gm.filter_active(self.gha, "merge_queue"))
+        self.assertEqual(mq_names, ["ubuntu-x64-aws", "ubuntu-x64-aws-json", "windows-x64-aws"])
+
+    def test_windows_merge_queue_row_enables_cpp_harness_build(self) -> None:
+        # build_odbc_tests_cpp in _test-odbc.yml runs only when the build
+        # matrix carries a vcpkg_triplet, i.e. when a Windows lane is active.
+        matrix = gm.build_matrix("odbc", "merge_group")
+        self.assertIn("vcpkg_triplet", json.dumps(matrix))
+        self.assertEqual(sorted(e["name"] for e in matrix), ["Linux x64", "Windows x64"])
+
+    def test_json_variant_is_merge_queue_cell(self) -> None:
+        json_rows = [r for r in self.gha if r.get("result_format") == "json"]
+        self.assertEqual(len(json_rows), 1)
+        r = json_rows[0]
+        self.assertEqual(r["trigger_level"], "merge_queue")
+        self.assertTrue(r.get("merge_queue_cell"))
+        self.assertNotIn(r, gm.filter_active(self.gha, "pr"))
+        for level in ("merge_queue", "merge", "nightly"):
+            self.assertIn(r, gm.filter_active(self.gha, level), level)
 
 
 class PythonMatrixTests(unittest.TestCase):
@@ -1115,6 +1142,24 @@ class PythonMatrixTests(unittest.TestCase):
             f"got merge_queue rows: {[r['name'] for r in mq_rows]}",
         )
         self.assertTrue(ubuntu_mq[0].get("merge_queue_cell"))
+
+    def test_merge_queue_rows(self) -> None:
+        mq = sorted(
+            (r["os"], r["py"], r["cloud_provider"], r["hatch_env"])
+            for r in gm.filter_active(self.gha, "merge_queue")
+        )
+        self.assertEqual(mq, [
+            ("ubuntu-latest", "3.13", "aws", "test"),
+            ("ubuntu-latest", "3.13", "aws", "test-native-arrow"),
+            ("ubuntu-latest", "3.13", "aws", "test-pandas"),
+            ("windows-11-arm", "3.11", "gcp", "test"),
+        ])
+
+    def test_merge_queue_builds_windows_arm_wheel(self) -> None:
+        self.assertEqual(
+            gm.build_targets("python", "merge_group"),
+            {"linux_x86": ["3.13"], "windows_arm": ["3.11"]},
+        )
 
     def test_native_arrow_is_one_linux_cell(self) -> None:
         # One ubuntu/x64/aws/py3.13 cell runs the full suite with
@@ -1293,6 +1338,99 @@ class CoreFipsMatrixTests(unittest.TestCase):
             )
 
 
+class OdbcReferenceMatrixTests(unittest.TestCase):
+    """_test-odbc-reference.yml lanes generated from models/odbc_reference.py."""
+
+    ALL_LANES = {
+        "Linux x64",
+        "macOS Universal",
+        "macOS Universal + iODBC",
+        "Windows x64",
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.gha = gm.generate(ODBC_REFERENCE_PATH, "odbc_reference")
+
+    def test_lanes_and_runners(self) -> None:
+        by_name = {r["name"]: r for r in self.gha}
+        self.assertEqual(set(by_name), self.ALL_LANES)
+        self.assertEqual(by_name["Linux x64"]["os"], "ubuntu-latest")
+        self.assertEqual(by_name["macOS Universal"]["os"], "macos-latest")
+        self.assertEqual(by_name["Windows x64"]["os"], "windows-latest")
+        self.assertEqual(by_name["macOS Universal + iODBC"]["driver_manager"], "iodbc")
+        self.assertEqual(by_name["macOS Universal"]["driver_manager"], "unixodbc")
+
+    def test_every_cumulative_scope_runs_every_lane(self) -> None:
+        for level in ("pr", "merge", "nightly"):
+            self.assertEqual(
+                {r["name"] for r in gm.filter_active(self.gha, level)},
+                self.ALL_LANES,
+                level,
+            )
+
+    def test_merge_queue_runs_only_macos_iodbc(self) -> None:
+        self.assertEqual(
+            [r["name"] for r in gm.filter_active(self.gha, "merge_queue")],
+            ["macOS Universal + iODBC"],
+        )
+
+    def test_required_keys_on_every_row(self) -> None:
+        required = {"name", "os", "driver_lib", "driver_manager", "trigger_level"}
+        for row in self.gha:
+            self.assertFalse(required - row.keys(), row["name"])
+
+    def test_no_json_rows(self) -> None:
+        self.assertFalse([r for r in self.gha if r.get("result_format")])
+
+    def test_validate_mappings_raises_on_missing_platform_row(self) -> None:
+        original = gm.ODBC_REFERENCE_PLATFORM.pop(("windows", "x64"))
+        try:
+            with self.assertRaises(RuntimeError) as ctx:
+                gm.generate(ODBC_REFERENCE_PATH, "odbc_reference")
+            self.assertIn("ODBC_REFERENCE_PLATFORM", str(ctx.exception))
+        finally:
+            gm.ODBC_REFERENCE_PLATFORM[("windows", "x64")] = original
+
+
+class JsonMergeQueueCellsTests(unittest.TestCase):
+    """JSON_CELLS["merge_queue"] rows follow MERGE_QUEUE_CELLS semantics."""
+
+    MODEL = (
+        "PARAMS = {'OS': ['ubuntu', 'windows'], 'Arch': ['x64'], 'Cloud': ['aws', 'gcp'],\n"
+        "          'DM': ['unixodbc']}\n"
+        "CONSTRAINTS = []\n"
+        "PR_CELLS = [{'OS': 'ubuntu', 'Arch': 'x64', 'Cloud': 'aws', 'DM': 'unixodbc'}]\n"
+        "MERGE_QUEUE_CELLS = [{'OS': 'windows', 'Arch': 'x64', 'Cloud': 'aws', 'DM': 'unixodbc'}]\n"
+        "JSON_CELLS = {'merge_queue': [\n"
+        "    {'OS': 'ubuntu', 'Arch': 'x64', 'Cloud': 'aws', 'DM': 'unixodbc'},\n"
+        "]}\n"
+    )
+
+    def setUp(self) -> None:
+        path = _write_model(self.MODEL)
+        try:
+            self.rows = gm.generate(path, "odbc")
+        finally:
+            path.unlink(missing_ok=True)
+        json_rows = [r for r in self.rows if r.get("result_format") == "json"]
+        self.assertEqual(len(json_rows), 1)
+        self.json_row = json_rows[0]
+
+    def test_trigger_level_and_marker(self) -> None:
+        self.assertEqual(self.json_row["trigger_level"], "merge_queue")
+        self.assertTrue(self.json_row.get("merge_queue_cell"))
+
+    def test_runs_at_merge_queue_alongside_mq_cells(self) -> None:
+        names = sorted(r["name"] for r in gm.filter_active(self.rows, "merge_queue"))
+        self.assertEqual(names, ["ubuntu-x64-aws-json", "windows-x64-aws"])
+
+    def test_not_at_pr_but_at_push_and_nightly(self) -> None:
+        self.assertNotIn(self.json_row, gm.filter_active(self.rows, "pr"))
+        self.assertIn(self.json_row, gm.filter_active(self.rows, "merge"))
+        self.assertIn(self.json_row, gm.filter_active(self.rows, "nightly"))
+
+
 # ---------------------------------------------------------------------------
 # Validation paths
 # ---------------------------------------------------------------------------
@@ -1365,7 +1503,8 @@ class JsonVariantRegressionTests(unittest.TestCase):
     """
     Locks the JSON cell count at push-to-main scope across odbc + python.
 
-    ODBC has 1 json cell (trigger_level="merge", gated on push-to-main).
+    ODBC has 1 json cell (trigger_level="merge_queue", so it also runs at
+    push-to-main and nightly).
     Python has 2 json cells, both at trigger_level="pr" — cumulative
     filtering means a "pr" row also appears at merge_queue, merge, and
     nightly scope, so no separate nightly entry is needed.

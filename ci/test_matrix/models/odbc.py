@@ -53,14 +53,18 @@ PR_CELLS = [
     {"OS": "macos",   "Arch": "arm", "Cloud": "aws",   "DM": "iodbc"},
 ]
 
+# Any Windows row also enables build_odbc_tests_cpp in _test-odbc.yml,
+# which builds the C++ harness for every Windows triplet (x64, x86, arm64).
 MERGE_QUEUE_CELLS = [
-    {"OS": "ubuntu", "Arch": "x64", "Cloud": "aws", "DM": "unixodbc"},
+    {"OS": "ubuntu",  "Arch": "x64", "Cloud": "aws", "DM": "unixodbc"},
+    {"OS": "windows", "Arch": "x64", "Cloud": "aws", "DM": "unixodbc"},
 ]
 
 JSON_CELLS = {
     "pr": [],
-    "merge": [
+    "merge_queue": [
         {"OS": "ubuntu", "Arch": "x64", "Cloud": "aws", "DM": "unixodbc"},
     ],
+    "merge": [],
     "nightly": [],
 }

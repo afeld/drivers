@@ -95,7 +95,8 @@ MERGE_VALID: list[Callable[[dict[str, str]], bool]]   (optional, default [])
     its (OS, Arch) row in the mappings tables.
 
 JSON_CELLS: dict[str, list[dict[str, str]]]
-    Maps trigger level ("pr" / "merge" / "nightly") to cells that get
-    duplicated with result_format="json" at that level. Same per-cell
-    completeness rule as PR_CELLS.
+    Maps trigger level ("pr" / "merge_queue" / "merge" / "nightly") to cells
+    that get duplicated with result_format="json" at that level. Same per-cell
+    completeness rule as PR_CELLS. "merge_queue" rows carry
+    merge_queue_cell=True, so they follow MERGE_QUEUE_CELLS semantics.
 """

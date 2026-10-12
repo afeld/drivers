@@ -12,6 +12,7 @@ from .python import PYTHON_PLATFORM, SDIST_PY
 from .core import CORE_PLATFORM
 from .core_fips import CORE_FIPS_PLATFORM
 from .dotnet import DOTNET_PLATFORM, DOTNET_TFM
+from .odbc_reference import ODBC_REFERENCE_PLATFORM
 
 __all__ = [
     # shared
@@ -22,4 +23,5 @@ __all__ = [
     "CORE_PLATFORM",
     "CORE_FIPS_PLATFORM",
     "DOTNET_PLATFORM", "DOTNET_TFM",
+    "ODBC_REFERENCE_PLATFORM",
 ]

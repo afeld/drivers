@@ -78,8 +78,12 @@ PR_CELLS = [
 ]
 
 MERGE_QUEUE_CELLS = [
-    {"OS": "ubuntu", "Arch": "x64", "Cloud": "aws", "PyVersion": "3.13", "HatchEnv": "test"},
-    {"OS": "ubuntu", "Arch": "x64", "Cloud": "aws", "PyVersion": "3.13", "HatchEnv": "test-native-arrow"},
+    {"OS": "ubuntu",  "Arch": "x64", "Cloud": "aws", "PyVersion": "3.13", "HatchEnv": "test"},
+    {"OS": "ubuntu",  "Arch": "x64", "Cloud": "aws", "PyVersion": "3.13", "HatchEnv": "test-native-arrow"},
+    {"OS": "ubuntu",  "Arch": "x64", "Cloud": "aws", "PyVersion": "3.13", "HatchEnv": "test-pandas"},
+    # windows-arm needs its own py3.11 wheel build, which puts this cell on
+    # the merge-queue critical path (~22 min wheel + ~17 min tests).
+    {"OS": "windows", "Arch": "arm", "Cloud": "gcp", "PyVersion": "3.11", "HatchEnv": "test"},
 ]
 
 JSON_CELLS = {

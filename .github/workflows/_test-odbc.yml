@@ -325,6 +325,14 @@ jobs:
 
   odbc_tests:
     needs: [build_odbc_driver, build_odbc_tests_cpp, load-odbc-matrix]
+    # build_odbc_tests_cpp is skipped when no active row is a Windows lane
+    # (e.g. a Linux-only merge-queue matrix). Without this condition the skip
+    # cascades and odbc_tests is skipped too, which odbc-status reads as green.
+    if: >-
+      !cancelled()
+      && needs.build_odbc_driver.result == 'success'
+      && (needs.build_odbc_tests_cpp.result == 'success'
+          || needs.build_odbc_tests_cpp.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:

@@ -102,11 +102,10 @@ jobs:
           registry-cache-hit: ${{ steps.rust-cache.outputs.registry-cache-hit }}
           target-cache-hit: ${{ steps.rust-cache.outputs.target-cache-hit }}
 
+  # Lanes come from ci/test_matrix/models/odbc_reference.py; the merge queue
+  # runs only that model's MERGE_QUEUE_CELLS.
   odbc_tests_reference:
-    if: >-
-      !contains(github.event.pull_request.labels.*.name, 'ci:scope-merge-queue')
-      && github.event_name != 'merge_group'
-      && inputs.run_odbc_reference
+    if: inputs.run_odbc_reference
     uses: ./.github/workflows/_test-odbc-reference.yml
     # secrets.PARAMETERS_SECRET is read by decode_secrets inside the
     # reusable workflow; reusable workflows do NOT auto-inherit secrets
