@@ -2,6 +2,8 @@
 Tests for PEP 249 module interface.
 """
 
+import os
+
 import pytest
 
 import snowflake.connector as pep249_dbapi
@@ -75,14 +77,12 @@ class TestModuleConnectFunction:
         assert isinstance(conn, Connection)
 
 
-# FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status shape is still under consideration.
-# def test_get_tls_status_reports_linked_provider_without_a_connection():
-#     status = pep249_dbapi.get_tls_status()
-#     expected_fips = os.environ.get("SF_CORE_EXPECT_FIPS_TLS", "").lower() in ("1", "true")
-#
-#     assert isinstance(status, pep249_dbapi.TlsStatus)
-#     assert status.tls_provider_is_fips is expected_fips
-#     assert status.fips_tls_build_enabled is expected_fips
+def test_get_fips_status_reports_without_a_connection():
+    status = pep249_dbapi.get_fips_status()
+    expected_fips = os.environ.get("SF_CORE_EXPECT_FIPS", "").lower() in ("1", "true")
+
+    assert isinstance(status, pep249_dbapi.FipsStatus)
+    assert status.is_fips is expected_fips
 
 
 class TestModuleExports:

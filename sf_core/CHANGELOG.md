@@ -2,20 +2,16 @@
 
 ## Upcoming Release
 
-Bug fixes:
-
-- Fixed PAT_WITH_EXTERNAL_SESSION connections always failing `connection_heartbeat` / `isValid` checks because the driver sent a Snowflake session-token heartbeat instead of `Authorization: Bearer` and `X-Snowflake-External-Session-ID`. (snowflakedb/drivers#2600)
-
 New features:
 
 - Added `workload_identity_azure_client_id` so Azure WIF can select a user-assigned managed identity from a connection option, with `MANAGED_IDENTITY_CLIENT_ID` as fallback. (snowflakedb/drivers#2226)
 - Added PAT-with-external-session authentication (`authenticator=PAT_WITH_EXTERNAL_SESSION`) so a programmatic access token plus `external_session_id` can reuse a server-side session without a login request, sending `Authorization: Bearer` and `X-Snowflake-External-Session-ID` on subsequent requests. (snowflakedb/drivers#1996)
 - Added `APPLICATION_PATH` to the login `CLIENT_ENVIRONMENT` payload. Wrappers pass it through `WrapperIdentity.application_path`. An unset or blank path is reported as `UNKNOWN`. (snowflakedb/drivers#2535)
-- Added a connection-free TLS status API and protobuf RPC that report whether the linked rustls TLS provider is in FIPS mode and whether this build enabled `fips-tls`. Neither field claims validated-module or whole-driver FIPS compliance. (snowflakedb/drivers#1355)
+- Added a connection-free status call that reports whether this process is the FIPS driver. Python `get_fips_status()`, JDBC `getFipsStatus()`, Node.js `getFipsStatus()`, .NET `GetFipsStatus()`, and ODBC `SFGetFipsStatus` return the same `is_fips` value. (snowflakedb/drivers#2562)
 - Added Duo push continuation for username/password MFA so a pending Duo challenge can wait for device approval and then finish login. (snowflakedb/drivers#2021)
 - Added a Python `platform_detection_timeout_seconds` connection parameter that limits each cloud-metadata platform check. Setting it to `0` skips those HTTP and STS queries and keeps only environment-based detection, matching the legacy Python connector. (snowflakedb/drivers#2186)
 - Added Azure blob Content-MD5 on PUT (single Put Blob and Put Block List), hashed in the same streaming pass as SHA-256 and over ciphertext when client-side encryption is on. (snowflakedb/drivers#2232)
-- Added an opt-in `fips-tls` build that routes TLS through AWS-LC-FIPS and fails closed if a non-FIPS crypto provider is active. (snowflakedb/drivers#2055)
+- Added an opt-in `fips` build that routes TLS through AWS-LC-FIPS and fails closed if a non-FIPS crypto provider is active. (snowflakedb/drivers#2055)
 - Added `IS_FIPS` to the login `CLIENT_ENVIRONMENT` payload so Snowflake can tell whether the driver's linked TLS provider is FIPS-approved. (snowflakedb/drivers#2384)
 - Added a `put_compress_level` connection setting that selects the gzip level (0–9) used when PUT AUTO_COMPRESS rewrites a file. (snowflakedb/drivers#2083)
 - Added a `put_tempdir` connection setting that selects the directory for gzip tempfiles created by PUT AUTO_COMPRESS. Unset and empty values keep the process temp directory. Nested directories are created. (snowflakedb/drivers#2084)
@@ -56,8 +52,12 @@ New features:
 
 Changes:
 
+- Standardized the opt-in build feature as `fips` and build/test environment variables as `SF_CORE_FIPS` and `SF_CORE_EXPECT_FIPS`. (SNOW-3927213)
+- Pinned `fips` builds to AWS-LC FIPS 3.6.0 (`aws-lc-fips-sys 0.13.17`) and added runtime module-version diagnostics and a FIPS smoke assertion. (SNOW-3927213)
+- Changed `fips` builds to reject `verify_certificates=false` and `tls_skip_verify=true`; standard builds still allow these insecure settings. Consequently, `NODE_TLS_REJECT_UNAUTHORIZED=0` now fails connection in FIPS Node builds. HTTPS CRL downloads now use the linked crypto module explicitly, preserving default trust and proxy behavior. (SNOW-3927213)
+- Changed a `fips` build to reject a private key encrypted with 3DES-CBC and to name `openssl pkcs8 -topk8 -v2 aes-256-cbc` as the conversion, while a standard build still unwraps those keys (snowflakedb/drivers#2488).
+- Expanded the `fips` smoke lane to cover in-module crypto unit paths, negotiated TLS suites, AES-encrypted key-pair login, rejection of 3DES and legacy PEM keys, and multi-chunk query downloads on AWS, Azure and GCP. (SNOW-3927213)
 - Changed the Python connector so it reads `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` unless `use_proxy_env` is set to false. (snowflakedb/drivers#2579)
-- Changed a `fips-tls` build to reject a private key encrypted with 3DES-CBC and to name `openssl pkcs8 -topk8 -v2 aes-256-cbc` as the conversion, while a standard build still unwraps those keys (snowflakedb/drivers#2488).
 - Changed platform detection to run by default, once per driver in the background, and to report the result as in-band `platform_detection_status` telemetry when a session closes instead of in the login request. Connect never waits for detection, and a session that closes before detection finishes reports nothing. Each probe is limited to 2 seconds, so `platform_detection_timeout_seconds` is still accepted but no longer has an effect. `SNOWFLAKE_EXPERIMENTAL_ENABLE_PLATFORM_DETECTION` is removed; `SNOWFLAKE_DISABLE_PLATFORM_DETECTION` still turns detection off. (snowflakedb/drivers#2399)
 - Changed verified connection and cloud-storage TLS clients to select the configured crypto module's rustls provider explicitly, including CRL-enabled clients, instead of depending on process-global provider initialization order. Inverted TLS version bounds now fail rather than restoring default protocols. (snowflakedb/drivers#1356)
 - Routed first-party SHA-256 hashing for CRL cache filenames, token-cache keys, S3 credential fingerprints, and certificate-name map keys through AWS-LC. Their stored key formats remain unchanged. (snowflakedb/drivers#1352)
@@ -71,6 +71,7 @@ Changes:
 
 Bug fixes:
 
+- Fixed PAT_WITH_EXTERNAL_SESSION connections always failing `connection_heartbeat` / `isValid` checks because the driver sent a Snowflake session-token heartbeat instead of `Authorization: Bearer` and `X-Snowflake-External-Session-ID`. (snowflakedb/drivers#2600)
 - Fixed Python `cursor.executemany()` so it accepts `num_statements` and applies that count to each statement, matching the v4 driver. (snowflakedb/drivers#2541)
 - Fixed JDBC I/O errors so a failed stage upload, a failed stage download, a full local disk during a transfer, and a network failure each report the vendor code and SQLState the previous JDBC driver uses for that failure. A disabled file transfer still reports no vendor code. (snowflakedb/drivers#2507)
 - Improved configuration errors for PAT with external session so an invalid `external_session_id` is reported without echoing the supplied identifier. (snowflakedb/drivers#1996)

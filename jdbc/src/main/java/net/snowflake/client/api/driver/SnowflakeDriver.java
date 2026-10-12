@@ -18,6 +18,7 @@ import net.snowflake.client.internal.api.implementation.exception.SqlExceptionMa
 import net.snowflake.client.internal.api.implementation.parameters.ConnectionOptionsResolver;
 import net.snowflake.client.internal.log.SFLogger;
 import net.snowflake.client.internal.log.SFLoggerFactory;
+import net.snowflake.client.internal.unicore.ProtobufApis;
 import net.snowflake.client.internal.util.DriverPropertyInfoUtil;
 
 /**
@@ -66,16 +67,10 @@ public class SnowflakeDriver implements Driver {
     return DRIVER_VERSION;
   }
 
-  // FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status shape is still
-  // under consideration.
-  // public TlsStatus getTlsStatus() throws SQLException {
-  //   return SqlExceptionMapper.call(
-  //       () -> {
-  //         DriverGetTlsStatusResponse response = ProtobufApis.coreDriverApi.driverGetTlsStatus();
-  //         return new TlsStatus(response.getTlsProviderIsFips(),
-  //             response.getFipsTlsBuildEnabled());
-  //       });
-  // }
+  public FipsStatus getFipsStatus() throws SQLException {
+    return SqlExceptionMapper.call(
+        () -> new FipsStatus(ProtobufApis.coreDriverApi.driverGetFipsStatus().getIsFips()));
+  }
 
   public static void empty() {}
 

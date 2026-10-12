@@ -114,7 +114,13 @@ export interface ExecuteParams {
   describeOnly?: boolean
 }
 
+export interface FipsStatus {
+  isFips: boolean
+}
+
 export declare function formatSnowflakeDate(format: string, epochMillis: number, nanos: number, scale: number, timezone: string | number): string
+
+export declare function getFipsStatus(): FipsStatus
 
 /**
  * Session parameters that both the Node.js layer and this bridge read for a

@@ -55,42 +55,51 @@ pub async fn detect_platforms(config: &DetectionConfig) -> Vec<String> {
     }
 
     // Env-only detection needs no HTTP client. Endpoint probes may run before
-    // any connection, so pin the process-global crypto provider before building
-    // their client; in a FIPS build, do not send traffic through another provider.
+    // any connection. Their HTTPS client uses the linked module.
+    // `require_fips_provider` decides whether a `fips` build runs detection.
     // `http` outlives the detector futures that borrow it.
     let http = if config.timeout.is_zero() {
         None
     } else {
         crate::tls::ensure_crypto_provider();
 
-        // Detection reaches cloud metadata and IdP endpoints over a reqwest
-        // client, which resolves the process-global provider rather than a config
-        // built from the linked module. `detect_platforms` returns `Vec<String>`
-        // and so has no error channel, which is why the TLS factories' fail-closed
-        // gate could not simply be called here -- but "no error channel" is not a
-        // reason to emit non-approved traffic from a `fips-tls` build, so the gate
-        // runs and its failure is folded into the existing `disabled` result.
-        //
-        // Nothing is lost by that: every connection this driver would go on to make
-        // fails the same gate, so the probes could only have contributed telemetry
-        // to a session that cannot be established.
-        #[cfg(feature = "fips-tls")]
+        // The probe client's HTTPS uses the linked module explicitly. The gate
+        // still runs so a `fips` build with a non-FIPS process provider skips
+        // detection: every connection this driver would go on to make fails the
+        // same gate, so the probes could only report on a session that cannot be
+        // established. `detect_platforms` has no error channel, so the failure
+        // folds into the existing `disabled` result.
+        #[cfg(feature = "fips")]
         if let Err(e) = crate::tls::require_fips_provider() {
             tracing::error!(
                 error = %e,
-                "skipping platform detection: crypto provider is not FIPS in a `fips-tls` build"
+                "skipping platform detection: crypto provider is not FIPS in a `fips` build"
             );
             return vec!["disabled".to_string()];
         }
 
-        match crate::tls::client::apply_http_pool_settings(reqwest::Client::builder()).build() {
+        let builder = match crate::tls::client::default_verified_client_builder() {
+            Ok(builder) => builder,
+            Err(e) => {
+                tracing::warn!(
+                    error_type = std::any::type_name_of_val(&e),
+                    error = %e,
+                    "failed to build platform detection HTTP client; skipping detection"
+                );
+                return vec!["disabled".to_string()];
+            }
+        };
+        match builder.build() {
             Ok(c) => Some(c),
             Err(e) => {
                 tracing::warn!(
                     error_type = std::any::type_name_of_val(&e),
                     "failed to build platform detection HTTP client; skipping detection"
                 );
-                tracing::debug!("failed to build platform detection HTTP client: {e}");
+                tracing::debug!(
+                    error = %e,
+                    "failed to build platform detection HTTP client"
+                );
                 return vec!["disabled".to_string()];
             }
         }

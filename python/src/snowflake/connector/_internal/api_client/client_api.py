@@ -82,8 +82,8 @@ from ..protobuf_gen.database_driver_v1_pb2 import (
     DatabaseReleaseRequest,
     DatabaseReleaseResponse,
     DownloadStreamHandle,
-    DriverGetTlsStatusRequest,
-    DriverGetTlsStatusResponse,
+    DriverGetFipsStatusRequest,
+    DriverGetFipsStatusResponse,
     ExecuteQueryResponse,
     QueryBindings,
     ResultChunk,
@@ -322,8 +322,8 @@ class CoreDriver:
     # Driver status
     # =====================================================================
 
-    def driver_get_tls_status(self) -> DriverGetTlsStatusResponse:
-        return self.client.driver_get_tls_status(DriverGetTlsStatusRequest())
+    def driver_get_fips_status(self) -> DriverGetFipsStatusResponse:
+        return self.client.driver_get_fips_status(DriverGetFipsStatusRequest())
 
     # =====================================================================
     # Database lifecycle

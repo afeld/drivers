@@ -65,6 +65,6 @@ export type CoreQueryBindings = CoreBinary.QueryBindings;
 export type CoreKnownSessionParameters = CoreBinary.KnownSessionParameters;
 export type QueryStatus = CoreBinary.QueryStatus;
 export type ConnectionTokenInfo = CoreBinary.ConnectionTokenInfo;
-// FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status shape is still under consideration.
-// export type CoreTlsStatus = CoreBinary.TlsStatus;
+export const getFipsStatus = core.getFipsStatus;
+export type CoreFipsStatus = CoreBinary.FipsStatus;
 export type StatementStatus = CoreBinary.StatementStatus;

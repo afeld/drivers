@@ -18,8 +18,10 @@ import ErrorCode from './constants/ErrorCode.js';
 import { OcspMode as ocspModes } from './constants/OcspMode.js';
 import {
   CoreConnection,
+  getFipsStatus as coreGetFipsStatus,
   registerClassConstructors,
   type CoreConnectionInstance,
+  type CoreFipsStatus,
   type CoreStatementInstance,
   type ConnectionTokenInfo,
 } from './core/index.js';
@@ -70,8 +72,7 @@ export {
   type StatementStatus,
 };
 
-// FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status shape is still under consideration.
-// export type TlsStatus = CoreTlsStatus;
+export type FipsStatus = CoreFipsStatus;
 
 // TODO: implement ConnectionOptions like in old driver (BD#2)
 export type ConnectionOptions = Record<string, unknown> & {
@@ -470,8 +471,7 @@ export class Connection {
   }
 }
 
-// FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status shape is still under consideration.
-// export const getTlsStatus: () => TlsStatus = coreGetTlsStatus;
+export const getFipsStatus: () => FipsStatus = coreGetFipsStatus;
 
 // TODO:
 // - JSDoc needed
@@ -498,6 +498,7 @@ export const deserializeConnection = (
 export default {
   configure,
   createConnection,
+  getFipsStatus,
   createPool,
   serializeConnection,
   deserializeConnection,

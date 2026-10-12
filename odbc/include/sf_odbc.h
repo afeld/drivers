@@ -63,15 +63,10 @@
 /* Multi-statement execution count: -1 = auto, 0 = single, N = exact count */
 #define SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT (SQL_SF_STMT_ATTR_BASE + 2)
 
-/* FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status
- * shape is still under consideration.
- *
- * typedef struct SFTlsStatus {
- *   uint32_t tls_provider_is_fips;
- *   uint32_t fips_tls_build_enabled;
- * } SFTlsStatus;
- *
- * int32_t SFGetTlsStatus(SFTlsStatus* status);
- */
+typedef struct SFFipsStatus {
+  uint32_t is_fips;
+} SFFipsStatus;
+
+int32_t SFGetFipsStatus(SFFipsStatus* status);
 
 #endif /* SF_ODBC_H */

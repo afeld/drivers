@@ -1030,15 +1030,13 @@ message ConfigGetPathsResponse {
   string connections_file = 2;
 }
 
-// Reports this build's linked TLS provider only. These fields do not establish
-// that every operation or the complete driver artifact is FIPS compliant.
-message DriverGetTlsStatusRequest {}
+// Reports whether this process is the FIPS driver. Does not open a connection.
+message DriverGetFipsStatusRequest {}
 
-message DriverGetTlsStatusResponse {
-  // Rustls's FIPS verdict for the linked TLS crypto provider.
-  bool tls_provider_is_fips = 1;
-  // Whether sf_core was compiled with the fips-tls feature.
-  bool fips_tls_build_enabled = 2;
+message DriverGetFipsStatusResponse {
+  // True when this binary was built with the fips feature and its linked TLS
+  // provider is in FIPS mode. A standard build returns false.
+  bool is_fips = 1;
 }
 
 // =============================================================================
@@ -1108,7 +1106,7 @@ message TelemetrySendLogRequest {
 service DatabaseDriver {
   option (service_error) = "DriverException";
   // Available without a database or connection handle, even in standard builds.
-  rpc DriverGetTlsStatus(DriverGetTlsStatusRequest) returns (DriverGetTlsStatusResponse);
+  rpc DriverGetFipsStatus(DriverGetFipsStatusRequest) returns (DriverGetFipsStatusResponse);
 
   // Database operations
   rpc DatabaseNew(DatabaseNewRequest) returns (DatabaseNewResponse);

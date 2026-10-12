@@ -47,28 +47,30 @@ macro_rules! record_err {
     };
 }
 
-// FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status shape is still under consideration.
-// #[repr(C)]
-// pub struct SFTlsStatus {
-//     pub tls_provider_is_fips: u32,
-//     pub fips_tls_build_enabled: u32,
-// }
-//
-// #[unsafe(no_mangle)]
-// pub unsafe extern "C" fn SFGetTlsStatus(status: *mut SFTlsStatus) -> i32 {
-//     if status.is_null() {
-//         return -1;
-//     }
-//
-//     let tls_status = sf_core::tls::tls_status();
-//     unsafe {
-//         status.write(SFTlsStatus {
-//             tls_provider_is_fips: u32::from(tls_status.tls_provider_is_fips),
-//             fips_tls_build_enabled: u32::from(tls_status.fips_tls_build_enabled),
-//         });
-//     }
-//     0
-// }
+#[repr(C)]
+pub struct SFFipsStatus {
+    pub is_fips: u32,
+}
+
+/// # Safety
+/// `status` is either null or a valid pointer to caller-owned `SFFipsStatus` memory.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn SFGetFipsStatus(status: *mut SFFipsStatus) -> i32 {
+    if status.is_null() {
+        return -1;
+    }
+
+    std::panic::catch_unwind(|| {
+        let fips_status = sf_core::tls::fips_status();
+        // SAFETY: `status` is non-null and this function writes one `SFFipsStatus` the caller owns.
+        unsafe {
+            status.write(SFFipsStatus {
+                is_fips: u32::from(fips_status.is_fips),
+            });
+        }
+    })
+    .map_or(-2, |()| 0)
+}
 
 /// # Safety
 /// This function is called by the ODBC driver manager.

@@ -114,29 +114,21 @@ fn smoke_connection_set_tls_config() {
         .expect("set options");
 }
 
-// FIPS_TLS_STATUS_WITHHELD: withheld from the shipped contract while the status shape is still under consideration.
-// #[test]
-// fn c_api_tls_status_reports_provider_and_build_without_a_connection() {
-//     let mut status = SFTlsStatus {
-//         tls_provider_is_fips: u32::MAX,
-//         fips_tls_build_enabled: u32::MAX,
-//     };
-//
-//     assert_eq!(unsafe { SFGetTlsStatus(&mut status) }, 0);
-//     assert_eq!(
-//         status.fips_tls_build_enabled,
-//         u32::from(cfg!(feature = "fips-tls"))
-//     );
-//     assert_eq!(
-//         status.tls_provider_is_fips,
-//         u32::from(cfg!(feature = "fips-tls"))
-//     );
-// }
-//
-// #[test]
-// fn c_api_tls_status_rejects_null_output() {
-//     assert_eq!(unsafe { SFGetTlsStatus(std::ptr::null_mut()) }, -1);
-// }
+#[test]
+fn c_api_fips_status_reports_without_a_connection() {
+    let mut status = sfodbc::c_api::SFFipsStatus { is_fips: u32::MAX };
+
+    assert_eq!(unsafe { sfodbc::c_api::SFGetFipsStatus(&mut status) }, 0);
+    assert_eq!(status.is_fips, u32::from(cfg!(feature = "fips")));
+}
+
+#[test]
+fn c_api_fips_status_rejects_null_output() {
+    assert_eq!(
+        unsafe { sfodbc::c_api::SFGetFipsStatus(std::ptr::null_mut()) },
+        -1
+    );
+}
 
 #[test]
 fn c_api_lifecycle_with_telemetry_shim_is_non_fatal() {

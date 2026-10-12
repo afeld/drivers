@@ -32,6 +32,8 @@ public sealed class PublicApiTest
             typeof(ChangedSessionBehavior).FullName!,
             typeof(ISnowflakeCredentialManager).FullName!,
             typeof(SnowflakeCredentialManagerFactory).FullName!,
+            typeof(SnowflakeDbDriver).FullName!,
+            typeof(SnowflakeFipsStatus).FullName!,
         };
 
         var violations = AssemblyUtil.LoadAssembly(AssembliesMetadata.RootAssembly).GetTypes()
@@ -248,6 +250,18 @@ public sealed class PublicApiTest
         $"M:{nameof(SnowflakeDbSessionPool.GetChangedSession)}()",
     ];
 
+    private static readonly HashSet<string> SnowflakeDbDriverPublicApi =
+    [
+        "C:()",
+        $"M:{nameof(SnowflakeDbDriver.GetFipsStatus)}()",
+    ];
+
+    private static readonly HashSet<string> SnowflakeFipsStatusPublicApi =
+    [
+        "C:()",
+        $"P:get_{nameof(SnowflakeFipsStatus.IsFips)}()",
+    ];
+
     public static IEnumerable<object[]> PublicAreSurfaceKeys => PublicApiSurface.Keys.Select(x => new object[] { x });
 
     private static readonly Dictionary<Type, HashSet<string>> PublicApiSurface = new()
@@ -266,6 +280,8 @@ public sealed class PublicApiTest
         [typeof(ChangedSessionBehavior)] = ChangedSessionBehaviorPublicApi,
         [typeof(ISnowflakeCredentialManager)] = ISnowflakeCredentialManagerPublicApi,
         [typeof(SnowflakeCredentialManagerFactory)] = SnowflakeCredentialManagerFactoryPublicApi,
+        [typeof(SnowflakeDbDriver)] = SnowflakeDbDriverPublicApi,
+        [typeof(SnowflakeFipsStatus)] = SnowflakeFipsStatusPublicApi,
     };
 
     private static string? FormatMemberSignature(MemberInfo member)

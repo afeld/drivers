@@ -90,15 +90,14 @@ impl DatabaseDriverImpl {
 }
 
 impl DatabaseDriver for DatabaseDriverImpl {
-    #[instrument(name = "DatabaseDriverV1::driver_get_tls_status", skip(self, _input))]
-    async fn driver_get_tls_status(
+    #[instrument(name = "DatabaseDriverV1::driver_get_fips_status", skip(self, _input))]
+    async fn driver_get_fips_status(
         &self,
-        _input: DriverGetTlsStatusRequest,
-    ) -> Result<DriverGetTlsStatusResponse, DriverException> {
-        let status = crate::tls::tls_status();
-        Ok(DriverGetTlsStatusResponse {
-            tls_provider_is_fips: status.tls_provider_is_fips,
-            fips_tls_build_enabled: status.fips_tls_build_enabled,
+        _input: DriverGetFipsStatusRequest,
+    ) -> Result<DriverGetFipsStatusResponse, DriverException> {
+        let status = crate::tls::fips_status();
+        Ok(DriverGetFipsStatusResponse {
+            is_fips: status.is_fips,
         })
     }
 
@@ -1272,37 +1271,16 @@ impl DatabaseDriver for DatabaseDriverImpl {
                 .map(SensitiveString::from),
         };
 
-        // A plain client is sufficient: the provider modules call cloud
-        // metadata / IdP endpoints (IMDS, Entra, GCP metadata), not
-        // Snowflake itself, so the account-specific TLS/OCSP client used by
-        // the login flow isn't needed here.
-        // Corporate-proxy env vars (HTTP_PROXY/HTTPS_PROXY/NO_PROXY) are
-        // still honored: `reqwest::Client::new()` auto-detects them by
-        // default, identically to passing `proxy: None` through
-        // `create_tls_client_with_proxy` (see `apply_proxy_to_builder`'s
-        // `None` case). What this client *can't* do is honor an explicit
-        // `PROXY` connection parameter, because — unlike the driver's own
-        // WIF login path (`rest::snowflake::workload_identity`, invoked
-        // from `auth_request_data`/`snowflake_login_with_client`, which
-        // reuses the login flow's `ClientInfo`-derived client) — this RPC
-        // has no `conn_handle` in `WifCreateAttestationRequest` to source a
-        // `ProxyConfig` from. Closing that gap needs new proxy-config
-        // plumbing independent of any connection handle. Tracked under
-        // SNOW-2912540.
-        // No `ensure_crypto_provider()` needed here: this is a method on
-        // `DatabaseDriverImpl`, which only exists via `new`/`new_with` ->
-        // `DatabaseDriverV1::with_providers`, and that installs the provider as
-        // its first statement (global_state.rs) -- same invariant as the CRL
-        // cache fallback.
-        //
-        // This client is deliberately plain, so its handshake runs on whatever
-        // provider won the process-global slot rather than on a config built
-        // from the linked module. In a `fips-tls` build that is safe only
-        // because `create_attestation` re-checks *both* at its entry and fails
-        // closed if either is non-FIPS -- see `tls::require_fips_provider`. It
-        // is the gate, not this client's construction, that keeps attestation
-        // traffic off a non-approved provider.
-        let client = reqwest::Client::new();
+        // The provider modules call cloud metadata / IdP endpoints, not
+        // Snowflake, so the account-specific login client isn't needed; the
+        // client still uses the linked module with default trust. Proxy env
+        // vars are honored, but an explicit `PROXY` connection parameter can't
+        // be: this RPC has no `conn_handle` to read it from (SNOW-2912540).
+        let client = crate::tls::client::default_verified_client_builder()
+            .and_then(|builder| builder.build().context(crate::tls::error::ClientBuildSnafu))
+            .context(crate::rest::snowflake::workload_identity::CryptoProviderSnafu)
+            .context(WorkloadIdentityAttestationSnafu)
+            .to_protobuf()?;
         // This client has no request timeout, so for the AWS/Azure/GCP providers
         // — which each await a cloud metadata or IdP endpoint — `operation_ctx` is the only
         // thing that can end the call short of the endpoint answering. The OIDC
@@ -1442,10 +1420,10 @@ where
 /// the generated async client methods directly.
 #[allow(clippy::result_large_err)]
 pub trait DatabaseDriverClientBlockingExt {
-    fn driver_get_tls_status_blocking(
+    fn driver_get_fips_status_blocking(
         &self,
-        input: DriverGetTlsStatusRequest,
-    ) -> BlockingProtoResult<DriverGetTlsStatusResponse>;
+        input: DriverGetFipsStatusRequest,
+    ) -> BlockingProtoResult<DriverGetFipsStatusResponse>;
     fn database_new_blocking(
         &self,
         input: DatabaseNewRequest,
@@ -1607,11 +1585,11 @@ pub trait DatabaseDriverClientBlockingExt {
 
 #[allow(clippy::result_large_err)]
 impl DatabaseDriverClientBlockingExt for DatabaseDriverClient {
-    fn driver_get_tls_status_blocking(
+    fn driver_get_fips_status_blocking(
         &self,
-        input: DriverGetTlsStatusRequest,
-    ) -> BlockingProtoResult<DriverGetTlsStatusResponse> {
-        block_on_client_call(self.driver_get_tls_status(input))
+        input: DriverGetFipsStatusRequest,
+    ) -> BlockingProtoResult<DriverGetFipsStatusResponse> {
+        block_on_client_call(self.driver_get_fips_status(input))
     }
 
     fn database_new_blocking(
