@@ -5,23 +5,23 @@ behavior_differences:
     status: allowed
     type: bug
     reviewed: true
-    is_breaking_change: true
-    impact: medium
+    is_breaking_change: false
+    impact: low
 
   2:
     name: "DEFLATE compression type option is now correctly auto-detected"
     status: allowed
     type: bugfix
     reviewed: true
-    is_breaking_change: true
-    impact: medium
+    is_breaking_change: false
+    impact: low
 
   3:
     name: "BROTLI compression type option is now supported"
     status: allowed
     type: enhancement
     reviewed: true
-    is_breaking_change: true
+    is_breaking_change: false
     impact: low
 
   5:
@@ -116,7 +116,7 @@ behavior_differences:
     status: allowed
     type: enhancement
     reviewed: true
-    is_breaking_change: true
+    is_breaking_change: false
     impact: low
     old_driver_behavior: |
       Does not validate the method parameter; attempts the request, which may result in an HttpError from the server.
@@ -130,7 +130,7 @@ behavior_differences:
     status: allowed
     type: enhancement
     reviewed: true
-    is_breaking_change: true
+    is_breaking_change: false
     impact: low
     old_driver_behavior: |
       `JSONResultBatch.to_arrow()` and `JSONResultBatch.to_pandas()` raise `NotSupportedError` because JSON-format chunks have no Arrow representation.
@@ -142,7 +142,7 @@ behavior_differences:
     name: "write_pandas create_temp_table parameter removed"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -186,7 +186,7 @@ behavior_differences:
     type: bugfix
     reviewed: true
     is_breaking_change: true
-    impact: high
+    impact: medium
     old_driver_behavior: |
       Only `execute()` has a closed-cursor guard (`InterfaceError`, errno=252006).
       Other methods fail incidentally based on internal state:
@@ -196,10 +196,10 @@ behavior_differences:
     new_driver_behavior: |
       Every cursor method now validates that the cursor is open and raises `InterfaceError("Cursor is closed.", errno=252006)` if it isn't.
       Two guards are used:
-          - `@_requires_open` (checks both cursor and connection) on:
+          - `@requires_open` (checks both cursor and connection) on:
             `execute`, `execute_async`, `executemany`, `describe`, `callproc`, `abort_query`, `get_results_from_sfqid`,
             `query_result`, `get_result_batches`, `fetch_arrow_batches`, `fetch_arrow_all`, `fetch_pandas_batches`, `fetch_pandas_all`.
-          - `@_requires_open_cursor_not_connection` (checks only the cursor's own `_closed` flag, NOT the connection) on:
+          - `@requires_open_cursor_not_connection` (checks only the cursor's own `_closed` flag, NOT the connection) on:
             `fetchone`, `fetchmany`, `fetchall`, and `reset`.
             This is a deliberate carve-out so that already-buffered result rows remain readable after `connection.close()`,
             matching the old driver's behavior for that scenario.
@@ -210,7 +210,7 @@ behavior_differences:
     type: bugfix
     reviewed: true
     is_breaking_change: true
-    impact: high
+    impact: medium
     old_driver_behavior: |
       Calling `fetchone`, `fetchmany`, `fetchall`, or iterating a cursor before any query has been executed has no guard, so they raise `TypeError` because the cursor's internal result state is `None`.
     new_driver_behavior: |
@@ -223,7 +223,7 @@ behavior_differences:
     type: api_incompatibility
     reviewed: true
     is_breaking_change: true
-    impact: high
+    impact: medium
     status_rationale: |
       Construction already establishes the session on both drivers, and the old
       connect() method was not a reconnect path (credentials are wiped after the
@@ -245,7 +245,7 @@ behavior_differences:
     type: api_incompatibility
     reviewed: true
     is_breaking_change: true
-    impact: medium
+    impact: low
     status_rationale: |
       Hostname construction moved to a fully-qualified account identifier or an
       explicit host; keeping a separate region kwarg would duplicate that
@@ -267,7 +267,7 @@ behavior_differences:
     type: api_incompatibility
     reviewed: true
     is_breaking_change: true
-    impact: high
+    impact: medium
     old_driver_behavior: |
       `client_fetch_threads` controls the chunk-fetch pool size (defaulting to
       `client_prefetch_threads`). `client_fetch_use_mp=True` switches the pool from
@@ -283,9 +283,9 @@ behavior_differences:
     name: "client_session_keep_alive[_heartbeat_frequency] setters removed"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
-    impact: high
+    impact: medium
     old_driver_behavior: |
       `Connection.client_session_keep_alive` and
       `Connection.client_session_keep_alive_heartbeat_frequency` expose
@@ -297,10 +297,10 @@ behavior_differences:
 
   27:
     name: "S3 endpoint for cn-* regions delegated to AWS SDK"
-    status: unknown
-    type: unknown
-    reviewed: false
-    is_breaking_change: true
+    status: allowed
+    type: enhancement
+    reviewed: true
+    is_breaking_change: false
     impact: high
     old_driver_behavior: |
       For S3 stages in China regions (`cn-*`), the old connector unconditionally constructs
@@ -326,9 +326,9 @@ behavior_differences:
     name: "oauth_enable_refresh_tokens parameter has no effect"
     status: allowed
     type: api_incompatibility
-    reviewed: false
-    is_breaking_change: true
-    impact: high
+    reviewed: true
+    is_breaking_change: false
+    impact: medium
     old_driver_behavior: |
       `oauth_enable_refresh_tokens` (default `True`) gates whether the refresh
       token returned by the IdP is used to refresh expired access tokens.
@@ -343,7 +343,7 @@ behavior_differences:
     name: "oauth_credentials_in_body sends client_secret_post (body only, not body+header)"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -381,9 +381,9 @@ behavior_differences:
     name: "enable_stage_s3_privatelink_for_us_east_1 renamed to use_s3_regional_url"
     status: allowed
     type: api_incompatibility
-    reviewed: false
-    is_breaking_change: true
-    impact: high
+    reviewed: true
+    is_breaking_change: false
+    impact: low
     old_driver_behavior: |
       `enable_stage_s3_privatelink_for_us_east_1` is the connection kwarg / session
       parameter that forces PUT/GET to use the S3 regional endpoint
@@ -402,7 +402,7 @@ behavior_differences:
 
   31:
     name: "HTTP_PROXY/HTTPS_PROXY env vars are not consulted by default"
-    status: unknown
+    status: allowed
     type: api_incompatibility
     reviewed: false
     impact: high
@@ -434,10 +434,10 @@ behavior_differences:
   32:
     name: "Azure Blob PUT does not set Content-Encoding header"
     status: allowed
-    type: bug
-    reviewed: false
-    impact: high
-    is_breaking_change: true
+    type: unknown
+    reviewed: true
+    impact: low
+    is_breaking_change: false
     old_driver_behavior: |
       The Python connector sets `Content-Encoding: utf-8` on Azure Blob single-shot
       PUT (the upload-chunk path in `azure_storage_client.py`) and
@@ -455,12 +455,15 @@ behavior_differences:
       Python connector retain their stored `Content-Encoding: utf-8` property;
       reading them with the new driver still works, because no driver acts on
       the property when downloading.
+    description: |
+      Unification of the behavior with the JDBC and libsnowflakeclient drivers.
+      No user-facing change, not worth additional logic.
 
   33:
     name: "Concurrent interactive auth prompts are serialized (disable_parallel_user_prompt)"
     status: allowed
     type: enhancement
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -508,9 +511,9 @@ behavior_differences:
 
   35:
     name: "OAuth bad client secret surfaces IdP error slug instead of generic browser message"
-    status: unknown
+    status: allowed
     type: enhancement
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -529,7 +532,7 @@ behavior_differences:
     name: "Session token authentication: eager validation and master_token requirement"
     status: todo
     type: enhancement
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -558,7 +561,7 @@ behavior_differences:
     name: "OAuth token/authorization endpoint URLs must use HTTPS (non-loopback http rejected)"
     status: allowed
     type: enhancement
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -583,7 +586,7 @@ behavior_differences:
     name: "Failed GET download no longer leaves an orphaned .part file"
     status: allowed
     type: bugfix
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     status_rationale: |
@@ -669,7 +672,7 @@ behavior_differences:
     name: "enable_crl_cache removed; CRL caches controlled by independent toggles"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -685,6 +688,7 @@ behavior_differences:
       `enable_crl_file_cache` → `crl_enable_disk_caching` (both default `True`).
       Callers who previously disabled caching via `enable_crl_cache=False` must
       set both toggles to `False` explicitly.
+
   44:
     name: "ReauthenticationRequest is not raised in MasterTokenExpired scenarios"
     status: fixed
@@ -711,25 +715,29 @@ behavior_differences:
     name: "Out-of-band (OOB) telemetry is not implemented"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
-      `TelemetryService` sends out-of-band telemetry events to Snowflake's
-      telemetry endpoint from a background thread. Snowpark uses this for usage
-      tracking and diagnostics.
+      `snowflake.connector.telemetry_oob.TelemetryService` is still importable.
+      `enabled` always returns `False`. `enable()` stores `False` as well, so
+      `add`, `flush`, and the log methods return without queueing an event.
+      No background thread is started, and the connector does not call this
+      service. `_upload_payload` can still POST to the telemetry URL, but only
+      if `enabled` were true. A comment on that POST marks the feature disabled
+      (`SNOW-2259522`).
     new_driver_behavior: |
-      The Universal Driver does not implement OOB telemetry at all -- the
-      `telemetry_oob` module and `TelemetryService` class do not exist;
+      The `telemetry_oob` module and `TelemetryService` class do not exist.
       `import snowflake.connector.telemetry_oob` raises `ModuleNotFoundError`.
     description: |
-      Telemetry OOB is disabled on the backend anyway; not planned for UD scope currently.
+      Neither driver sends out-of-band telemetry. The old driver keeps a
+      disabled client; the universal driver omits the module.
 
   46:
     name: "Azure EncryptionAgent.EncryptionAlgorithm stays 256; Python-Azure emits 128"
     status: allowed
     type: bugfix
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -758,7 +766,7 @@ behavior_differences:
     name: "CSE KeyWrappingMetadata.EncryptionLibrary: UD self-identifies as \"Rust(OpenSSL)\""
     status: allowed
     type: enhancement
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -781,7 +789,7 @@ behavior_differences:
     name: "Error exposes structured parameter and validation_code attributes on validation failures"
     status: allowed
     type: enhancement
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -831,8 +839,8 @@ behavior_differences:
     name: "fetch_pandas_all/fetch_pandas_batches: no pandas.concat kwarg routing"
     status: allowed
     type: api_incompatibility
-    reviewed: false
-    is_breaking_change: true
+    reviewed: true
+    is_breaking_change: false
     impact: low
     old_driver_behavior: |
       Legacy's `_fetch_pandas_all` (`result_set.py:268-280` in the legacy connector) fetches
@@ -862,6 +870,7 @@ behavior_differences:
       correctly. Only kwargs that are exclusively `pandas.concat`-specific remain
       unsupported, and only because the concat step itself doesn't exist in the new
       architecture.
+
   52:
     name: "login_timeout, network_timeout, and socket_timeout connection getters are now implemented"
     status: unknown
@@ -1038,7 +1047,7 @@ behavior_differences:
     name: "session_parameters values are coerced to str before the protobuf map (legacy allows any JSON-serializable value)"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -1083,7 +1092,7 @@ behavior_differences:
     name: "backoff_policy callable parameter removed; retry backoff now configured via typed retry_backoff_* parameters with different defaults"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -1103,7 +1112,7 @@ behavior_differences:
     name: "Application auto-detection overrides the default connection profile on bare connect()"
     status: allowed
     type: bugfix
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: medium
     old_driver_behavior: |
@@ -1150,8 +1159,8 @@ behavior_differences:
     name: "PUT resolves relative source paths to absolute canonical form before upload"
     status: allowed
     type: enhancement
-    reviewed: false
-    is_breaking_change: false
+    reviewed: true
+    is_breaking_change: true
     impact: medium
     status_rationale: |
       Aligns the universal driver with legacy JDBC's `file.getCanonicalPath()`. The legacy Python
@@ -1225,7 +1234,7 @@ behavior_differences:
     name: "disable_request_pooling property removed; connect() kwarg is a no-op"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -1247,7 +1256,7 @@ behavior_differences:
     name: "EXTERNALBROWSER no longer auto-reauthenticates on mid-session master-token expiry"
     status: todo
     type: bug
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: medium
     old_driver_behavior: |
@@ -1283,7 +1292,7 @@ behavior_differences:
     name: "display_size is populated for text columns; the old driver always returns None"
     status: allowed
     type: enhancement
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -1304,7 +1313,7 @@ behavior_differences:
     name: "Unrecognized qmark/numeric bind value raises with a different message, errno, and raise-point than the reference driver"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -1336,9 +1345,9 @@ behavior_differences:
 
   91:
     name: "connector.options module removed"
-    status: unknown
+    status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: medium
     old_driver_behavior: |
@@ -1366,8 +1375,8 @@ behavior_differences:
     name: "fetch_pandas_all/fetch_pandas_batches accept JSON result sets"
     status: allowed
     type: enhancement
-    reviewed: false
-    is_breaking_change: false
+    reviewed: true
+    is_breaking_change: true
     impact: medium
     old_driver_behavior: |
       `fetch_pandas_all()`/`fetch_pandas_batches()` and the `fetch_arrow_*` equivalents
@@ -1379,11 +1388,12 @@ behavior_differences:
     description: |
       The cursor-level counterpart of entry 18, which records the same capability on
       `ResultBatch`.
+
   93:
     name: "executemany() rewrite failure for a non-VALUES INSERT raises ProgrammingError instead of InterfaceError"
     status: allowed
     type: bugfix
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -1404,9 +1414,9 @@ behavior_differences:
 
   95:
     name: "put_get_max_attempts has no upper-bound clamp"
-    status: unknown
+    status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -1442,10 +1452,10 @@ behavior_differences:
 
   97:
     name: "client_store_temporary_credential defaults true"
-    status: unknown
+    status: allowed
     type: enhancement
-    reviewed: false
-    is_breaking_change: true
+    reviewed: true
+    is_breaking_change: false
     impact: medium
     old_driver_behavior: |
       The connection parameter defaults to false. External-browser login on macOS and
@@ -1464,10 +1474,10 @@ behavior_differences:
 
   98:
     name: "Unused, JSON-only, and internal connect kwargs dropped"
-    status: unknown
+    status: allowed
     type: api_incompatibility
-    reviewed: false
-    is_breaking_change: true
+    reviewed: true
+    is_breaking_change: false
     impact: low
     old_driver_behavior: |
       `dsn`, `session_id` (connect kwarg), `support_negative_year`,
@@ -1497,9 +1507,9 @@ behavior_differences:
 
   100:
     name: "password_callback connect parameter removed"
-    status: unknown
+    status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -1511,9 +1521,9 @@ behavior_differences:
 
   101:
     name: "iobound_tpe_limit connect parameter removed"
-    status: unknown
+    status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
@@ -1528,7 +1538,7 @@ behavior_differences:
     name: "GET result 'file' value for a multi-level stage subdirectory"
     status: allowed
     type: bugfix
-    reviewed: false
+    reviewed: true
     is_breaking_change: false
     impact: low
     old_driver_behavior: |
@@ -1550,7 +1560,7 @@ behavior_differences:
     name: "Removes converter_class parameter from SnowflakeConnection"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: medium
     old_driver_behavior: |
@@ -1570,16 +1580,16 @@ behavior_differences:
     name: "Removes OCSP support in favor of CRLs"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
-    impact: high
+    impact: medium
     old_driver_behavior: |
       Certificate revocation uses OCSP, controlled by parameters such as
       `ocsp_fail_open`, `ocsp_response_cache_filename`, and `insecure_mode`.
     new_driver_behavior: |
       OCSP is not implemented. Certificate revocation uses CRLs, configured via
       CRL parameters (`crl_check_mode`, `enable_crl_memory_cache`,
-      `enable_crl_file_cache`, etc.). OCSP-specific connection parameters are not accepted.
+      `enable_crl_file_cache`, etc.). OCSP-specific connection parameters are treated as unknown.
     description: |
       The new driver performs TLS revocation checking with CRL support shared
       across wrappers. OCSP was not ported; callers must migrate to CRL configuration.
@@ -1589,7 +1599,7 @@ behavior_differences:
     name: "Removes modules snowflake.connector.dbapi and snowflake.connector.auth (internal API)"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: medium
     old_driver_behavior: |
@@ -1610,8 +1620,8 @@ behavior_differences:
     name: "Deprecates HTTP and internal error classes retained only for import compatibility"
     status: allowed
     type: api_incompatibility
-    reviewed: false
-    is_breaking_change: true
+    reviewed: true
+    is_breaking_change: false
     impact: low
     old_driver_behavior: |
       Raises (or uses as internal retry/control-flow signals): `HttpError`,
@@ -1635,7 +1645,7 @@ behavior_differences:
     name: "Removes file-transfer and type-helper symbols from snowflake.connector.constants"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: medium
     old_driver_behavior: |
@@ -1659,7 +1669,7 @@ behavior_differences:
     name: "Removes DownloadMetrics, RemoteChunkInfo, and related symbols from result_batch"
     status: allowed
     type: api_incompatibility
-    reviewed: false
+    reviewed: true
     is_breaking_change: true
     impact: low
     old_driver_behavior: |
