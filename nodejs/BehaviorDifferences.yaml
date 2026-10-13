@@ -61,10 +61,6 @@ behavior_differences:
       difference. Tracked inline via index.ts's pre-existing "TODO: implement ConnectionOptions
       like in old driver" comment.
 
-      Following properties are support by connection config but were never types:
-      * protocol
-      * port
-
   3:
     name: 'fetchResult now inherits the connection-level rowMode default'
     status: allowed

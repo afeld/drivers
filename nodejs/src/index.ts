@@ -84,6 +84,18 @@ export type ConnectionOptions = Record<string, unknown> & {
    * Specifies a fully-qualified endpoint for connecting to Snowflake.
    */
   accessUrl?: string;
+  /**
+   * TCP port of the Snowflake endpoint. Used with `host` when {@link accessUrl}
+   * is not set.
+   */
+  port?: number | string;
+  /**
+   * Scheme of the Snowflake endpoint, `https` or `http`. Used with `host` when
+   * {@link accessUrl} is not set.
+   *
+   * @default "https"
+   */
+  protocol?: 'http' | 'https';
   workloadIdentityProvider?: 'AWS' | 'AZURE' | 'GCP' | 'OIDC';
   rowMode?: RowMode;
   fetchAsString?: DataType[];

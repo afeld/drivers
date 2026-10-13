@@ -67,6 +67,13 @@ describe('toCoreConnectionOptions', () => {
     });
   });
 
+  it('should stringify a numeric port for sf_core', () => {
+    expect(toCoreConnectionOptions({ port: 443, protocol: 'https' })).toEqual({
+      port: '443',
+      protocol: 'https',
+    });
+  });
+
   it('should map certRevocationCheckMode onto crl_check_mode', () => {
     expect(toCoreConnectionOptions({ certRevocationCheckMode: 'ENABLED' })).toEqual({
       crl_check_mode: 'ENABLED',
