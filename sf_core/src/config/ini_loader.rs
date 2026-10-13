@@ -1,7 +1,7 @@
 //! The wrapper crate supplies an ordered list of candidate paths and calls
-//! [`load_ini_files`]; the first existing file wins, its top-level
-//! `key = value` pairs are normalised to lowercase keys, and the result is
-//! cached in a process-wide [`OnceLock`]. Subsystem extractors (logging today,
+//! [`load_ini_files`]; the first candidate that is a regular file wins, its
+//! top-level `key = value` pairs are normalised to lowercase keys, and the
+//! result is cached in a process-wide [`OnceLock`]. Subsystem extractors (logging today,
 //! others later) then read the snapshot via [`get_ini_config`] and project
 //! the entries they care about into their own typed configs.
 //!
@@ -61,14 +61,16 @@ impl IniConfig {
 
 static INI_CONFIG: OnceLock<IniConfig> = OnceLock::new();
 
-/// Load `sf.odbc.ini` from the first existing path in `paths` and cache the
+/// Load `sf.odbc.ini` from the first regular file in `paths` and cache the
 /// resulting snapshot in the process-wide [`OnceLock`].
 ///
-/// `paths` is walked in order. The first path that exists on disk is
+/// `paths` is walked in order. The first candidate that is a regular file is
 /// permission-checked, parsed, and used to seed the snapshot; remaining
-/// paths are ignored. If no candidate exists, an empty [`IniConfig`] is
-/// still cached so subsequent [`get_ini_config`] calls return
-/// `Some(&default)`.
+/// paths are ignored. A candidate that is not a regular file (missing, or a
+/// directory) is skipped, so a `SF_ODBC_INI` pointing at a directory does not
+/// hide the per-user `sf.odbc.ini` later in the list. If no candidate is a
+/// regular file, an empty [`IniConfig`] is still cached so subsequent
+/// [`get_ini_config`] calls return `Some(&default)`.
 ///
 /// The first successful call wins. Subsequent calls return
 /// [`ConfigError::IniAlreadyLoaded`] without modifying the global; callers
@@ -86,7 +88,7 @@ pub fn load_ini_files(paths: &[PathBuf]) -> Result<(), ConfigError> {
 
 fn read_first_existing(paths: &[PathBuf]) -> Result<IniConfig, ConfigError> {
     for path in paths {
-        if !path.exists() {
+        if !path.is_file() {
             continue;
         }
         super::toml_loader::check_file_permissions(
@@ -186,6 +188,35 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let ini =
             read_first_existing(&[dir.path().join("a.ini"), dir.path().join("b.ini")]).unwrap();
+        assert!(ini.iter().next().is_none());
+        assert!(ini.source().is_none());
+    }
+
+    #[test]
+    fn read_first_existing_skips_directory_candidate_and_reads_next_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let as_dir = dir.path().join("sf.odbc.ini");
+        std::fs::create_dir(&as_dir).unwrap();
+        let real = dir.path().join("real.ini");
+        std::fs::write(&real, "LogLevel=DEBUG\n").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&real, std::fs::Permissions::from_mode(0o600)).unwrap();
+        }
+
+        let ini = read_first_existing(&[as_dir, real.clone()]).unwrap();
+        assert_eq!(ini.get("loglevel"), Some("DEBUG"));
+        assert_eq!(ini.source(), Some(real.as_path()));
+    }
+
+    #[test]
+    fn read_first_existing_directory_only_candidate_returns_default_snapshot() {
+        let dir = tempfile::tempdir().unwrap();
+        let as_dir = dir.path().join("sf.odbc.ini");
+        std::fs::create_dir(&as_dir).unwrap();
+
+        let ini = read_first_existing(&[as_dir]).unwrap();
         assert!(ini.iter().next().is_none());
         assert!(ini.source().is_none());
     }

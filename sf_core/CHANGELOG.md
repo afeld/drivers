@@ -73,6 +73,7 @@ Bug fixes:
 
 - Fixed PAT_WITH_EXTERNAL_SESSION connections always failing `connection_heartbeat` / `isValid` checks because the driver sent a Snowflake session-token heartbeat instead of `Authorization: Bearer` and `X-Snowflake-External-Session-ID`. (snowflakedb/drivers#2600)
 - Fixed Python `cursor.executemany()` so it accepts `num_statements` and applies that count to each statement, matching the v4 driver. (snowflakedb/drivers#2541)
+- Fixed `sf.odbc.ini` discovery treating a candidate path that is a directory (or otherwise not a regular file) as a match and aborting the search, instead of skipping it and trying the next candidate; a `SF_ODBC_INI` pointing at a directory no longer hides the standard per-user `sf.odbc.ini`. (snowflakedb/drivers#2591)
 - Fixed JDBC I/O errors so a failed stage upload, a failed stage download, a full local disk during a transfer, and a network failure each report the vendor code and SQLState the previous JDBC driver uses for that failure. A disabled file transfer still reports no vendor code. (snowflakedb/drivers#2507)
 - Improved configuration errors for PAT with external session so an invalid `external_session_id` is reported without echoing the supplied identifier. (snowflakedb/drivers#1996)
 - Fixed Python `cursor.description` reporting GEOGRAPHY and GEOMETRY columns as OBJECT when the server sent those names in a separate extended type field. (snowflakedb/drivers#2326)
