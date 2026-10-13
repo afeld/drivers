@@ -352,4 +352,26 @@ class SnowflakeColumnMetadataTest {
     assertEquals(Types.BIGINT, asInt.getType());
     assertEquals(Types.DECIMAL, asDecimal.getType());
   }
+
+  @Test
+  void shouldCopyProtoFixedFlagOntoColumnMetadata() {
+    ColumnMetadata fixedCol =
+        ColumnMetadata.newBuilder()
+            .setName("id_col")
+            .setType("fixed")
+            .setScale(0)
+            .setFixed(true)
+            .build();
+    ColumnMetadata unfixedCol =
+        ColumnMetadata.newBuilder()
+            .setName("id_col")
+            .setType("fixed")
+            .setScale(0)
+            .setFixed(false)
+            .build();
+
+    assertTrue(new SnowflakeColumnMetadata(fixedCol, true).isFixed());
+    assertTrue(new SnowflakeColumnMetadata(fixedCol, false).isFixed());
+    assertFalse(new SnowflakeColumnMetadata(unfixedCol, true).isFixed());
+  }
 }
