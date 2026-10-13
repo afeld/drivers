@@ -4,6 +4,11 @@
 CTest ``--repeat until-pass:N --output-junit`` keeps only the last attempt.
 The verbose log still lists every Failed/Passed line, so we reconstruct retry
 history and write Surefire-style children the dashboard parser already reads.
+
+CTest also writes ``<failure message="Failed"/>`` with no body and keeps the
+test output only in ``<system-out>``. The Catch2 failure section of that
+output is copied into the ``<failure>`` text, and its first assertion line
+replaces the generic message.
 """
 
 from __future__ import annotations
@@ -21,6 +26,10 @@ TEST_LINE = re.compile(
 )
 
 FAILED = {"failed", "timeout", "exception"}
+
+CATCH2_FAILED_LINE = re.compile(r"^.*:\d+: FAILED:.*$", re.MULTILINE)
+FAILURE_TEXT_LIMIT = 8000
+FAILURE_MESSAGE_LIMIT = 500
 
 
 def parse_attempts(log_text: str) -> dict[str, list[str]]:
@@ -41,12 +50,39 @@ def _testcase_name(case: ET.Element) -> str:
     return name or classname
 
 
+def _failure_details(output: str) -> tuple[str, str | None]:
+    match = CATCH2_FAILED_LINE.search(output)
+    if match is None:
+        return output[-FAILURE_TEXT_LIMIT:], None
+    text = output[match.start() :][:FAILURE_TEXT_LIMIT]
+    summary = match.group(0).strip()
+    for line in text.splitlines()[1:]:
+        if line[:1].isspace() and line.strip():
+            summary = f"{summary} {line.strip()}"
+            break
+    return text, summary[:FAILURE_MESSAGE_LIMIT]
+
+
+def _attach_failure_output(case: ET.Element) -> None:
+    failure = case.find("failure")
+    if failure is None or (failure.text or "").strip():
+        return
+    output = (case.findtext("system-out") or "").strip()
+    if not output:
+        return
+    text, summary = _failure_details(output)
+    failure.text = text
+    if summary and failure.get("message", "Failed") == "Failed":
+        failure.set("message", summary)
+
+
 def annotate(junit_xml: str, attempts: dict[str, list[str]]) -> str:
     root = ET.fromstring(junit_xml)
     suites = root.findall(".//testcase")
     if root.tag == "testcase":
         suites = [root]
     for case in suites:
+        _attach_failure_output(case)
         key = _testcase_name(case)
         history = attempts.get(key) or attempts.get(case.get("name") or "")
         if not history or len(history) < 2:

@@ -104,7 +104,8 @@ public class SnowflakeTestCaseRunner : XunitTestCaseRunnerBase<SnowflakeCaseRunn
         var classname = ctxt.TestCase.TestClassName ?? "unknown";
         var name = test.TestDisplayName;
         var time = result.Time;
-        var skipped = bus.Messages.OfType<ITestSkipped>().Any();
+        var skippedMessage = bus.Messages.OfType<ITestSkipped>().LastOrDefault();
+        var skipped = skippedMessage is not null;
         var failed = FailureFrom(bus);
 
         JunitRetryXml.CaseStatus status;
@@ -115,7 +116,7 @@ public class SnowflakeTestCaseRunner : XunitTestCaseRunnerBase<SnowflakeCaseRunn
         else
             status = JunitRetryXml.CaseStatus.Passed;
 
-        JunitRetryXml.Record(classname, name, time, status, priorFailures, failed);
+        JunitRetryXml.Record(classname, name, time, status, priorFailures, failed, skippedMessage?.Reason);
     }
 
     private static JunitRetryXml.AttemptFailure? FailureFrom(SnowflakeDelayedMessageBus bus)

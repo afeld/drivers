@@ -9,6 +9,7 @@ from __future__ import annotations
 import importlib.util
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,6 +69,57 @@ class AnnotateCtestJunitRetriesTests(unittest.TestCase):
         xml = self.mod.annotate(junit, self.mod.parse_attempts(log))
         self.assertNotIn("flakyFailure", xml)
         self.assertNotIn("rerunFailure", xml)
+
+    def test_failure_gets_catch2_failure_section_from_system_out(self) -> None:
+        junit = """<testsuite>
+  <testcase name="t: c" classname="t: c" time="1" status="fail">
+    <failure message="Failed" />
+    <system-out>Filters: "c"
+../tests/t.cpp:10: warning:
+  retrying
+
+../tests/t.cpp:20: FAILED:
+  REQUIRE( ret == SQL_SUCCESS )
+with expansion:
+  -1 == 0
+</system-out>
+  </testcase>
+</testsuite>"""
+        root = ET.fromstring(self.mod.annotate(junit, {}))
+        failure = root.find(".//failure")
+        assert failure is not None
+        self.assertEqual(
+            failure.get("message"),
+            "../tests/t.cpp:20: FAILED: REQUIRE( ret == SQL_SUCCESS )",
+        )
+        self.assertTrue(failure.text.startswith("../tests/t.cpp:20: FAILED:"))
+        self.assertIn("-1 == 0", failure.text)
+        self.assertNotIn("retrying", failure.text)
+        self.assertIn("retrying", root.findtext(".//system-out"))
+
+    def test_failure_without_catch2_marker_gets_truncated_output_tail(self) -> None:
+        output = "x" * (self.mod.FAILURE_TEXT_LIMIT + 100) + "segfault"
+        junit = (
+            '<testsuite><testcase name="a" classname="a" status="fail">'
+            f'<failure message="Failed"/><system-out>{output}</system-out>'
+            "</testcase></testsuite>"
+        )
+        failure = ET.fromstring(self.mod.annotate(junit, {})).find(".//failure")
+        assert failure is not None
+        self.assertEqual(failure.get("message"), "Failed")
+        self.assertEqual(len(failure.text), self.mod.FAILURE_TEXT_LIMIT)
+        self.assertTrue(failure.text.endswith("segfault"))
+
+    def test_failure_with_existing_text_is_unchanged(self) -> None:
+        junit = (
+            '<testsuite><testcase name="a" classname="a">'
+            '<failure message="Timeout">kept</failure><system-out>../t.cpp:1: FAILED:</system-out>'
+            "</testcase></testsuite>"
+        )
+        failure = ET.fromstring(self.mod.annotate(junit, {})).find(".//failure")
+        assert failure is not None
+        self.assertEqual(failure.text, "kept")
+        self.assertEqual(failure.get("message"), "Timeout")
 
     def test_cli_rewrites_file(self) -> None:
         log = "1/1 Test #1: a: b .....................***Failed  0.1 sec\n1/1 Test #1: a: b .....................   Passed  0.1 sec\n"

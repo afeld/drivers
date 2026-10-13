@@ -677,8 +677,20 @@ jobs:
           TEST_CLOUD_PROVIDER: ${{ matrix.cloud_provider }}
         run: |
           export PARAMETER_PATH=$(pwd)/parameters.json
+          # The nextest store (target/nextest) is under the cached target/ tree, so a
+          # JUnit restored from cache would be uploaded if this run never reaches nextest.
+          rm -f target/nextest/ci/junit.xml
           cargo llvm-cov --locked --no-report --package sf_core ${{ matrix.cargo_flags }} \
             nextest --profile ci --no-fail-fast
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-core-tests-${{ matrix.name }}-${{ matrix.cloud_provider }}
+          path: target/nextest/ci/junit.xml
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Run flaky tests (non-blocking)
         continue-on-error: true

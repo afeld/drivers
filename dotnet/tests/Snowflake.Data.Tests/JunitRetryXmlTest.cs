@@ -70,6 +70,21 @@ public sealed class JunitRetryXmlTest
         Assert.Contains("<testcase", xml);
     }
 
+    [SnowflakeFact(RetriesCount = RetriesCount.NoRetries)]
+    public void SkippedCaseCarriesSkipReason()
+    {
+        var xml = JunitRetryXml.RenderCase(
+            "Cls",
+            "skip",
+            0m,
+            JunitRetryXml.CaseStatus.Skipped,
+            [],
+            finalFailure: null,
+            skipReason: "SNOW-123 until 2026-12-31");
+
+        Assert.Contains("<skipped message=\"SNOW-123 until 2026-12-31\"", xml);
+    }
+
     private static int Count(string haystack, string needle)
     {
         var n = 0;

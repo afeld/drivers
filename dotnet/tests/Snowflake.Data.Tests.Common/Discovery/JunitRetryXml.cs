@@ -51,13 +51,14 @@ public static class JunitRetryXml
         decimal timeSeconds,
         CaseStatus status,
         IReadOnlyList<AttemptFailure> priorFailures,
-        AttemptFailure? finalFailure)
+        AttemptFailure? finalFailure,
+        string? skipReason = null)
     {
         if (OutputPath is null)
             return;
 
         var key = classname + "::" + name;
-        Cases[key] = RenderCase(classname, name, timeSeconds, status, priorFailures, finalFailure);
+        Cases[key] = RenderCase(classname, name, timeSeconds, status, priorFailures, finalFailure, skipReason);
         Flush();
     }
 
@@ -77,7 +78,8 @@ public static class JunitRetryXml
         decimal timeSeconds,
         CaseStatus status,
         IReadOnlyList<AttemptFailure> priorFailures,
-        AttemptFailure? finalFailure)
+        AttemptFailure? finalFailure,
+        string? skipReason = null)
     {
         var sb = new StringBuilder();
         using var writer = XmlWriter.Create(sb, new XmlWriterSettings
@@ -95,6 +97,8 @@ public static class JunitRetryXml
         {
             case CaseStatus.Skipped:
                 writer.WriteStartElement("skipped");
+                if (!string.IsNullOrEmpty(skipReason))
+                    writer.WriteAttributeString("message", Truncate(skipReason));
                 writer.WriteEndElement();
                 break;
             case CaseStatus.Failed:

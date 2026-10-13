@@ -180,13 +180,14 @@ jobs:
           GRADLE_TEST_RETRY_COUNT: '2'
 
       - name: Upload NEW driver test results
-        if: always() && matrix.result_format == 'default'
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: jdbc-tests-artifacts-java${{ matrix.java-version }}-${{ matrix.cloud }}
+          name: jdbc-tests-artifacts-java${{ matrix.java-version }}-${{ matrix.cloud }}${{ matrix.result_format != 'default' && format('-{0}', matrix.result_format) || '' }}
           path: |
             jdbc/build/test-results/test/**/*.xml
           if-no-files-found: error
+          retention-days: 14
 
       - name: Upload NEW driver coverage (primary Linux cell)
         if: always() && matrix.java-version == '21' && matrix.cloud == 'aws' && matrix.result_format == 'default'
