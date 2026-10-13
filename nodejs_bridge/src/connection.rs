@@ -54,12 +54,8 @@ impl Connection {
             no_connection_details,
         } = params;
         let database_handle = BRIDGE.driver.database_new();
-        BRIDGE.driver.database_init(database_handle).map_err(|e| {
-            let _ = BRIDGE.driver.database_release(database_handle);
-            e.to_js_error(*env)
-        })?;
-
         let conn_handle = BRIDGE.driver.connection_new();
+        let session = Session::new(conn_handle, database_handle);
 
         // TODO: temporary conversion, proper options mapping will be done later
         let mut converted_options: HashMap<String, Setting> = options
@@ -93,6 +89,7 @@ impl Connection {
             .transpose()?;
 
         block_on(async {
+            BRIDGE.driver.database_init(database_handle)?;
             BRIDGE
                 .driver
                 .connection_set_options(
@@ -144,15 +141,9 @@ impl Connection {
 
             Ok::<_, ApiError>(())
         })
-        .map_err(|e| {
-            let _ = BRIDGE.driver.connection_release(conn_handle);
-            let _ = BRIDGE.driver.database_release(database_handle);
-            e.to_js_error(*env)
-        })?;
+        .map_err(|e| e.to_js_error(*env))?;
 
-        Ok(Self {
-            session: Session::new(conn_handle, database_handle),
-        })
+        Ok(Self { session })
     }
 
     #[napi]
