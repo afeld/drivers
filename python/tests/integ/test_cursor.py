@@ -14,7 +14,7 @@ import pytest
 from snowflake.connector.constants import FIELD_ID_TO_NAME
 from snowflake.connector.cursor import QueryResultStats, ResultMetadata, ResultMetadataV2, SnowflakeCursor
 from snowflake.connector.errors import InterfaceError, ProgrammingError
-from tests.compatibility import NEW_DRIVER_ONLY, is_new_driver
+from tests.compatibility import NEW_DRIVER_ONLY, is_new_driver, is_old_driver
 from tests.conftest import run_against_sync_and_async, skip_async, with_paramstyle
 from tests.e2e.types.utils import assert_sequential_values
 
@@ -2745,11 +2745,7 @@ def test_connect_kwarg_enables_unescape(connection_factory):
 
 
 def _as_request_id_str(request_id: object) -> str:
-    """Normalize a ``_request_id`` to its canonical string form.
-
-    Legacy exposes a ``uuid.UUID`` object where UD exposes a ``str`` (BD#56), so tests
-    that UUID-parse or compare the value work from the string form to hold on both.
-    """
+    """Return the canonical hyphenated form of a ``uuid.UUID`` request id."""
     return str(request_id)
 
 
@@ -2766,16 +2762,16 @@ class TestRequestIdIsolation:
         assert cursor._request_id is None
 
     def test_request_id_is_populated_after_execute(self, cursor):
-        """_request_id is a valid UUID after a simple execute, in each driver's type (BD#56)."""
+        """_request_id is a uuid.UUID after a simple execute."""
         cursor.execute("SELECT 1")
-        assert cursor._request_id is not None
+        assert isinstance(cursor._request_id, uuid.UUID)
 
-        if NEW_DRIVER_ONLY("BD#56"):
-            assert isinstance(cursor._request_id, str)
-        else:
-            assert isinstance(cursor._request_id, uuid.UUID)
-
-        uuid.UUID(_as_request_id_str(cursor._request_id))  # raises ValueError if malformed
+    @pytest.mark.skipif(is_old_driver(), reason="Cursor.request_id is a new-driver property")
+    def test_request_id_after_execute(self, cursor):
+        # The other request-id cases in this class are covered by the `_request_id` tests.
+        cursor.execute("SELECT 1")
+        assert isinstance(cursor.request_id, uuid.UUID)
+        assert cursor.request_id == cursor._request_id
 
     def test_request_id_distinct_from_sfqid(self, cursor):
         """_request_id must not equal sfqid — they are different ID spaces."""
@@ -2812,13 +2808,10 @@ class TestRequestIdIsolation:
             futures = [pool.submit(run_cursor, i) for i in range(self.N_CURSORS)]
             results = [f.result() for f in as_completed(futures)]
 
-        request_ids = [_as_request_id_str(r[0]) for r in results if r[0] is not None]
-        sfqids = [r[1] for r in results]
-
-        # Every cursor must have produced a valid UUID request_id.
-        assert len(request_ids) == self.N_CURSORS, "request_id should not be None after execute"
-        for rid in request_ids:
-            uuid.UUID(rid)  # raises ValueError if not a valid UUID
+        assert len(results) == self.N_CURSORS
+        assert all(isinstance(request_id, uuid.UUID) for request_id, _sfqid in results)
+        request_ids = [str(request_id) for request_id, _sfqid in results]
+        sfqids = [sfqid for _request_id, sfqid in results]
 
         # All N request_ids must be distinct (no cross-cursor contamination).
         assert len(set(request_ids)) == self.N_CURSORS, (
@@ -2860,10 +2853,8 @@ class TestRequestIdIsolation:
         """execute_async sets _request_id from StatementExecuteAsyncResponse."""
         with connection.cursor() as cursor:
             cursor.execute_async("SELECT 1")
-            assert cursor._request_id is not None, "_request_id must be set after execute_async"
-            request_id = _as_request_id_str(cursor._request_id)
-            uuid.UUID(request_id)  # raises ValueError if not a valid UUID
-            assert request_id != cursor.sfqid, "_request_id and sfqid must be different identifiers"
+            assert isinstance(cursor._request_id, uuid.UUID)
+            assert str(cursor._request_id) != cursor.sfqid
 
     def test_request_id_survives_nextset(self, cursor):
         """Every child statement of a multi-statement query reports the submission's _request_id.

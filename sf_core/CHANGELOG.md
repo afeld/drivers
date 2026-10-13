@@ -71,6 +71,7 @@ Changes:
 
 Bug fixes:
 
+- Fixed Python `Cursor.request_id` to return a `uuid.UUID` when a request id is present and `None` otherwise. `Cursor._request_id` returns that same value and warns on use. (snowflakedb/drivers#2594)
 - Fixed PAT_WITH_EXTERNAL_SESSION connections always failing `connection_heartbeat` / `isValid` checks because the driver sent a Snowflake session-token heartbeat instead of `Authorization: Bearer` and `X-Snowflake-External-Session-ID`. (snowflakedb/drivers#2600)
 - Fixed Python `cursor.executemany()` so it accepts `num_statements` and applies that count to each statement, matching the v4 driver. (snowflakedb/drivers#2541)
 - Fixed `sf.odbc.ini` discovery treating a candidate path that is a directory (or otherwise not a regular file) as a match and aborting the search, instead of skipping it and trying the next candidate; a `SF_ODBC_INI` pointing at a directory no longer hides the standard per-user `sf.odbc.ini`. (snowflakedb/drivers#2591)

@@ -6,6 +6,7 @@ import asyncio
 import ctypes
 import io
 import json
+import uuid
 
 from decimal import Decimal
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
@@ -1014,8 +1015,8 @@ class TestSfqidOnFailedQuery:
         # Both IDs must be visible in the formatted message so users can share it with support.
         assert request_id in msg, f"expected request_id in error message: {msg!r}"
         assert sfqid in msg, f"expected sfqid in error message: {msg!r}"
-        # And mirrored on the cursor.
-        assert cursor.request_id == error.request_id
+        assert cursor.request_id == uuid.UUID(request_id)
+        assert str(cursor.request_id) == error.request_id
         assert cursor.sfqid == error.sfqid
 
     def test_request_id_none_when_error_has_no_request_id(self, cursor, mock_core_client):
@@ -2290,7 +2291,10 @@ class TestDescribe:
 
         cursor.describe("SELECT 1")
 
-        assert cursor._request_id == "550e8400-e29b-41d4-a716-446655440000"
+        expected = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
+        assert cursor.request_id == expected
+        assert cursor._request_id == cursor.request_id
+        assert str(cursor.request_id) == "550e8400-e29b-41d4-a716-446655440000"
 
     def test_describe_forwards_parameters_as_bindings(self, cursor, mock_connection, mock_core_client):
         """describe() forwards bind parameters to statement_prepare instead of dropping them.
@@ -3644,26 +3648,48 @@ class TestRequestId:
 
     def test_request_id_is_none_before_execute(self, cursor):
         assert cursor._request_id is None
+        assert cursor.request_id is None
 
     def test_request_id_delegates_to_query_result(self, cursor):
-        cursor._query_result.request_id = "550e8400-e29b-41d4-a716-446655440000"
-        assert cursor._request_id == "550e8400-e29b-41d4-a716-446655440000"
+        request_id = "550e8400-e29b-41d4-a716-446655440000"
+        cursor._query_result.request_id = request_id
+        assert isinstance(cursor.request_id, uuid.UUID)
+        assert cursor._request_id == cursor.request_id
+        assert str(cursor.request_id) == request_id
+
+    def test_request_id_round_trips_non_version_4(self, cursor):
+        request_id = "550e8400-e29b-11d4-a716-446655440000"
+        cursor._query_result.request_id = request_id
+        assert cursor.request_id == uuid.UUID(request_id)
+        assert cursor.request_id.version == 1
+        assert str(cursor.request_id) == request_id
+        assert cursor._request_id == cursor.request_id
+
+    def test_request_id_empty_string_is_none(self, cursor):
+        cursor._query_result.request_id = ""
+        assert cursor.request_id is None
+        assert cursor._request_id is None
 
     def test_request_id_property_does_not_alias_sfqid(self, cursor):
         cursor._query_result.request_id = "aaaaaaaa-0000-4000-8000-000000000001"
         cursor._query_result.sfqid = "bbbbbbbb-0000-4000-8000-000000000002"
-        assert cursor._request_id != cursor.sfqid
-        assert cursor._request_id == "aaaaaaaa-0000-4000-8000-000000000001"
+        assert str(cursor.request_id) != cursor.sfqid
+        assert cursor.request_id == uuid.UUID("aaaaaaaa-0000-4000-8000-000000000001")
+        assert cursor._request_id == cursor.request_id
         assert cursor.sfqid == "bbbbbbbb-0000-4000-8000-000000000002"
 
     def test_request_id_cleared_to_none_when_query_result_reset(self, cursor):
         cursor._query_result.request_id = "some-uuid"
         cursor._query_result = QueryResult()
+        assert cursor.request_id is None
         assert cursor._request_id is None
 
     def test_async_cursor_request_id_delegates_to_query_result(self, async_cursor):
-        async_cursor._query_result.request_id = "550e8400-e29b-41d4-a716-446655440000"
-        assert async_cursor._request_id == "550e8400-e29b-41d4-a716-446655440000"
+        request_id = "550e8400-e29b-41d4-a716-446655440000"
+        async_cursor._query_result.request_id = request_id
+        assert isinstance(async_cursor.request_id, uuid.UUID)
+        assert async_cursor._request_id == async_cursor.request_id
+        assert str(async_cursor.request_id) == request_id
 
 
 class TestDescribeInternal:
@@ -3790,7 +3816,10 @@ class TestDescribeInternal:
 
         cursor._describe_internal("SELECT 1")
 
-        assert cursor._request_id == "550e8400-e29b-41d4-a716-446655440000"
+        expected = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
+        assert cursor.request_id == expected
+        assert cursor._request_id == cursor.request_id
+        assert str(cursor.request_id) == "550e8400-e29b-41d4-a716-446655440000"
 
     def test_params_alias_forwarded_to_prepare_query(self, cursor, mock_core_client):
         """`params=` is the Snowpark alias for `parameters=`; _resolve_alias forwards it."""

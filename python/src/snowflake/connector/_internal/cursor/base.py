@@ -5,6 +5,7 @@ from __future__ import annotations
 import abc
 import ctypes
 import re
+import uuid
 import warnings
 
 from collections.abc import Callable, Sequence
@@ -193,20 +194,22 @@ class CursorBaseMixin(ErrorHandlerMixin, abc.ABC):
 
     @property
     @api_telemetry
-    def request_id(self) -> str | None:
+    def request_id(self) -> uuid.UUID | None:
         """
         Read-only attribute containing the client-generated ``requestId`` of the last query submission.
 
         Returns:
-            str | None: Client request UUID, or None when unavailable.
+            uuid.UUID | None: Client request id, or None when unavailable.
         """
-        return self._query_result.request_id
+        value = self._query_result.request_id
+        if not value:
+            return None
+        return uuid.UUID(value)
 
     @property
     @snowpark_compat
     @backward_compatibility(recommendation="Use the public `request_id` property instead.")
-    def _request_id(self) -> str | None:
-        """Private alias of :attr:`request_id`, kept for Snowpark's expected attribute name."""
+    def _request_id(self) -> uuid.UUID | None:
         return self.request_id
 
     @property

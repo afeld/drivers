@@ -213,15 +213,13 @@ class TestErrorAttributes:
 
     @pytest.mark.skipif(is_old_driver(), reason="request_id on errors is a new-driver feature")
     def test_error_exposes_request_id(self, cursor):
-        """Test that a failed query surfaces the client-generated request_id as a UUID."""
+        """A failed query puts the client request id on the error as a string and on the cursor as a uuid.UUID."""
         with pytest.raises(Error) as excinfo:
             cursor.execute("SELEC 1")
         error = excinfo.value
         assert error.request_id, "expected a request_id on the query error"
-        # request_id is a client-generated UUID v4.
-        uuid.UUID(error.request_id)
-        # It also lands on the cursor and is distinct from the server query id.
-        assert cursor.request_id == error.request_id
+        assert cursor._request_id == uuid.UUID(error.request_id)
+        assert str(cursor._request_id) == error.request_id
         assert error.request_id != error.sfqid
 
     @pytest.mark.skipif(is_old_driver(), reason="new-driver sfqid-on-error contract")
