@@ -40,6 +40,7 @@ const CONNECTION_OPTION_ALIASES: Record<string, string> = {
   clientSessionKeepAlive: 'CLIENT_SESSION_KEEP_ALIVE',
   clientSessionKeepAliveHeartbeatFrequency: 'CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY',
   serverSessionKeepAlive: 'server_session_keep_alive',
+  disableQueryContextCache: 'disable_query_context_cache',
   certRevocationCheckMode: 'crl_check_mode',
   crlAllowCertificatesWithoutCrlURL: 'crl_allow_certificates_without_crl_url',
   crlInMemoryCache: 'crl_enable_memory_caching',

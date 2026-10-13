@@ -98,6 +98,12 @@ describe('toCoreConnectionOptions', () => {
     });
   });
 
+  it('should map disableQueryContextCache onto disable_query_context_cache', () => {
+    expect(toCoreConnectionOptions({ disableQueryContextCache: true })).toEqual({
+      disable_query_context_cache: 'true',
+    });
+  });
+
   it('should convert browserActionTimeout milliseconds to seconds', () => {
     expect(toCoreConnectionOptions({ browserActionTimeout: 120000 })).toEqual({
       browserActionTimeout: '120',

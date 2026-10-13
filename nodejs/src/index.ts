@@ -178,6 +178,14 @@ export type ConnectionOptions = Record<string, unknown> & {
   serverSessionKeepAlive?: boolean;
 
   /**
+   * When true, the driver does not keep a client-side query context cache.
+   * No context is sent on requests, and context returned by the server is ignored.
+   *
+   * @default false
+   */
+  disableQueryContextCache?: boolean;
+
+  /**
    * Enables Certificate Revocation List (CRL) validation.
    *
    * When `ENABLED` is set, it fails if the certificate is revoked or if any error occurs (network, parsing, etc.).
