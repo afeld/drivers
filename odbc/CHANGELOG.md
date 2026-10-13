@@ -18,6 +18,7 @@ Bug fixes:
 - Fixed `SQLColAttribute` to report `ARRAY`/`STRUCT`/`VARIANT` for `SQL_DESC_TYPE_NAME` and `SQL_DESC_LOCAL_TYPE_NAME` instead of always returning `VARCHAR`. (snowflakedb/drivers#2490)
 - Fixed query-result `SQL_DESC_TYPE_NAME` so `TIMESTAMP_NTZ`, `TIMESTAMP_LTZ`, and `TIMESTAMP_TZ` are reported separately. `SQLDescribeCol` stays `SQL_TYPE_TIMESTAMP` (93). (snowflakedb/drivers#2444)
 - Fixed `SQLBindParameter` and IPD `SQLSetDescRec` to return SQLSTATE `HYC00` (optional feature not implemented) for the Snowflake vendor type codes that `SQLGetTypeInfo` reports but the driver cannot bind: `SQL_SF_ARRAY`, `SQL_SF_OBJECT`, `SQL_SF_VARIANT`, and `SQL_SF_VECTOR`. `SQLBindParameter` previously returned `HY004`; IPD `SQLSetDescRec` previously returned `HY021`. Bind semi-structured values as `SQL_VARCHAR` and coerce in the SQL with `PARSE_JSON(?)`, `TO_ARRAY(?)`, or `TO_OBJECT(?)`. A type code the catalog does not report still returns `HY004` from `SQLBindParameter`. (snowflakedb/drivers#2369)
+- Redacted credentials embedded in URL-typed connection parameters (proxy, server URL, OAuth/WIF endpoint URIs, and authenticator) in ODBC connection-parameter log output, including scheme-bearing values with a colon and no `@` unless the authority is a dotted host or bracketed IPv6 with a numeric port; query strings and fragments are also stripped from those parameters. (snowflakedb/drivers#1848)
 
 ## v4.0.0
 

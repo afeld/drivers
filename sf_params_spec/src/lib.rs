@@ -382,6 +382,21 @@ pub enum ParamScope {
     Statement,
 }
 
+/// The semantic type of a parameter's value, used for targeted log sanitization.
+///
+/// `Unspecified` — the value is a plain string and is either fully shown or
+/// fully masked based on [`ParamDef::sensitive`].
+///
+/// `Url` — the value is expected to be a URL (or schemeless authority). The
+/// logger keeps scheme, username, host, port, and path while masking any
+/// embedded password and stripping query strings and fragments.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum LogicalType {
+    #[default]
+    Unspecified,
+    Url,
+}
+
 /// Identity of a language/protocol wrapper that talks to core.
 ///
 /// Used by [`Alias`] scoping and [`ParamRegistry::resolve_for`] so the same
@@ -569,6 +584,9 @@ pub struct ParamDef {
     /// [`ParamRegistry::is_known`] still returns true for every canonical.
     pub visible_to: VisibleTo,
 
+    /// Semantic type of the parameter's value, used for log sanitization.
+    pub logical_type: LogicalType,
+
     /// When true, wrappers drop the key during option normalization. The
     /// parameter is registered so it is not an unknown session parameter, and
     /// its value is not applied.
@@ -637,6 +655,7 @@ impl ParamDef {
             default: None,
             deprecated: None,
             visible_to: VisibleTo::All,
+            logical_type: LogicalType::Unspecified,
             ignored: false,
         }
     }
@@ -709,6 +728,7 @@ pub struct ParamDefBuilder {
     default: Option<DefaultValue>,
     deprecated: Option<Deprecation>,
     visible_to: VisibleTo,
+    logical_type: LogicalType,
     ignored: bool,
 }
 
@@ -788,6 +808,11 @@ impl ParamDefBuilder {
         self
     }
 
+    pub const fn logical_type(mut self, value: LogicalType) -> Self {
+        self.logical_type = value;
+        self
+    }
+
     pub const fn ignored(mut self, value: bool) -> Self {
         self.ignored = value;
         self
@@ -833,6 +858,7 @@ impl ParamDefBuilder {
             default: self.default,
             deprecated: self.deprecated,
             visible_to: self.visible_to,
+            logical_type: self.logical_type,
             ignored: self.ignored,
         }
     }
@@ -906,6 +932,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .logical_type(LogicalType::Url)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::PRESERVE_UNDERSCORES_IN_HOSTNAME.as_str())
@@ -958,6 +985,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .logical_type(LogicalType::Url)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::PRIVATE_KEY.as_str())
@@ -1313,6 +1341,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .logical_type(LogicalType::Url)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::OAUTH_TOKEN_REQUEST_URL.as_str())
@@ -1330,6 +1359,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .logical_type(LogicalType::Url)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::OAUTH_REDIRECT_URI.as_str())
@@ -1341,6 +1371,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .logical_type(LogicalType::Url)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::OAUTH_SCOPE.as_str())
@@ -2306,6 +2337,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .logical_type(LogicalType::Url)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::WORKLOAD_IDENTITY_AZURE_CLIENT_ID.as_str())
@@ -2349,6 +2381,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .logical_type(LogicalType::Url)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::USE_PROXY_ENV.as_str())
@@ -2778,6 +2811,14 @@ impl ParamRegistry {
     /// invisible to the global [`Self::is_sensitive`].
     pub fn is_sensitive_for(&self, wrapper: Wrapper, key: impl AsRef<str>) -> bool {
         self.resolve_for(wrapper, key).is_some_and(|d| d.sensitive)
+    }
+
+    /// The [`LogicalType`] of the parameter resolved under wrapper-scoped
+    /// resolution. Unknown keys return [`LogicalType::Unspecified`].
+    pub fn logical_type_for(&self, wrapper: Wrapper, key: impl AsRef<str>) -> LogicalType {
+        self.resolve_for(wrapper, key)
+            .map(|d| d.logical_type)
+            .unwrap_or(LogicalType::Unspecified)
     }
 
     /// Whether the parameter resolved under wrapper-scoped resolution
@@ -4136,6 +4177,39 @@ mod tests {
             assert!(
                 !r.is_auth_for(Wrapper::Odbc, key),
                 "{key} should not be classified as an auth parameter"
+            );
+        }
+    }
+
+    #[test]
+    fn logical_type_for_tags_url_params_and_leaves_others_plain() {
+        let r = registry();
+        for key in [
+            "server_url",
+            "authenticator",
+            "OAUTH_AUTHORIZATION_URL",
+            "OAUTH_TOKEN_REQUEST_URL",
+            "OAUTH_REDIRECT_URI",
+            "WORKLOAD_IDENTITY_ENTRA_RESOURCE",
+            "proxy",
+            "PROXY",
+        ] {
+            assert_eq!(
+                r.logical_type_for(Wrapper::Odbc, key),
+                LogicalType::Url,
+                "{key} should be LogicalType::Url"
+            );
+        }
+        for key in [
+            "account",
+            "password",
+            "OAUTH_CLIENT_SECRET",
+            "totally_unknown",
+        ] {
+            assert_eq!(
+                r.logical_type_for(Wrapper::Odbc, key),
+                LogicalType::Unspecified,
+                "{key} should be LogicalType::Unspecified"
             );
         }
     }
