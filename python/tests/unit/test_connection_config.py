@@ -771,6 +771,8 @@ class TestClassVariables:
             "passcodeinpassword": "passcode_in_password",
             # legacy kwarg -> renamed field
             "private_key_file_pwd": "private_key_password",
+            # connector kwarg -> canonical field
+            "workload_identity_host": "wif_host",
         }
 
     def test_alias_map_excludes_odbc_dsn_keys(self):

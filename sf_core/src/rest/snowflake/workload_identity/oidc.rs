@@ -97,6 +97,7 @@ mod tests {
             impersonation_path: Vec::new(),
             oidc_token: oidc_token.map(SensitiveString::from),
             aws_use_outbound_token: false,
+            wif_host: None,
         }
     }
 

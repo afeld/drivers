@@ -302,6 +302,9 @@ pub mod param_names {
     /// `SNOWFLAKE_ENABLE_AWS_WIF_OUTBOUND_TOKEN`. Default `false`.
     pub const WORKLOAD_IDENTITY_AWS_USE_OUTBOUND_TOKEN: ParamKey =
         ParamKey("workload_identity_aws_use_outbound_token");
+    /// AWS STS hostname for Workload Identity Federation. An http(s) URL keeps
+    /// its scheme, host, port, and path. Unset or empty uses the regional STS host.
+    pub const WIF_HOST: ParamKey = ParamKey("wif_host");
     /// Pre-acquired OIDC JWT forwarded directly to Snowflake.
     /// Required when `workload_identity_provider = OIDC`.
     /// Reuses the existing `token` param key for OIDC so callers that
@@ -2379,6 +2382,23 @@ static PARAM_DEFS: &[ParamDef] = &[
         .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::WIF_HOST.as_str())
+        .aliases(&[
+            Alias::scoped(Wrapper::Jdbc, "wifHost"),
+            Alias::scoped(Wrapper::Jdbc, "workloadIdentityHost"),
+            Alias::scoped(Wrapper::Jdbc, "workload_identity_host"),
+            Alias::scoped(Wrapper::Python, "workload_identity_host"),
+            Alias::scoped(Wrapper::NodeJs, "wifHost"),
+        ])
+        .value_type(ValueType::String)
+        .sensitive(false)
+        .auth(true)
+        .description("AWS STS hostname for Workload Identity Federation. Unset keeps the regional default")
+        .scopes(&[ParamScope::Connection])
+        .used_at_connect(true)
+        .mutable_after_connect(false)
+        .build(),
     // Legacy ODBC PROXY URL form (parsed and merged with the fields above).
     ParamDef::builder()
         .canonical_name(param_names::PROXY.as_str())
@@ -3092,6 +3112,9 @@ mod tests {
             // Legacy Node.js login wall clock. Core `retry_timeout` is a different parameter.
             ("retryTimeout", "login_timeout", &[NodeJs]),
             ("browserActionTimeout", "authentication_timeout", &[NodeJs]),
+            ("wifHost", "wif_host", &[Jdbc, NodeJs]),
+            ("workloadIdentityHost", "wif_host", &[Jdbc]),
+            ("workload_identity_host", "wif_host", &[Jdbc, Python]),
         ];
         for (alias, expected_canonical, owners) in scoped_cases {
             for wrapper in [Odbc, Jdbc, Python, NodeJs, DotNet] {

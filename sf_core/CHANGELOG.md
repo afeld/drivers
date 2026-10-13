@@ -4,6 +4,8 @@
 
 New features:
 
+- Added a `wif_host` connection parameter that sets the AWS STS endpoint for Workload Identity Federation, including the pre-signed GetCallerIdentity request, AssumeRole impersonation, and outbound GetWebIdentityToken; unset keeps the AWS SDK regional STS hostname. (snowflakedb/drivers#2439)
+- Added JDBC aliases `wifHost`, `workloadIdentityHost`, and `workload_identity_host`, a Python alias `workload_identity_host`, and a Node.js alias `wifHost` for the `wif_host` connection parameter. (snowflakedb/drivers#2439)
 - Added `workload_identity_azure_client_id` so Azure WIF can select a user-assigned managed identity from a connection option, with `MANAGED_IDENTITY_CLIENT_ID` as fallback. (snowflakedb/drivers#2226)
 - Added PAT-with-external-session authentication (`authenticator=PAT_WITH_EXTERNAL_SESSION`) so a programmatic access token plus `external_session_id` can reuse a server-side session without a login request, sending `Authorization: Bearer` and `X-Snowflake-External-Session-ID` on subsequent requests. (snowflakedb/drivers#1996)
 - Added `APPLICATION_PATH` to the login `CLIENT_ENVIRONMENT` payload. Wrappers pass it through `WrapperIdentity.application_path`. An unset or blank path is reported as `UNKNOWN`. (snowflakedb/drivers#2535)

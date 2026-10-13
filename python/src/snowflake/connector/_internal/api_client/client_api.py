@@ -642,6 +642,7 @@ class CoreDriver:
         token: str | None = None,
         impersonation_path: list[str] | None = None,
         aws_use_outbound_token: bool | None = None,
+        wif_host: str | None = None,
     ) -> WifCreateAttestationResponse:
         request = WifCreateAttestationRequest(
             provider=provider,
@@ -649,6 +650,7 @@ class CoreDriver:
             token=token,
             impersonation_path=impersonation_path or [],
             aws_use_outbound_token=aws_use_outbound_token,
+            wif_host=wif_host,
         )
         return self.client.wif_create_attestation(request)
 

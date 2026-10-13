@@ -403,6 +403,9 @@ class ConnectionConfig(ConnectionConfigMixin):
     verify_hostname: bool | None = True
     """Whether to verify the server hostname in TLS. Default: True"""
 
+    wif_host: str | None = None
+    """AWS STS hostname for Workload Identity Federation. Unset keeps the regional default"""
+
     workload_identity_aws_use_outbound_token: bool | None = False
     """Use outbound STS GetWebIdentityToken for AWS WIF (default: pre-signed GetCallerIdentity). Default: False"""
 
@@ -455,6 +458,7 @@ class ConnectionConfig(ConnectionConfigMixin):
         "enable_stage_s3_privatelink_for_us_east_1": "use_s3_regional_url",
         "passcodeinpassword": "passcode_in_password",
         "private_key_file_pwd": "private_key_password",
+        "workload_identity_host": "wif_host",
     }
     """Lowercased alias -> Python field name."""
 

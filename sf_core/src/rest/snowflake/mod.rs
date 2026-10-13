@@ -6271,6 +6271,7 @@ mod tests {
                     azure_client_id: None,
                     impersonation_path: Vec::new(),
                     aws_use_outbound_token: false,
+                    wif_host: None,
                     // Deliberately absent: if dispatch ever reached the
                     // provider without the host guard short-circuiting first,
                     // `oidc::get_token` would fail with `MissingToken`

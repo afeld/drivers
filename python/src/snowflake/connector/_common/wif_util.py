@@ -58,6 +58,7 @@ def create_attestation(
     token: str | None = None,
     impersonation_path: list[str] | None = None,
     aws_use_outbound_token: bool | None = None,
+    wif_host: str | None = None,
 ) -> WorkloadIdentityAttestation:
     """Acquires a Workload Identity Federation attestation for the given provider.
 
@@ -72,6 +73,9 @@ def create_attestation(
     single-hop service-principal token exchange (Azure) exactly as the
     driver's own WIF login flow does.
 
+    `wif_host` is forwarded as the AWS STS hostname override. Unset uses the
+    regional STS default.
+
     Any other keyword argument raises `TypeError`.
     """
     response = core_driver.wif_create_attestation(
@@ -80,6 +84,7 @@ def create_attestation(
         token=token,
         impersonation_path=impersonation_path or [],
         aws_use_outbound_token=aws_use_outbound_token,
+        wif_host=wif_host,
     )
     return WorkloadIdentityAttestation(
         provider=AttestationProvider.from_string(response.provider),

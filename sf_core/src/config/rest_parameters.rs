@@ -8,12 +8,13 @@ use super::private_key::{has_private_key_params, read_private_key};
 use super::token::{
     read_optional_bearer_token, read_required_bearer_token, read_required_header_bearer_token,
 };
-use crate::config::InvalidParameterValueSnafu;
 use crate::config::configured_redirect_uri::ConfiguredRedirectUri;
 use crate::config::param_registry::param_names;
 use crate::config::settings::Setting;
 use crate::config::settings::Settings;
-use crate::config::{ConfigError, MissingParameterSnafu};
+use crate::config::{
+    ConfigError, ConflictingParametersSnafu, InvalidParameterValueSnafu, MissingParameterSnafu,
+};
 use crate::crl::config::CrlConfig;
 use crate::rest::snowflake::BrowserLaunchFn;
 use crate::sensitive::SensitiveString;
@@ -540,8 +541,9 @@ pub const DEFAULT_AZURE_ENTRA_RESOURCE: &str = "api://fd3f753b-eed3-462c-b6a7-a4
 
 /// Fully-validated Workload Identity Federation configuration.
 ///
-/// Created by [`WorkloadIdentityConfig::from_settings`] and carried in
-/// [`AuthConfig::WorkloadIdentity`] / [`LoginMethod::WorkloadIdentity`].
+/// Built by [`WorkloadIdentityConfig::new`]. [`WorkloadIdentityConfig::from_settings`]
+/// reads connection settings and calls `new`. A `wif_host` value is rejected
+/// unless `provider` is AWS.
 ///
 /// TODO: split into a provider enum so `azure_client_id` and `entra_resource`
 /// exist only on Azure, and `aws_use_outbound_token` only on AWS. A value can
@@ -569,9 +571,42 @@ pub struct WorkloadIdentityConfig {
     /// instead of the default pre-signed `GetCallerIdentity` attestation.
     /// Takes precedence over `SNOWFLAKE_ENABLE_AWS_WIF_OUTBOUND_TOKEN`.
     pub aws_use_outbound_token: bool,
+    /// AWS STS hostname. `None`, an empty string, or whitespace-only uses the AWS SDK regional STS host.
+    pub wif_host: Option<String>,
 }
 
 impl WorkloadIdentityConfig {
+    pub fn new(
+        provider: WifProvider,
+        entra_resource: Option<String>,
+        azure_client_id: Option<String>,
+        impersonation_path: Vec<String>,
+        oidc_token: Option<SensitiveString>,
+        aws_use_outbound_token: bool,
+        wif_host: Option<String>,
+    ) -> Result<Self, ConfigError> {
+        let wif_host = wif_host
+            .map(|host| host.trim().to_string())
+            .filter(|host| !host.is_empty());
+        if wif_host.is_some() && provider != WifProvider::Aws {
+            return ConflictingParametersSnafu {
+                parameter: String::from(param_names::WIF_HOST),
+                value: String::new(),
+                explanation: "wif_host is supported only for AWS".to_string(),
+            }
+            .fail();
+        }
+        Ok(Self {
+            provider,
+            entra_resource,
+            azure_client_id,
+            impersonation_path,
+            oidc_token,
+            aws_use_outbound_token,
+            wif_host,
+        })
+    }
+
     pub fn from_settings(settings: &dyn Settings) -> Result<Self, ConfigError> {
         let provider_str = settings
             .get_string("workload_identity_provider")
@@ -606,14 +641,15 @@ impl WorkloadIdentityConfig {
             param_names::WORKLOAD_IDENTITY_AWS_USE_OUTBOUND_TOKEN.as_str(),
             false,
         );
-        Ok(Self {
+        Self::new(
             provider,
             entra_resource,
             azure_client_id,
             impersonation_path,
             oidc_token,
             aws_use_outbound_token,
-        })
+            settings.get_string(param_names::WIF_HOST.as_str()),
+        )
     }
 }
 
@@ -1102,6 +1138,32 @@ mod tests {
             .into_iter()
             .map(|(k, v)| (k.to_string(), v))
             .collect()
+    }
+
+    #[test]
+    fn wif_host_is_rejected_unless_provider_is_aws() {
+        let azure = create_test_settings(vec![
+            (
+                "workload_identity_provider",
+                Setting::String("AZURE".to_string()),
+            ),
+            ("wif_host", Setting::String("sts.example.com".to_string())),
+        ]);
+        let err = WorkloadIdentityConfig::from_settings(&azure).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "Conflicting parameters: wif_host is supported only for AWS"
+        );
+
+        let aws = create_test_settings(vec![
+            (
+                "workload_identity_provider",
+                Setting::String("AWS".to_string()),
+            ),
+            ("wif_host", Setting::String("sts.example.com".to_string())),
+        ]);
+        let config = WorkloadIdentityConfig::from_settings(&aws).expect("aws wif_host");
+        assert_eq!(config.wif_host.as_deref(), Some("sts.example.com"));
     }
 
     #[test]

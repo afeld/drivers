@@ -113,6 +113,14 @@ class TestCreateAttestationKwargsCompat:
         request = mock_db_api.wif_create_attestation.call_args[0][0]
         assert request.aws_use_outbound_token is True
 
+    def test_forwards_wif_host_to_request(self, mock_db_api):
+        mock_db_api.wif_create_attestation.return_value = MagicMock(provider="AWS", credential="fake-credential")
+
+        create_attestation(AttestationProvider.AWS, wif_host="sts.example.snowflake.com")
+
+        request = mock_db_api.wif_create_attestation.call_args[0][0]
+        assert request.wif_host == "sts.example.snowflake.com"
+
     def test_unknown_kwarg_raises_type_error(self, mock_db_api):
         with pytest.raises(TypeError, match="unknown_kwarg"):
             create_attestation(AttestationProvider.AWS, unknown_kwarg=1)

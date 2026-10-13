@@ -24,6 +24,9 @@ use aws_credential_types::Credentials;
 use aws_credential_types::provider::ProvideCredentials as _;
 use aws_lc_rs::{digest, hmac};
 use aws_sdk_sts::config::SharedCredentialsProvider;
+use aws_sdk_sts::config::endpoint::{
+    DefaultResolver, Params as StsEndpointParams, ResolveEndpoint,
+};
 use aws_sdk_sts::{Client as StsClient, config::Builder as StsConfigBuilder};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use futures::FutureExt as _;
@@ -100,6 +103,18 @@ pub enum AwsAttestationError {
         #[snafu(implicit)]
         location: Location,
     },
+    #[snafu(display("invalid wif_host '{host}'"))]
+    InvalidWifHost {
+        host: String,
+        #[snafu(implicit)]
+        location: Location,
+    },
+    #[snafu(display("could not resolve an STS endpoint for region '{region}'"))]
+    StsEndpointResolve {
+        region: String,
+        #[snafu(implicit)]
+        location: Location,
+    },
 }
 
 /// Primary AWS WIF entry point.
@@ -153,7 +168,8 @@ async fn get_caller_identity_token(
         &region,
         &amz_date,
         &date_stamp,
-    );
+        config.wif_host.as_deref(),
+    )?;
 
     let json = serde_json::to_string(&request).context(TokenSerializeSnafu)?;
     Ok(BASE64.encode(json.as_bytes()))
@@ -173,9 +189,20 @@ fn build_signed_caller_identity_request(
     region: &str,
     amz_date: &str,
     date_stamp: &str,
-) -> SignedCallerIdentityRequest {
-    let host = sts_hostname(region);
-    let url = format!("https://{host}/?Action=GetCallerIdentity&Version=2011-06-15");
+    wif_host: Option<&str>,
+) -> Result<SignedCallerIdentityRequest, AwsAttestationError> {
+    let endpoint = aws_sts_endpoint_for(region, wif_host)?;
+    let host = endpoint.authority;
+    let (scheme, after_scheme) = endpoint
+        .base_url
+        .split_once("://")
+        .context(StsEndpointResolveSnafu { region })?;
+    let canonical_uri = after_scheme
+        .strip_prefix(&host)
+        .filter(|path| !path.is_empty())
+        .unwrap_or("/");
+    let url =
+        format!("{scheme}://{host}{canonical_uri}?Action=GetCallerIdentity&Version=2011-06-15");
 
     // Canonical headers: alphabetical, lowercase, each followed by \n.
     let mut canonical_headers = format!("host:{host}\nx-amz-date:{amz_date}\n");
@@ -191,7 +218,7 @@ fn build_signed_caller_identity_request(
     let signed_headers = signed_header_names.join(";");
 
     let canonical_request = format!(
-        "POST\n/\nAction=GetCallerIdentity&Version=2011-06-15\n{canonical_headers}\n{signed_headers}\n{EMPTY_BODY_HASH}"
+        "POST\n{canonical_uri}\nAction=GetCallerIdentity&Version=2011-06-15\n{canonical_headers}\n{signed_headers}\n{EMPTY_BODY_HASH}"
     );
 
     let credential_scope = format!("{date_stamp}/{region}/sts/aws4_request");
@@ -221,11 +248,11 @@ fn build_signed_caller_identity_request(
         SNOWFLAKE_AUDIENCE.to_string(),
     );
 
-    SignedCallerIdentityRequest {
+    Ok(SignedCallerIdentityRequest {
         url,
         method: "POST",
         headers,
-    }
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -241,14 +268,16 @@ async fn get_web_identity_token(
     endpoints: &AttestationEndpoints,
 ) -> Result<String, AwsAttestationError> {
     let region = resolve_region(endpoints).await;
-    let sdk_config = sdk_config_with_shared_transport(sdk_http, &region, None).await;
+    let sts_endpoint = aws_sts_endpoint_for(&region, config.wif_host.as_deref())?;
+    let sdk_config =
+        sdk_config_with_shared_transport(sdk_http, &region, None, Some(&sts_endpoint)).await;
 
     let sts_client = StsClient::new(&sdk_config);
 
     let credentials = if config.impersonation_path.is_empty() {
         None
     } else {
-        Some(chain_assume_role(sdk_http, &region, &config.impersonation_path).await?)
+        Some(chain_assume_role(sdk_http, &region, &config.impersonation_path, &sts_endpoint).await?)
     };
 
     let final_sts_client = if let Some(creds) = credentials {
@@ -310,10 +339,15 @@ fn sts_sdk_error_status<E>(err: &aws_sdk_sts::error::SdkError<E>) -> Option<u16>
 /// these are SigV4-signed SDK calls: the transport must not follow redirects,
 /// auto-decompress, or negotiate HTTP/2 (see `tls::aws_http_client`), and the
 /// newtype is what guarantees a general-purpose client cannot end up here.
+///
+/// When `sts_endpoint` is an override, it is pinned as `endpoint_url` and
+/// FIPS/dualstack selection is cleared so they cannot reject the custom host.
+/// A regional default is left to the SDK so ambient FIPS/dualstack still apply.
 async fn sdk_config_with_shared_transport(
     sdk_http: &AwsSdkReqwestClient,
     region: &str,
     credentials: Option<&Credentials>,
+    sts_endpoint: Option<&AwsStsEndpoint>,
 ) -> aws_config::SdkConfig {
     let mut loader = aws_config::defaults(BehaviorVersion::latest())
         .region(Region::new(region.to_string()))
@@ -322,6 +356,14 @@ async fn sdk_config_with_shared_transport(
         ));
     if let Some(creds) = credentials {
         loader = loader.credentials_provider(SharedCredentialsProvider::new(creds.clone()));
+    }
+    if let Some(endpoint) = sts_endpoint
+        && endpoint.overridden
+    {
+        loader = loader
+            .endpoint_url(&endpoint.base_url)
+            .use_fips(false)
+            .use_dual_stack(false);
     }
     loader.load().await
 }
@@ -334,7 +376,7 @@ async fn resolve_credentials(
     region: &str,
 ) -> Result<Credentials, AwsAttestationError> {
     if config.impersonation_path.is_empty() {
-        let sdk_config = sdk_config_with_shared_transport(sdk_http, region, None).await;
+        let sdk_config = sdk_config_with_shared_transport(sdk_http, region, None, None).await;
         let provider = sdk_config
             .credentials_provider()
             .context(NoCredentialsProviderSnafu)?;
@@ -344,7 +386,8 @@ async fn resolve_credentials(
             .boxed()
             .context(CredentialsLoadSnafu)
     } else {
-        chain_assume_role(sdk_http, region, &config.impersonation_path).await
+        let sts_endpoint = aws_sts_endpoint_for(region, config.wif_host.as_deref())?;
+        chain_assume_role(sdk_http, region, &config.impersonation_path, &sts_endpoint).await
     }
 }
 
@@ -368,6 +411,7 @@ trait AssumeRoleProvider: Send + Sync {
 struct StsAssumeRoleProvider {
     sdk_http: AwsSdkReqwestClient,
     region: String,
+    sts_endpoint: AwsStsEndpoint,
 }
 
 impl AssumeRoleProvider for StsAssumeRoleProvider {
@@ -377,8 +421,13 @@ impl AssumeRoleProvider for StsAssumeRoleProvider {
         credentials: Option<&'a Credentials>,
     ) -> BoxFuture<'a, Result<Credentials, AwsAttestationError>> {
         async move {
-            let sdk_config =
-                sdk_config_with_shared_transport(&self.sdk_http, &self.region, credentials).await;
+            let sdk_config = sdk_config_with_shared_transport(
+                &self.sdk_http,
+                &self.region,
+                credentials,
+                Some(&self.sts_endpoint),
+            )
+            .await;
             let client = StsClient::new(&sdk_config);
 
             let session_name = format!("snowflake-wif-{}", std::process::id());
@@ -428,10 +477,12 @@ async fn chain_assume_role(
     sdk_http: &AwsSdkReqwestClient,
     region: &str,
     role_arns: &[String],
+    sts_endpoint: &AwsStsEndpoint,
 ) -> Result<Credentials, AwsAttestationError> {
     let provider = StsAssumeRoleProvider {
         sdk_http: sdk_http.clone(),
         region: region.to_string(),
+        sts_endpoint: sts_endpoint.clone(),
     };
     chain_assume_role_via(&provider, role_arns).await
 }
@@ -529,12 +580,116 @@ async fn try_imds_region(imds_base_url: &str) -> Option<String> {
     }
 }
 
-fn sts_hostname(region: &str) -> String {
-    if region.starts_with("cn-") {
-        format!("sts.{region}.amazonaws.com.cn")
-    } else {
-        format!("sts.{region}.amazonaws.com")
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct AwsStsEndpoint {
+    authority: String,
+    base_url: String,
+    overridden: bool,
+}
+
+/// A blank or missing `wif_host` uses the regional SDK STS endpoint. Any other
+/// value is parsed as an override and rejected when it is not a valid http(s) host.
+fn aws_sts_endpoint_for(
+    region: &str,
+    wif_host: Option<&str>,
+) -> Result<AwsStsEndpoint, AwsAttestationError> {
+    if let Some(host) = wif_host {
+        let host = host.trim();
+        if !host.is_empty() {
+            return parse_workload_identity_host(host);
+        }
     }
+    default_sts_endpoint(region)
+}
+
+fn parse_workload_identity_host(host: &str) -> Result<AwsStsEndpoint, AwsAttestationError> {
+    let with_scheme = if host.contains("://") {
+        host.to_string()
+    } else {
+        format!("https://{host}")
+    };
+    let parsed = url::Url::parse(&with_scheme)
+        .ok()
+        .context(InvalidWifHostSnafu { host: "" })?;
+    let authority = authority_of(&parsed).unwrap_or_default();
+    let path = parsed.path().trim_end_matches('/');
+    let host = if parsed.cannot_be_a_base() || path.is_empty() {
+        authority.clone()
+    } else {
+        format!("{authority}{path}")
+    };
+    if !wif_host_url_allowed(&parsed) || authority.is_empty() {
+        return InvalidWifHostSnafu { host }.fail();
+    }
+    Ok(AwsStsEndpoint {
+        base_url: base_url_of(&parsed, &authority),
+        authority,
+        overridden: true,
+    })
+}
+
+// Taken from gosnowflake `parseWorkloadIdentityHost`.
+fn wif_host_url_allowed(parsed: &url::Url) -> bool {
+    matches!(parsed.scheme(), "http" | "https")
+        && parsed.host().is_some()
+        && parsed.username().is_empty()
+        && parsed.password().is_none()
+        && parsed.query().is_none()
+        && parsed.fragment().is_none()
+}
+
+fn default_sts_endpoint(region: &str) -> Result<AwsStsEndpoint, AwsAttestationError> {
+    let params = StsEndpointParams::builder()
+        .region(region)
+        .use_fips(false)
+        .use_dual_stack(false)
+        .use_global_endpoint(false)
+        .build()
+        .ok()
+        .context(StsEndpointResolveSnafu { region })?;
+    let endpoint = DefaultResolver::new()
+        .resolve_endpoint(&params)
+        .now_or_never()
+        .and_then(Result::ok)
+        .context(StsEndpointResolveSnafu { region })?;
+    endpoint_from_url(endpoint.url(), region, false)
+}
+
+fn endpoint_from_url(
+    url: &str,
+    region: &str,
+    overridden: bool,
+) -> Result<AwsStsEndpoint, AwsAttestationError> {
+    let parsed = url::Url::parse(url)
+        .ok()
+        .context(StsEndpointResolveSnafu { region })?;
+    let authority = authority_of(&parsed).context(StsEndpointResolveSnafu { region })?;
+    Ok(AwsStsEndpoint {
+        base_url: base_url_of(&parsed, &authority),
+        authority,
+        overridden,
+    })
+}
+
+fn authority_of(parsed: &url::Url) -> Option<String> {
+    let host = match parsed.host()? {
+        url::Host::Domain(domain) => domain.to_ascii_lowercase(),
+        url::Host::Ipv4(ip) => ip.to_string(),
+        url::Host::Ipv6(ip) => format!("[{ip}]"),
+    };
+    Some(match parsed.port() {
+        Some(port) => format!("{host}:{port}"),
+        None => host,
+    })
+}
+
+fn base_url_of(parsed: &url::Url, authority: &str) -> String {
+    let mut base = format!("{}://{authority}", parsed.scheme());
+    let path = parsed.path().trim_end_matches('/');
+    if !path.is_empty() {
+        base.push_str(path);
+    }
+    base
 }
 
 // Keep local WIF signing on AWS-LC so fips uses its FIPS module for both
@@ -588,7 +743,9 @@ mod tests {
             .unwrap_or(0)
     }
 
-    async fn start_recording_proxy() -> (
+    async fn start_recording_proxy(
+        sts_request_prefix: &[u8],
+    ) -> (
         std::net::SocketAddr,
         tokio::sync::oneshot::Receiver<Vec<u8>>,
     ) {
@@ -596,6 +753,7 @@ mod tests {
             .await
             .expect("bind proxy listener");
         let addr = listener.local_addr().expect("proxy address");
+        let sts_request_prefix = sts_request_prefix.to_vec();
         let (request_tx, request_rx) = tokio::sync::oneshot::channel();
         tokio::spawn(async move {
             let mut request_tx = Some(request_tx);
@@ -616,13 +774,15 @@ mod tests {
                     }
                 }
                 let body_len = proxy_content_length(&head);
+                let mut recorded = head.clone();
                 if body_len > 0 {
                     let mut body = vec![0u8; body_len];
                     if socket.read_exact(&mut body).await.is_err() {
                         continue;
                     }
+                    recorded.extend_from_slice(&body);
                 }
-                let is_sts = head.starts_with(b"POST http://sts-target.invalid/");
+                let is_sts = recorded.starts_with(&sts_request_prefix);
                 let body = b"<ErrorResponse><Error><Code>InvalidAction</Code><Message>test</Message></Error><RequestId>test</RequestId></ErrorResponse>";
                 let response = format!(
                     "HTTP/1.1 400 Bad Request\r\nContent-Type: text/xml\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
@@ -633,7 +793,7 @@ mod tests {
                 let _ = socket.flush().await;
                 let _ = socket.shutdown().await;
                 if is_sts {
-                    let _ = request_tx.take().map(|tx| tx.send(head));
+                    let _ = request_tx.take().map(|tx| tx.send(recorded));
                     return;
                 }
             }
@@ -641,9 +801,10 @@ mod tests {
         (addr, request_rx)
     }
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn sts_sdk_uses_the_supplied_reqwest_transport() {
-        let (proxy_addr, request_rx) = start_recording_proxy().await;
+    async fn sdk_http_through_recording_proxy(
+        sts_request_prefix: &[u8],
+    ) -> (AwsSdkReqwestClient, tokio::sync::oneshot::Receiver<Vec<u8>>) {
+        let (proxy_addr, request_rx) = start_recording_proxy(sts_request_prefix).await;
         let proxy = crate::tls::ProxyConfig {
             host: Some(proxy_addr.ip().to_string()),
             port: Some(i64::from(proxy_addr.port())),
@@ -655,24 +816,60 @@ mod tests {
             crate::crl::CrlManager::new(),
         )
         .expect("SDK HTTP client must build");
+        (sdk_http, request_rx)
+    }
+
+    fn aws_offline_signed_sts_env() -> [(&'static str, Option<&'static str>); 12] {
+        [
+            ("AWS_REGION", Some("us-east-1")),
+            ("AWS_DEFAULT_REGION", None),
+            ("AWS_ACCESS_KEY_ID", Some("test-key")),
+            ("AWS_SECRET_ACCESS_KEY", Some("test-secret")),
+            ("AWS_SESSION_TOKEN", None),
+            ("AWS_PROFILE", None),
+            (
+                "AWS_SHARED_CREDENTIALS_FILE",
+                Some("/nonexistent/aws-credentials-for-tests"),
+            ),
+            ("AWS_CONFIG_FILE", Some("/nonexistent/aws-config-for-tests")),
+            ("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", None),
+            ("AWS_CONTAINER_CREDENTIALS_FULL_URI", None),
+            ("AWS_WEB_IDENTITY_TOKEN_FILE", None),
+            ("AWS_EC2_METADATA_DISABLED", Some("true")),
+        ]
+    }
+
+    async fn sts_request_head_via_recording_proxy(
+        sts_endpoint: Option<&AwsStsEndpoint>,
+        client_endpoint_url: Option<&str>,
+    ) -> String {
+        let (sdk_http, request_rx) =
+            sdk_http_through_recording_proxy(b"POST http://sts-target.invalid/").await;
         let credentials = Credentials::new("test-key", "test-secret", None, None, "test");
-        let sdk_config =
-            sdk_config_with_shared_transport(&sdk_http, "us-east-1", Some(&credentials)).await;
+        let sdk_config = sdk_config_with_shared_transport(
+            &sdk_http,
+            "us-east-1",
+            Some(&credentials),
+            sts_endpoint,
+        )
+        .await;
         // Retries are off and the timeouts are explicit so a transport
         // regression surfaces as the assertion below rather than as a hang:
         // under the SDK's default standard retry mode a first attempt that
         // looks like a connection error is replayed, and the replay races the
         // proxy's accept loop.
-        let sts_config = StsConfigBuilder::from(&sdk_config)
-            .endpoint_url("http://sts-target.invalid")
+        let mut sts_config = StsConfigBuilder::from(&sdk_config)
             .retry_config(aws_config::retry::RetryConfig::disabled())
             .timeout_config(
                 aws_config::timeout::TimeoutConfig::builder()
                     .operation_timeout(std::time::Duration::from_secs(2))
                     .operation_attempt_timeout(std::time::Duration::from_secs(2))
                     .build(),
-            )
-            .build();
+            );
+        if let Some(url) = client_endpoint_url {
+            sts_config = sts_config.endpoint_url(url);
+        }
+        let sts_config = sts_config.build();
 
         let result = tokio::time::timeout(
             std::time::Duration::from_secs(5),
@@ -686,12 +883,101 @@ mod tests {
             .await
             .expect("proxy observation must not hang")
             .expect("proxy must receive the STS request");
-        let request = String::from_utf8(request).expect("request head must be utf-8");
-
         assert!(result.is_err(), "the test proxy returns an STS error");
+        String::from_utf8(request).expect("request head must be utf-8")
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn sts_sdk_uses_the_supplied_reqwest_transport() {
+        let request =
+            sts_request_head_via_recording_proxy(None, Some("http://sts-target.invalid")).await;
         assert!(
             request.starts_with("POST http://sts-target.invalid/ HTTP/1.1\r\n"),
             "proxy received unexpected request head: {request}"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn sts_sdk_pins_overridden_wif_host_as_endpoint() {
+        let endpoint = parse_workload_identity_host("http://sts-target.invalid").expect("wif_host");
+        let request = sts_request_head_via_recording_proxy(Some(&endpoint), None).await;
+        assert!(
+            request.starts_with("POST http://sts-target.invalid/ HTTP/1.1\r\n"),
+            "proxy received unexpected request head: {request}"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn get_web_identity_token_routes_to_wif_host() {
+        let (sdk_http, request_rx) =
+            sdk_http_through_recording_proxy(b"POST http://sts.example.snowflake.com/").await;
+        let config = WorkloadIdentityConfig {
+            provider: WifProvider::Aws,
+            entra_resource: None,
+            azure_client_id: None,
+            impersonation_path: vec![],
+            aws_use_outbound_token: true,
+            oidc_token: None,
+            wif_host: Some("http://sts.example.snowflake.com".to_string()),
+        };
+        let endpoints = AttestationEndpoints {
+            aws_imds_base_url: "http://127.0.0.1:1".to_string(),
+            ..Default::default()
+        };
+
+        temp_env::async_with_vars(aws_offline_signed_sts_env(), async {
+            let _ = tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                get_web_identity_token(&sdk_http, &config, &endpoints),
+            )
+            .await;
+        })
+        .await;
+
+        let request = tokio::time::timeout(std::time::Duration::from_secs(5), request_rx)
+            .await
+            .expect("proxy observation must not hang")
+            .expect("proxy must receive the STS request");
+        let request = String::from_utf8(request).expect("request must be utf-8");
+        assert!(
+            request.starts_with("POST http://sts.example.snowflake.com/ HTTP/1.1\r\n"),
+            "proxy received unexpected request: {request}"
+        );
+        assert!(
+            request.contains("Action=GetWebIdentityToken"),
+            "expected GetWebIdentityToken in the STS body, got: {request}"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn assume_role_routes_to_wif_host() {
+        let (sdk_http, request_rx) =
+            sdk_http_through_recording_proxy(b"POST http://sts.example.snowflake.com/").await;
+        let sts_endpoint =
+            parse_workload_identity_host("http://sts.example.snowflake.com").expect("wif_host");
+        let role_arns = vec!["arn:aws:iam::123456789012:role/test-role".to_string()];
+
+        temp_env::async_with_vars(aws_offline_signed_sts_env(), async {
+            let _ = tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                chain_assume_role(&sdk_http, "us-east-1", &role_arns, &sts_endpoint),
+            )
+            .await;
+        })
+        .await;
+
+        let request = tokio::time::timeout(std::time::Duration::from_secs(5), request_rx)
+            .await
+            .expect("proxy observation must not hang")
+            .expect("proxy must receive the STS request");
+        let request = String::from_utf8(request).expect("request must be utf-8");
+        assert!(
+            request.starts_with("POST http://sts.example.snowflake.com/ HTTP/1.1\r\n"),
+            "proxy received unexpected request: {request}"
+        );
+        assert!(
+            request.contains("Action=AssumeRole"),
+            "expected AssumeRole in the STS body, got: {request}"
         );
     }
 
@@ -902,6 +1188,7 @@ mod tests {
             impersonation_path: vec![],
             aws_use_outbound_token: false,
             oidc_token: None,
+            wif_host: None,
         };
 
         temp_env::async_with_vars(
@@ -947,6 +1234,7 @@ mod tests {
             impersonation_path: vec![],
             aws_use_outbound_token,
             oidc_token: None,
+            wif_host: None,
         }
     }
 
@@ -1252,26 +1540,44 @@ mod tests {
         );
     }
 
+    fn sts_authority(region: &str, wif_host: Option<&str>) -> String {
+        aws_sts_endpoint_for(region, wif_host)
+            .expect("STS endpoint")
+            .authority
+    }
+
     #[test]
     fn sts_hostname_china() {
         assert_eq!(
-            sts_hostname("cn-northwest-1"),
+            sts_authority("cn-northwest-1", None),
             "sts.cn-northwest-1.amazonaws.com.cn"
         );
     }
 
     #[test]
     fn sts_hostname_standard() {
-        assert_eq!(sts_hostname("us-east-1"), "sts.us-east-1.amazonaws.com");
+        assert_eq!(
+            sts_authority("us-east-1", None),
+            "sts.us-east-1.amazonaws.com"
+        );
     }
 
-    /// Expands hostname coverage beyond china + one standard region: legacy's
-    /// `test_get_aws_sts_hostname_valid_inputs` (8-case matrix, parameterized
-    /// on a `partition` argument that UD's `sts_hostname` doesn't have, since
-    /// it derives the TLD purely from the region prefix). GovCloud regions in
-    /// particular use the standard `.amazonaws.com` suffix, not a distinct
-    /// partition-specific one, so this also proves `sts_hostname` handles
-    /// them correctly with no `us-gov-` special case.
+    #[test]
+    fn sts_hostname_keeps_regional_default_when_wif_host_is_absent_or_empty() {
+        assert_eq!(
+            sts_authority("us-east-1", None),
+            "sts.us-east-1.amazonaws.com"
+        );
+        assert_eq!(
+            sts_authority("cn-north-1", Some("")),
+            "sts.cn-north-1.amazonaws.com.cn"
+        );
+        assert_eq!(
+            sts_authority("us-east-1", Some("   ")),
+            "sts.us-east-1.amazonaws.com"
+        );
+    }
+
     #[test]
     fn sts_hostname_covers_govcloud_and_additional_standard_regions() {
         let cases = [
@@ -1281,10 +1587,98 @@ mod tests {
             ("eu-central-1", "sts.eu-central-1.amazonaws.com"),
             ("ap-southeast-2", "sts.ap-southeast-2.amazonaws.com"),
             ("cn-north-1", "sts.cn-north-1.amazonaws.com.cn"),
+            ("us-isob-east-1", "sts.us-isob-east-1.sc2s.sgov.gov"),
+            ("us-iso-east-1", "sts.us-iso-east-1.c2s.ic.gov"),
+            ("eu-isoe-west-1", "sts.eu-isoe-west-1.cloud.adc-e.uk"),
+            ("us-isof-south-1", "sts.us-isof-south-1.csp.hci.ic.gov"),
+            ("eusc-de-east-1", "sts.eusc-de-east-1.amazonaws.eu"),
         ];
         for (region, expected) in cases {
-            assert_eq!(sts_hostname(region), expected, "region {region}");
+            assert_eq!(sts_authority(region, None), expected, "region {region}");
         }
+    }
+
+    #[test]
+    fn parse_workload_identity_host_accepts_bare_host_url_and_port() {
+        let bare = parse_workload_identity_host("sts.sc2s.sgov.gov").expect("bare host");
+        assert_eq!(bare.authority, "sts.sc2s.sgov.gov");
+        assert_eq!(bare.base_url, "https://sts.sc2s.sgov.gov");
+        assert!(bare.overridden);
+
+        let https = parse_workload_identity_host("https://sts.sc2s.sgov.gov").expect("https host");
+        assert_eq!(https.authority, "sts.sc2s.sgov.gov");
+        assert_eq!(https.base_url, "https://sts.sc2s.sgov.gov");
+
+        let http = parse_workload_identity_host("http://sts.example.snowflake.com:8443")
+            .expect("http host with port");
+        assert_eq!(http.authority, "sts.example.snowflake.com:8443");
+        assert_eq!(http.base_url, "http://sts.example.snowflake.com:8443");
+
+        let mixed = parse_workload_identity_host("STS.Example.Snowflake.COM").expect("mixed case");
+        assert_eq!(mixed.authority, "sts.example.snowflake.com");
+
+        let with_path = parse_workload_identity_host("https://sts.example.snowflake.com/foo/")
+            .expect("host with path");
+        assert_eq!(with_path.authority, "sts.example.snowflake.com");
+        assert_eq!(with_path.base_url, "https://sts.example.snowflake.com/foo");
+
+        let ipv6 = parse_workload_identity_host("https://[2001:db8::1]:8443").expect("ipv6 host");
+        assert_eq!(ipv6.authority, "[2001:db8::1]:8443");
+        assert_eq!(ipv6.base_url, "https://[2001:db8::1]:8443");
+    }
+
+    #[test]
+    fn parse_workload_identity_host_rejects_empty_userinfo_query_fragment_and_bad_scheme() {
+        for (input, echoed) in [
+            ("", ""),
+            (
+                "user:pass@sts.example.snowflake.com",
+                "sts.example.snowflake.com",
+            ),
+            (
+                "https://user:pass@sts.example.snowflake.com",
+                "sts.example.snowflake.com",
+            ),
+            (
+                "https://sts.example.snowflake.com?x=1",
+                "sts.example.snowflake.com",
+            ),
+            (
+                "https://sts.example.snowflake.com#frag",
+                "sts.example.snowflake.com",
+            ),
+            (
+                "ftp://sts.example.snowflake.com",
+                "sts.example.snowflake.com",
+            ),
+            (
+                "https://sts.example.snowflake.com/foo?x=1",
+                "sts.example.snowflake.com/foo",
+            ),
+            ("blob:https://user:LEAK@host/id?token=SECRET#frag", ""),
+            (
+                "view-source:https://user:LEAK@example.com/path?token=SECRET#frag",
+                "",
+            ),
+            ("javascript:https://user:LEAK@example.com/x?y=SECRET#f", ""),
+            ("filesystem:https://user:LEAK@example.com/secret?x=1#f", ""),
+        ] {
+            let err = parse_workload_identity_host(input).expect_err("rejected wif_host");
+            assert!(
+                matches!(err, AwsAttestationError::InvalidWifHost { .. }),
+                "expected InvalidWifHost for {input:?}, got {err:?}"
+            );
+            assert_eq!(err.to_string(), format!("invalid wif_host '{echoed}'"));
+        }
+    }
+
+    #[test]
+    fn default_sts_endpoint_fails_closed_on_invalid_region() {
+        let err = default_sts_endpoint("not a region").unwrap_err();
+        assert!(
+            matches!(err, AwsAttestationError::StsEndpointResolve { .. }),
+            "expected fail-closed resolve error, got {err:?}"
+        );
     }
 
     #[test]
@@ -1297,7 +1691,9 @@ mod tests {
             "us-east-1",
             "20240101T120000Z",
             "20240101",
-        );
+            None,
+        )
+        .expect("regional STS host");
 
         let json = serde_json::to_string(&request)?;
         let decoded: serde_json::Value = serde_json::from_str(&json)?;
@@ -1324,6 +1720,105 @@ mod tests {
     }
 
     #[test]
+    fn caller_identity_request_uses_wif_host_verbatim() -> Result<(), serde_json::Error> {
+        let request = build_signed_caller_identity_request(
+            "AKIAIOSFODNN7EXAMPLE",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            None,
+            "cn-north-1",
+            "20240101T120000Z",
+            "20240101",
+            Some("sts.sc2s.sgov.gov"),
+        )
+        .expect("wif_host override");
+
+        let json = serde_json::to_string(&request)?;
+        let decoded: serde_json::Value = serde_json::from_str(&json)?;
+
+        assert_eq!(
+            decoded["url"],
+            "https://sts.sc2s.sgov.gov/?Action=GetCallerIdentity&Version=2011-06-15"
+        );
+        assert_eq!(decoded["headers"]["Host"], "sts.sc2s.sgov.gov");
+
+        Ok(())
+    }
+
+    #[test]
+    fn caller_identity_request_strips_http_prefix_from_wif_host() -> Result<(), serde_json::Error> {
+        let request = build_signed_caller_identity_request(
+            "AKIAIOSFODNN7EXAMPLE",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            None,
+            "cn-north-1",
+            "20240101T120000Z",
+            "20240101",
+            Some("https://sts.sc2s.sgov.gov"),
+        )
+        .expect("https wif_host override");
+        let decoded: serde_json::Value = serde_json::from_str(&serde_json::to_string(&request)?)?;
+        assert_eq!(
+            decoded["url"],
+            "https://sts.sc2s.sgov.gov/?Action=GetCallerIdentity&Version=2011-06-15"
+        );
+        assert_eq!(decoded["headers"]["Host"], "sts.sc2s.sgov.gov");
+
+        let http = build_signed_caller_identity_request(
+            "AKIAIOSFODNN7EXAMPLE",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            None,
+            "cn-north-1",
+            "20240101T120000Z",
+            "20240101",
+            Some("http://sts.example.snowflake.com:8443"),
+        )
+        .expect("http wif_host override");
+        let http: serde_json::Value = serde_json::from_str(&serde_json::to_string(&http)?)?;
+        assert_eq!(
+            http["url"],
+            "http://sts.example.snowflake.com:8443/?Action=GetCallerIdentity&Version=2011-06-15"
+        );
+        assert_eq!(http["headers"]["Host"], "sts.example.snowflake.com:8443");
+
+        let with_path = build_signed_caller_identity_request(
+            "AKIAIOSFODNN7EXAMPLE",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            None,
+            "cn-north-1",
+            "20240101T120000Z",
+            "20240101",
+            Some("https://sts.example.snowflake.com/foo/"),
+        )
+        .expect("path wif_host override");
+        let with_path: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&with_path)?)?;
+        assert_eq!(
+            with_path["url"],
+            "https://sts.example.snowflake.com/foo?Action=GetCallerIdentity&Version=2011-06-15"
+        );
+        assert_eq!(with_path["headers"]["Host"], "sts.example.snowflake.com");
+
+        let ipv6 = build_signed_caller_identity_request(
+            "AKIAIOSFODNN7EXAMPLE",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            None,
+            "cn-north-1",
+            "20240101T120000Z",
+            "20240101",
+            Some("https://[2001:db8::1]:8443"),
+        )
+        .expect("ipv6 wif_host override");
+        let ipv6: serde_json::Value = serde_json::from_str(&serde_json::to_string(&ipv6)?)?;
+        assert_eq!(
+            ipv6["url"],
+            "https://[2001:db8::1]:8443/?Action=GetCallerIdentity&Version=2011-06-15"
+        );
+        assert_eq!(ipv6["headers"]["Host"], "[2001:db8::1]:8443");
+
+        Ok(())
+    }
+
+    #[test]
     fn caller_identity_request_matches_sigv4_reference_without_session_token()
     -> Result<(), serde_json::Error> {
         let request = build_signed_caller_identity_request(
@@ -1333,7 +1828,9 @@ mod tests {
             "eu-west-1",
             "20240101T120000Z",
             "20240101",
-        );
+            None,
+        )
+        .expect("regional STS host");
 
         let json = serde_json::to_string(&request)?;
         let decoded: serde_json::Value = serde_json::from_str(&json)?;

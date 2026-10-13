@@ -300,6 +300,7 @@ mod tests {
             azure_client_id: None,
             impersonation_path: Vec::new(),
             aws_use_outbound_token: false,
+            wif_host: None,
             oidc_token: None,
         }
     }
@@ -670,6 +671,7 @@ mod tests {
             azure_client_id: None,
             impersonation_path: Vec::new(),
             aws_use_outbound_token: false,
+            wif_host: None,
             oidc_token: None,
         };
         let client = reqwest::Client::new();

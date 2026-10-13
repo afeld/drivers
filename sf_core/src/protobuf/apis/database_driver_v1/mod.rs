@@ -1259,17 +1259,20 @@ impl DatabaseDriver for DatabaseDriverImpl {
             })
             .to_protobuf()?;
 
-        let config = WorkloadIdentityConfig {
+        let config = WorkloadIdentityConfig::new(
             provider,
-            entra_resource: input.entra_resource.filter(|s| !s.is_empty()),
-            azure_client_id: None,
-            impersonation_path: input.impersonation_path,
-            aws_use_outbound_token: input.aws_use_outbound_token.unwrap_or(false),
-            oidc_token: input
+            input.entra_resource.filter(|s| !s.is_empty()),
+            None,
+            input.impersonation_path,
+            input
                 .token
                 .filter(|s| !s.is_empty())
                 .map(SensitiveString::from),
-        };
+            input.aws_use_outbound_token.unwrap_or(false),
+            input.wif_host,
+        )
+        .context(ConfigurationSnafu)
+        .to_protobuf()?;
 
         // The provider modules call cloud metadata / IdP endpoints, not
         // Snowflake, so the account-specific login client isn't needed; the

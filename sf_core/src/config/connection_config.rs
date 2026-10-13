@@ -567,6 +567,7 @@ fn login_method_from_auth_config(auth: &AuthConfig) -> LoginMethod {
                 impersonation_path: cfg.impersonation_path.clone(),
                 oidc_token: cfg.oidc_token.clone(),
                 aws_use_outbound_token: cfg.aws_use_outbound_token,
+                wif_host: cfg.wif_host.clone(),
             })
         }
     }
@@ -976,6 +977,31 @@ pub fn validate_settings(settings: &ParamStore) -> Vec<ValidationIssue> {
                     });
                 }
             }
+            if let Some(provider) = settings
+                .get_string(WORKLOAD_IDENTITY_PROVIDER)
+                .as_deref()
+                .and_then(WifProvider::parse_str)
+                && let Err(ConfigError::ConflictingParameters {
+                    parameter,
+                    explanation,
+                    ..
+                }) = WorkloadIdentityConfig::new(
+                    provider,
+                    None,
+                    None,
+                    Vec::new(),
+                    None,
+                    false,
+                    settings.get_string(WIF_HOST),
+                )
+            {
+                issues.push(ValidationIssue {
+                    severity: ValidationSeverity::Error,
+                    parameter,
+                    message: explanation,
+                    code: ValidationCode::ConflictingWifParameters,
+                });
+            }
         }
         _ if auth_upper.starts_with("HTTPS://") => {
             if Url::parse(&authenticator).is_err() {
@@ -1121,6 +1147,7 @@ pub fn validate_settings(settings: &ParamStore) -> Vec<ValidationIssue> {
             WORKLOAD_IDENTITY_ENTRA_RESOURCE,
             WORKLOAD_IDENTITY_AZURE_CLIENT_ID,
             WORKLOAD_IDENTITY_IMPERSONATION_PATH,
+            WIF_HOST,
         ] {
             if non_empty_string(settings, param).is_some() {
                 issues.push(ValidationIssue {
@@ -3639,6 +3666,80 @@ mod tests {
                     && i.code == ValidationCode::ConflictingWifParameters
             }),
             "Expected ConflictingWifParameters when authenticator absent, got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn validate_wif_host_rejected_unless_provider_is_aws() {
+        let mut azure = wif_base_settings("AZURE");
+        azure.push(("wif_host", Setting::String("sts.example.com".into())));
+        let azure_issues = validate_settings(&settings_from(&azure));
+        assert!(
+            azure_issues.iter().any(|i| {
+                i.parameter == "wif_host"
+                    && i.code == ValidationCode::ConflictingWifParameters
+                    && i.message == "wif_host is supported only for AWS"
+            }),
+            "wif_host with a non-AWS provider should fail, got: {azure_issues:?}"
+        );
+
+        let mut aws = wif_base_settings("AWS");
+        aws.push(("wif_host", Setting::String("sts.example.com".into())));
+        let aws_issues = validate_settings(&settings_from(&aws));
+        assert!(
+            !aws_issues.iter().any(|i| i.parameter == "wif_host"),
+            "wif_host with AWS should be accepted, got: {aws_issues:?}"
+        );
+    }
+
+    #[test]
+    fn validate_wif_host_is_not_checked_until_the_provider_parses() {
+        let missing = settings_from(&[
+            ("account", Setting::String("acct".into())),
+            (
+                "host",
+                Setting::String("acct.snowflakecomputing.com".into()),
+            ),
+            ("authenticator", Setting::String("WORKLOAD_IDENTITY".into())),
+            ("wif_host", Setting::String("sts.example.com".into())),
+        ]);
+        let missing_issues = validate_settings(&missing);
+        assert!(
+            missing_issues.iter().any(|i| {
+                i.parameter == "workload_identity_provider"
+                    && i.code == ValidationCode::MissingRequired
+            }),
+            "missing provider should be reported, got: {missing_issues:?}"
+        );
+        assert!(
+            !missing_issues.iter().any(|i| i.parameter == "wif_host"),
+            "missing provider should not also reject wif_host, got: {missing_issues:?}"
+        );
+
+        let unparsed = settings_from(&[
+            ("account", Setting::String("acct".into())),
+            (
+                "host",
+                Setting::String("acct.snowflakecomputing.com".into()),
+            ),
+            ("authenticator", Setting::String("WORKLOAD_IDENTITY".into())),
+            (
+                "workload_identity_provider",
+                Setting::String("not-a-provider".into()),
+            ),
+            ("wif_host", Setting::String("sts.example.com".into())),
+        ]);
+        let unparsed_issues = validate_settings(&unparsed);
+        assert!(
+            unparsed_issues.iter().any(|i| {
+                i.parameter == "workload_identity_provider"
+                    && i.code == ValidationCode::InvalidValue
+            }),
+            "unparsed provider should be reported, got: {unparsed_issues:?}"
+        );
+        assert!(
+            !unparsed_issues.iter().any(|i| i.parameter == "wif_host"),
+            "unparsed provider should not also reject wif_host, got: {unparsed_issues:?}"
         );
     }
 
