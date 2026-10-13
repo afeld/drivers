@@ -85,6 +85,10 @@ TEST_CASE("should be idempotent when close called multiple times", "[session][lo
   CHECK(first_ret == SQL_SUCCESS);
 }
 
+// SNOW-4243760: new driver still SIGABRTs on concurrent SQLDisconnect under
+// unixODBC (~64–80% abort on Linux / macos-arm-gcp). iODBC serializes at the DM
+// and is clean. Keep [flaky] until the driver serializes disconnect; do not
+// un-quarantine while aborts remain.
 TEST_CASE("should handle concurrent close calls safely", "[session][logout][flaky]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");

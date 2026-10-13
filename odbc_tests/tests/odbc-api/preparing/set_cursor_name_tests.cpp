@@ -258,10 +258,9 @@ TEST_CASE_METHOD(EnvDefaultDSNFixture, "SQLSetCursorName: same name on two diffe
   REQUIRE(SQLSetCursorName(stmt2.getHandle(), sqlchar("SharedName"), SQL_NTS) == SQL_SUCCESS);
 }
 
-// [flaky]: intermittently segfaults freeing stmt1's StatementHandleWrapper (the cursor-name
-// release path) under CI load; the same test passes cleanly on other runs. Tags it `[flaky]`
-// so it's excluded from the gating run and moved to the separate flaky-test job, per existing
-// convention in this file's directory (see async_execution.cpp's cross-thread cancel test).
+// SNOW-4243762: SQLFreeHandle of a statement with a custom cursor name
+// intermittently SEGFAULTs (~38% Linux x64, ~3–9% Windows ARM). Keep [flaky]
+// until the driver free path is fixed; do not un-quarantine while SEGFAULT remains.
 // Failure: https://github.com/snowflakedb/drivers/actions/runs/30533857404/job/90849833008?pr=881
 TEST_CASE_METHOD(DbcDefaultDSNFixture, "SQLSetCursorName: name reusable after freeing the owning statement",
                  "[odbc-api][cursorname][preparing][flaky]") {

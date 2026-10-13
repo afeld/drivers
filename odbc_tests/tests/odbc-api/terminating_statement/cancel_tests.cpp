@@ -974,15 +974,11 @@ TEST_CASE_METHOD(StmtDefaultDSNFixture, "SQLCancel: Async cancel clears diagnost
 // SQLCancel - Cross-Thread Cancel
 // ============================================================================
 
-// [flaky]: cross-thread SQLCancel races the in-flight SQLExecDirect, so the
-// canceled statement intermittently ends up with two diagnostic records (an
-// extra S1010 sequence error) instead of the coalesced single HY008 — a
-// timing ambiguity the ODBC spec explicitly permits (see BD#70 below and the
-// prior mitigations in NO-SNOW #982 / #1055). The [flaky] tag maps to the
-// CTest `flaky` label, so this runs in the non-blocking flaky job rather than
-// gating merges.
 TEST_CASE_METHOD(StmtDefaultDSNFixture, "SQLCancel: Cross-thread cancel interrupts execution with HY008",
-                 "[odbc-api][cancel][terminating_statement][cross_thread][flaky]") {
+                 "[odbc-api][cancel][terminating_statement][cross_thread]") {
+  SKIP_IODBC(
+      "iODBC DM posts S1010 on cross-thread SQLCancel instead of HY008 "
+      "(BD#70); 274/274 fail on macos-arm-aws-iodbc, 0 fails elsewhere");
   SQLHSTMT stmt = stmt_handle();
   odbc_test::CrossThreadCancel ctx;
   // 5-second delay lets the query reach the server before cancel fires.

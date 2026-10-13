@@ -47,9 +47,11 @@ class ExtraConnectedDbc {
   }
 
   ~ExtraConnectedDbc() {
-    stmt_wrapper_.reset();
-    if (dbc_wrapper_.getHandle() != SQL_NULL_HDBC) {
-      SQLDisconnect(dbc_wrapper_.getHandle());
+    if (!disconnected_) {
+      stmt_wrapper_.reset();
+      if (dbc_wrapper_.getHandle() != SQL_NULL_HDBC) {
+        SQLDisconnect(dbc_wrapper_.getHandle());
+      }
     }
   }
 
@@ -60,16 +62,24 @@ class ExtraConnectedDbc {
   // transaction is still open (SNOW-3831236), so callers that need the connection to be genuinely
   // closed afterwards must end the transaction (SQLEndTran commit/rollback) first. The return code
   // is logged so an unexpected failure is observable.
+  //
+  // Free the statement *before* SQLDisconnect. SNOW-3240577: a successful
+  // disconnect drains child statements, so a later SQLFreeHandle on those
+  // handles is invalid. The Windows ARM DM AVs that double-free (Catch2
+  // SEGFAULT in the env-scope EndTran/Transact skip-disconnected tests).
   void disconnect() {
+    stmt_wrapper_.reset();
     if (dbc_wrapper_.getHandle() != SQL_NULL_HDBC) {
       const SQLRETURN ret = SQLDisconnect(dbc_wrapper_.getHandle());
       INFO("SQLDisconnect returned " << ret);
     }
+    disconnected_ = true;
   }
 
  private:
   ConnectionHandleWrapper dbc_wrapper_;
   std::optional<StatementHandleWrapper> stmt_wrapper_;
+  bool disconnected_ = false;
 };
 
 #endif  // TERMINATING_STATEMENT_HELPERS_HPP
