@@ -76,6 +76,10 @@ docker run --rm --platform "$PLATFORM" \
     -v "${HELPERS}/totpGenerator.js:/externalbrowser/totpGenerator.js:ro" \
     -v "${HELPERS}/totpGenerator.test.js:/externalbrowser/totpGenerator.test.js:ro" \
     -v "${HELPERS}/provideBrowserCredentials.js:/externalbrowser/provideBrowserCredentials.js:ro" \
+    -v "${HELPERS}/oauthBrowserSteps.js:/externalbrowser/oauthBrowserSteps.js:ro" \
+    -v "${HELPERS}/oauthBrowserSteps.test.js:/externalbrowser/oauthBrowserSteps.test.js:ro" \
+    -v "${HELPERS}/snowflakeSignIn.js:/externalbrowser/snowflakeSignIn.js:ro" \
+    -v "${HELPERS}/snowflakeSignIn.test.js:/externalbrowser/snowflakeSignIn.test.js:ro" \
     -v "${HELPERS}/getTOTP.js:/externalbrowser/getTOTP.js:ro" \
     -e WORKSPACE_ROOT=/mnt/host \
     -e WORKSPACE=/mnt/host \
@@ -83,5 +87,5 @@ docker run --rm --platform "$PLATFORM" \
     -e AUTH_BROWSER_MODE="${AUTH_BROWSER_MODE}" \
     ${DOCKER_RUN_EXTRA_ARGS:-} \
     "${DOCKER_IMAGE}" \
-    bash -c "cd /externalbrowser && node --test totpGenerator.test.js && bash /mnt/host/tests/auth/auth_browser_${WRAPPER}.sh \"\$@\"" \
+    bash -c "cd /externalbrowser && node --test totpGenerator.test.js oauthBrowserSteps.test.js snowflakeSignIn.test.js && bash /mnt/host/tests/auth/auth_browser_${WRAPPER}.sh \"\$@\"" \
     auth_browser "$@"

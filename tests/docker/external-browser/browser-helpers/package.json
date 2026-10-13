@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "provideBrowserCredentials.js",
   "scripts": {
-    "test": "node --test totpGenerator.test.js"
+    "test": "node --test totpGenerator.test.js oauthBrowserSteps.test.js snowflakeSignIn.test.js"
   },
   "author": "",
   "license": "ISC",

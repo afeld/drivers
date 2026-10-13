@@ -40,6 +40,10 @@ RUN ARCH=$(dpkg --print-architecture) \
 COPY browser-helpers/package.json /externalbrowser/package.json
 COPY browser-helpers/cleanBrowserProcesses.js /externalbrowser/cleanBrowserProcesses.js
 COPY browser-helpers/provideBrowserCredentials.js /externalbrowser/provideBrowserCredentials.js
+COPY browser-helpers/oauthBrowserSteps.js /externalbrowser/oauthBrowserSteps.js
+COPY browser-helpers/oauthBrowserSteps.test.js /externalbrowser/oauthBrowserSteps.test.js
+COPY browser-helpers/snowflakeSignIn.js /externalbrowser/snowflakeSignIn.js
+COPY browser-helpers/snowflakeSignIn.test.js /externalbrowser/snowflakeSignIn.test.js
 COPY browser-helpers/getOauthToken.js /externalbrowser/getOauthToken.js
 COPY browser-helpers/patHelper.js /externalbrowser/patHelper.js
 COPY browser-helpers/totpGenerator.js /externalbrowser/totpGenerator.js
