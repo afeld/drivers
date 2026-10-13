@@ -78,7 +78,7 @@ export declare class Statement {
   getNumUpdatedRows(): number | null
   getSessionState(): SessionState | null
   /**
-   * Not part of the driver's public API. Callers are suposed toinvoke this only after the
+   * Not part of the driver's public API. Callers are suposed to invoke this only after the
    * statement has finished, so a result that is not yet ready is a programming error
    */
   getSessionParametersSnapshot(): KnownSessionParameters

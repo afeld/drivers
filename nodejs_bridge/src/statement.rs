@@ -8,18 +8,21 @@ mod stream_state;
 
 pub use column::Column;
 
+use crate::BRIDGE;
 use crate::error::{BridgeError, ToJsError, async_to_js};
-use crate::session::Ready;
+use crate::session::Session;
 use crate::session_params::KnownSessionParameters;
 use crate::session_state::SessionState;
+use crate::validation_utils::{require_valid_query_id, require_valid_request_id};
 use napi::bindgen_prelude::*;
-use napi::tokio::sync::{Mutex, MutexGuard};
+use napi::tokio::sync::MutexGuard;
 use napi_derive::napi;
-use result::{ResultData, StatementOutcome, StatementResult};
-use sf_core::apis::database_driver_v1::{AsyncExecuteResult, ExecuteQueryResult};
+use result::{QueryResult, ResultValue, StatementResult};
+use sf_core::apis::database_driver_v1::{BindingType, DataPtr};
 use sf_core::apis::operation_ctx::OperationCtx;
+use sf_core::config::settings::Setting;
 use sf_core::query_types::QueryType;
-use std::future::Future;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 const NUM_UPDATED_ROWS_NOT_APPLICABLE: i64 = -1;
@@ -32,49 +35,79 @@ pub enum StatementStatus {
 }
 
 #[napi]
+pub enum QueryBindingFormat {
+    Json,
+    Csv,
+}
+
+/// Bind parameters handed down from the wrapper. `data` is either a JSON object
+/// of `{ "1": { type, value }, ... }` or CSV text, selected by `format`.
+#[napi(object)]
+pub struct QueryBindings {
+    pub format: QueryBindingFormat,
+    pub data: String,
+}
+
+impl QueryBindings {
+    fn as_binding_type(&self) -> BindingType<'_> {
+        let ptr = DataPtr::new(self.data.as_ptr(), self.data.len() as i64);
+        match self.format {
+            QueryBindingFormat::Csv => BindingType::Csv(ptr),
+            QueryBindingFormat::Json => BindingType::Json(ptr),
+        }
+    }
+}
+
+#[napi(object)]
+pub struct ExecuteParams {
+    pub query: String,
+    pub bindings: Option<QueryBindings>,
+    pub parameters: Option<HashMap<String, String>>,
+    pub async_exec: Option<bool>,
+    pub request_id: Option<String>,
+    pub describe_only: Option<bool>,
+}
+
+#[napi]
 pub struct Statement {
     result: StatementResult,
-    operation_ctx: Option<Arc<OperationCtx>>,
+    operation_ctx: Arc<OperationCtx>,
     request_id: Option<uuid::Uuid>,
 }
 
 #[napi]
 impl Statement {
-    pub(crate) fn from_query_result(
-        operation_ctx: Option<Arc<OperationCtx>>,
-        request_id: Option<uuid::Uuid>,
-        result_future: impl Future<
-            Output = std::result::Result<(Ready, ExecuteQueryResult), BridgeError>,
-        > + Send
-        + 'static,
-    ) -> Self {
-        Self {
+    pub(crate) fn execute(
+        session: Session,
+        mut params: ExecuteParams,
+    ) -> std::result::Result<Self, BridgeError> {
+        let request_id = resolve_request_id(params.request_id.take(), uuid::Uuid::new_v4)?;
+        let operation_ctx = Arc::new(OperationCtx::with_own_token());
+        let task_ctx = Arc::clone(&operation_ctx);
+        Ok(Self {
             result: StatementResult::from_future(async move {
-                let (ready, result) = result_future.await?;
-                Ok(StatementOutcome::Rows(Mutex::new(Box::new(
-                    ResultData::from_execute_result(result, ready.connection()).await?,
-                ))))
+                run_execute(session, params, request_id, &task_ctx).await
             }),
             operation_ctx,
-            request_id,
-        }
+            request_id: Some(request_id),
+        })
     }
 
-    pub(crate) fn from_async_exec(
-        operation_ctx: Option<Arc<OperationCtx>>,
-        request_id: Option<uuid::Uuid>,
-        result_future: impl Future<Output = std::result::Result<AsyncExecuteResult, BridgeError>>
-        + Send
-        + 'static,
-    ) -> Self {
+    pub(crate) fn from_query_id(session: Session, query_id: String) -> Self {
+        let operation_ctx = Arc::new(OperationCtx::with_own_token());
+        let task_ctx = Arc::clone(&operation_ctx);
         Self {
             result: StatementResult::from_future(async move {
-                Ok(StatementOutcome::AsyncSubmitted {
-                    query_id: result_future.await?.query_id,
-                })
+                require_valid_query_id(&query_id)?;
+                let ready = session.ready().await?;
+                let result = BRIDGE
+                    .driver
+                    .connection_get_query_result(Some(&task_ctx), ready.connection(), query_id)
+                    .await?;
+                ResultValue::from_execute_result(result, ready.connection()).await
             }),
             operation_ctx,
-            request_id,
+            request_id: None,
         }
     }
 
@@ -91,31 +124,16 @@ impl Statement {
     pub fn fetch_next_batch(&self, env: &Env) -> Result<AsyncBlock<bool>> {
         let result = self.result.clone();
         async_to_js(env, async move {
-            let outcome = result.ready().await?;
-            let StatementOutcome::Rows(mutex) = outcome else {
+            let value = result.ready().await?;
+            let ResultValue::QueryResult(query_result) = value else {
                 return Ok(false);
             };
-            let data = mutex.lock().await;
-            let stream_state = Arc::clone(&data.stream_state);
-            let session_params = Arc::clone(&data.session_params);
-            drop(data);
+            let query_result = query_result.lock().await;
+            let stream_state = Arc::clone(&query_result.stream_state);
+            let session_params = Arc::clone(&query_result.session_params);
+            drop(query_result);
             stream_state.fetch_next_batch(&session_params).await
         })
-    }
-
-    fn ready_rows(&self, env: &Env) -> Result<Option<MutexGuard<'_, Box<ResultData>>>> {
-        match self.result.get() {
-            None => Ok(None),
-            Some(Ok(outcome)) => Ok(outcome.rows()),
-            Some(Err(error)) => Err(error.to_js_error(*env)),
-        }
-    }
-
-    fn rows(&self) -> Option<MutexGuard<'_, Box<ResultData>>> {
-        match self.result.get() {
-            Some(Ok(outcome)) => outcome.rows(),
-            None | Some(Err(_)) => None,
-        }
     }
 
     /// Returns the next row of the current batch, or `null` once that batch
@@ -123,9 +141,13 @@ impl Statement {
     /// another.
     #[napi]
     pub fn get_next_row<'env>(&self, env: &'env Env) -> Result<Option<Array<'env>>> {
-        match self.ready_rows(env)? {
-            Some(data) => data.stream_state.next_row(env),
+        match self.result.get() {
             None => Ok(None),
+            Some(Err(error)) => Err(error.to_js_error(*env)),
+            Some(Ok(value)) => match value.lock_query_result() {
+                Some(query_result) => query_result.stream_state.next_row(env),
+                None => Ok(None),
+            },
         }
     }
 
@@ -150,22 +172,30 @@ impl Statement {
     pub fn get_query_id(&self, _env: &Env) -> Result<Option<String>> {
         match self.result.get() {
             None => Ok(None),
-            Some(Ok(outcome)) => Ok(Some(outcome.query_id())),
+            Some(Ok(value)) => Ok(Some(value.query_id())),
             Some(Err(BridgeError::Core(api_error))) => Ok(api_error.query_id()),
             Some(Err(_)) => Ok(None),
         }
     }
 
+    /// `None` while pending, on failure, or for async-submitted queries.
+    fn successful_query_result(&self) -> Option<MutexGuard<'_, Box<QueryResult>>> {
+        match self.result.get() {
+            Some(Ok(value)) => value.lock_query_result(),
+            None | Some(Err(_)) => None,
+        }
+    }
+
     #[napi]
     pub fn get_num_rows(&self) -> Option<i64> {
-        self.rows()
-            .and_then(|data| data.result_set_descriptor.row_count)
+        self.successful_query_result()
+            .and_then(|query_result| query_result.result_set_descriptor.row_count)
     }
 
     #[napi]
     pub fn get_num_updated_rows(&self) -> Option<i64> {
-        let data = self.rows()?;
-        let query_type = QueryType::from_raw(data.result_set_descriptor.statement_type_id);
+        let query_result = self.successful_query_result()?;
+        let query_type = QueryType::from_raw(query_result.result_set_descriptor.statement_type_id);
         Some(
             if matches!(
                 query_type,
@@ -176,7 +206,10 @@ impl Statement {
                     | QueryType::MULTI_TABLE_INSERT
                     | QueryType::COPY
             ) {
-                data.result_set_descriptor.rows_affected.unwrap_or(0)
+                query_result
+                    .result_set_descriptor
+                    .rows_affected
+                    .unwrap_or(0)
             } else {
                 NUM_UPDATED_ROWS_NOT_APPLICABLE
             },
@@ -185,11 +218,11 @@ impl Statement {
 
     #[napi]
     pub fn get_session_state(&self) -> Option<SessionState> {
-        self.rows()
-            .map(|data| SessionState::from_descriptor(&data.result_set_descriptor))
+        self.successful_query_result()
+            .map(|query_result| SessionState::from_descriptor(&query_result.result_set_descriptor))
     }
 
-    /// Not part of the driver's public API. Callers are suposed toinvoke this only after the
+    /// Not part of the driver's public API. Callers are suposed to invoke this only after the
     /// statement has finished, so a result that is not yet ready is a programming error
     #[napi]
     pub fn get_session_parameters_snapshot(&self, env: &Env) -> Result<KnownSessionParameters> {
@@ -198,8 +231,8 @@ impl Statement {
                 "session parameters snapshot requested before the statement finished".to_string(),
             )
             .to_js_error(*env)),
-            Some(Ok(outcome)) => match outcome.rows() {
-                Some(data) => Ok((*data.session_params).clone()),
+            Some(Ok(value)) => match value.lock_query_result() {
+                Some(query_result) => Ok((*query_result.session_params).clone()),
                 None => Err(BridgeError::Message(
                     "session parameters snapshot requested on a statement with no result set"
                         .to_string(),
@@ -212,8 +245,9 @@ impl Statement {
 
     #[napi]
     pub fn get_columns(&self) -> Option<Vec<Column>> {
-        self.rows().map(|data| {
-            data.result_set_descriptor
+        self.successful_query_result().map(|query_result| {
+            query_result
+                .result_set_descriptor
                 .columns
                 .iter()
                 .enumerate()
@@ -224,8 +258,8 @@ impl Statement {
 
     #[napi]
     pub fn get_column(&self, identifier: Either<String, u32>) -> Option<Column> {
-        let data = self.rows()?;
-        let columns = &data.result_set_descriptor.columns;
+        let query_result = self.successful_query_result()?;
+        let columns = &query_result.result_set_descriptor.columns;
         match identifier {
             Either::A(name) => columns
                 .iter()
@@ -242,40 +276,34 @@ impl Statement {
     // processed from the bridge
     #[napi]
     pub fn close(&self) -> Result<()> {
-        if let Some(Ok(outcome)) = self.result.get()
-            && let Some(mut data) = outcome.rows()
-        {
-            data.close();
+        if let Some(mut query_result) = self.successful_query_result() {
+            query_result.close();
         }
         Ok(())
     }
 
     #[napi]
     pub fn has_next(&self) -> bool {
-        match self.result.get() {
-            Some(Ok(outcome)) => outcome.rows().is_some_and(|data| data.has_next()),
-            _ => false,
-        }
+        self.successful_query_result()
+            .is_some_and(|query_result| query_result.has_next())
     }
 
     #[napi]
     pub fn is_multi_statement(&self) -> bool {
-        match self.result.get() {
-            Some(Ok(outcome)) => outcome.rows().is_some_and(|data| data.is_multi_statement()),
-            _ => false,
-        }
+        self.successful_query_result()
+            .is_some_and(|query_result| query_result.is_multi_statement())
     }
 
     #[napi]
     pub fn next_result(&self, env: &Env) -> Result<AsyncBlock<bool>> {
         let result = self.result.clone();
         async_to_js(env, async move {
-            let outcome = result.ready().await?;
-            let StatementOutcome::Rows(mutex) = outcome else {
+            let value = result.ready().await?;
+            let ResultValue::QueryResult(query_result) = value else {
                 return Ok(false);
             };
-            let mut data = mutex.lock().await;
-            data.next_result().await
+            let mut query_result = query_result.lock().await;
+            query_result.next_result().await
         })
     }
 
@@ -283,9 +311,118 @@ impl Statement {
     // swallowing the outcome.
     #[napi]
     pub async fn cancel(&self) -> Result<()> {
-        if let Some(operation_ctx) = &self.operation_ctx {
-            operation_ctx.cancel();
-        }
+        self.operation_ctx.cancel();
         Ok(())
+    }
+}
+
+fn resolve_request_id(
+    request_id: Option<String>,
+    uuid_supplier: impl FnOnce() -> uuid::Uuid,
+) -> std::result::Result<uuid::Uuid, BridgeError> {
+    match request_id.filter(|id| !id.is_empty()) {
+        None => Ok(uuid_supplier()),
+        // Uuid::parse_str also accepts 32-char, braced, and urn forms.
+        // require_valid_request_id keeps requestId on the same hyphenated check as queryId.
+        Some(id) => require_valid_request_id(&id).and_then(|()| {
+            uuid::Uuid::parse_str(&id).map_err(|_| BridgeError::InvalidRequestId(id))
+        }),
+    }
+}
+
+async fn run_execute(
+    session: Session,
+    params: ExecuteParams,
+    request_id: uuid::Uuid,
+    operation_ctx: &OperationCtx,
+) -> std::result::Result<ResultValue, BridgeError> {
+    let driver = &BRIDGE.driver;
+    let conn_handle = session.ready().await?.connection();
+    let stmt = driver.statement_new(conn_handle)?;
+
+    let result = async {
+        driver.statement_set_sql_query(stmt, params.query).await?;
+        if let Some(parameters) = params.parameters {
+            let options = parameters
+                .into_iter()
+                .map(|(k, v)| (k, Setting::String(v)))
+                .collect();
+            driver.statement_set_options(stmt, options).await?;
+        }
+        let binds = params.bindings.as_ref().map(QueryBindings::as_binding_type);
+        if params.async_exec.unwrap_or(false) {
+            let submitted = driver
+                .statement_execute_async(
+                    Some(operation_ctx),
+                    stmt,
+                    binds,
+                    Some(request_id),
+                    params.describe_only,
+                )
+                .await?;
+            return Ok(ResultValue::AsyncSubmitted {
+                query_id: submitted.query_id,
+            });
+        }
+        let result = driver
+            .statement_execute_query(
+                Some(operation_ctx),
+                stmt,
+                binds,
+                None,
+                Some(request_id),
+                params.describe_only,
+            )
+            .await?;
+        ResultValue::from_execute_result(result, conn_handle).await
+    }
+    .await;
+
+    let _ = driver.statement_release(stmt);
+    result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn resolve_request_id_creates_uuid_when_omitted() {
+        let supplied = uuid::Uuid::from_u128(0x1234_5678_1234_4123_a123_1234_5678_9012);
+        let Ok(parsed) = resolve_request_id(None, || supplied) else {
+            panic!("minted request id parses");
+        };
+        assert_eq!(parsed, supplied);
+    }
+
+    #[test]
+    fn resolve_request_id_creates_uuid_when_empty() {
+        let supplied = uuid::Uuid::from_u128(0x1234_5678_1234_4123_a123_1234_5678_9012);
+        let Ok(parsed) = resolve_request_id(Some(String::new()), || supplied) else {
+            panic!("empty request id mints");
+        };
+        assert_eq!(parsed, supplied);
+    }
+
+    #[test]
+    fn resolve_request_id_keeps_a_valid_caller_id() {
+        let request_id = "12345678-1234-4123-A123-123456789012";
+        let Ok(parsed) = resolve_request_id(Some(request_id.to_string()), uuid::Uuid::new_v4)
+        else {
+            panic!("valid request id parses");
+        };
+        assert_eq!(
+            parsed.to_string().to_ascii_lowercase(),
+            request_id.to_ascii_lowercase()
+        );
+    }
+
+    #[test]
+    fn resolve_request_id_rejects_malformed_values() {
+        let request_id = "foobar";
+        assert!(matches!(
+            resolve_request_id(Some(request_id.to_string()), uuid::Uuid::new_v4),
+            Err(BridgeError::InvalidRequestId(id)) if id == request_id
+        ));
     }
 }
