@@ -68,7 +68,10 @@ Ensure the public API of the statement returned by `connection.execute` is fully
   `nodejs/tests/e2e/statement.test.ts`. `with a valid token` and `with an invalid token` are
   not ported: they pass `sessionToken` to `createConnection`, which the new driver rejects
   (BD#83). The remaining statement API is still pending.
-- `integration/testStreamRows.js`
+- `integration/testStreamRows.js` — pending. `Test Stream Rows HighWaterMark` asserts at most
+  `highWaterMark` rows per `readable` event; the new driver pushes rows synchronously, so one
+  `readable` drain can exceed it. Buffer-level backpressure (`readableLength` stops at the mark)
+  is covered by `nodejs/tests/e2e/query/row-stream-high-water-mark.test.ts`.
 - `integration/testUpdatedRows.js` — migrated to `nodejs/tests/e2e/query/num-updated-rows.test.ts`.
 
 ### Query binding

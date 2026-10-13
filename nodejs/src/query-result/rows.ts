@@ -45,6 +45,7 @@ export function createRowStream(
 
   return new Readable({
     objectMode: true,
+    highWaterMark: rowOptions.rowStreamHighWaterMark,
     read() {
       if (pushNextRow(this)) {
         return;

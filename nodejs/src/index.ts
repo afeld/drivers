@@ -118,6 +118,17 @@ export type ConnectionOptions = Record<string, unknown> & {
   representNullAsStringNull?: boolean;
 
   /**
+   * Maximum number of rows buffered by the stream returned from `statement.streamRows()`.
+   * Passed as the `highWaterMark` of the underlying Node.js `Readable`.
+   *
+   * This does not bound the memory used for fetched result chunks; that is controlled by the
+   * `CLIENT_MEMORY_LIMIT` and `CLIENT_PREFETCH_THREADS` session parameters.
+   *
+   * @default 10
+   */
+  rowStreamHighWaterMark?: number;
+
+  /**
    * Decides when large bulk {@link StatementOption.binds} are uploaded to a temporary stage instead
    * of being sent with the request.
    *
@@ -325,6 +336,7 @@ export class Connection {
       fetchAsString,
       jsTreatIntegerAsBigInt,
       representNullAsStringNull,
+      rowStreamHighWaterMark,
       arrayBindingThreshold,
       openExternalBrowserCallback,
       [TOKEN_INFO]: tokenInfo,
@@ -338,6 +350,7 @@ export class Connection {
       rowMode: rowMode ?? 'object',
       fetchAsString: fetchAsString ?? [],
       representNullAsStringNull: representNullAsStringNull ?? true,
+      rowStreamHighWaterMark: rowStreamHighWaterMark ?? 10,
     };
 
     const sessionParameters: Record<string, string> = {};

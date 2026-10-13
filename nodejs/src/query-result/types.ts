@@ -29,6 +29,7 @@ export interface RowOptions {
   representNullAsStringNull: boolean;
   rowMode: RowMode;
   fetchAsString: DataType[];
+  rowStreamHighWaterMark: number;
 }
 
 export type StatementCallback = (
