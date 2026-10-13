@@ -20,11 +20,6 @@ use std::time::Duration;
 const NODE_TLS_REJECT_UNAUTHORIZED: &str = "NODE_TLS_REJECT_UNAUTHORIZED";
 const NODE_EXTRA_CA_CERTS: &str = "NODE_EXTRA_CA_CERTS";
 
-#[napi]
-pub struct Connection {
-    session: Session,
-}
-
 #[napi(object)]
 pub struct ConnectionTokenInfo {
     pub session_token: String,
@@ -42,49 +37,61 @@ pub struct ConnectionParams<'a> {
     pub no_connection_details: Option<bool>,
 }
 
-#[napi]
-impl Connection {
-    #[napi(constructor)]
-    pub fn new(env: &Env, params: ConnectionParams) -> Result<Self> {
-        let ConnectionParams {
-            options,
-            session_parameters,
-            open_external_browser_callback,
-            token_info,
-            no_connection_details,
-        } = params;
-        let database_handle = BRIDGE.driver.database_new();
-        let conn_handle = BRIDGE.driver.connection_new();
-        let session = Session::new(conn_handle, database_handle);
-
+impl ConnectionParams<'_> {
+    fn build_connection_options(&self) -> HashMap<String, Setting> {
         // TODO: temporary conversion, proper options mapping will be done later
-        let mut converted_options: HashMap<String, Setting> = options
+        let mut core_options: HashMap<String, Setting> = self
+            .options
             .iter()
             .map(|(k, v)| (k.clone(), Setting::String(v.clone())))
             .collect();
+
         if std::env::var(NODE_TLS_REJECT_UNAUTHORIZED).as_deref() == Ok("0") {
-            converted_options
-                .entry(param_names::TLS_SKIP_VERIFY.as_str().to_string())
-                .or_insert_with(|| Setting::String("true".to_string()));
+            core_options.insert(
+                param_names::TLS_SKIP_VERIFY.as_str().to_string(),
+                Setting::String("true".to_string()),
+            );
         }
         if let Ok(ca_path) = std::env::var(NODE_EXTRA_CA_CERTS)
             && !ca_path.is_empty()
         {
-            converted_options
-                .entry(param_names::EXTRA_ROOT_STORE_PATH.as_str().to_string())
-                .or_insert_with(|| Setting::String(ca_path));
+            core_options.insert(
+                param_names::EXTRA_ROOT_STORE_PATH.as_str().to_string(),
+                Setting::String(ca_path),
+            );
         }
-        if let Some(token_info) = &token_info {
-            converted_options.insert(
+
+        if let Some(token_info) = &self.token_info {
+            core_options.insert(
                 param_names::SESSION_TOKEN.as_str().to_string(),
                 Setting::String(token_info.session_token.clone()),
             );
-            converted_options.insert(
+            core_options.insert(
                 param_names::MASTER_TOKEN.as_str().to_string(),
                 Setting::String(token_info.master_token.clone()),
             );
         }
-        let browser_opener = open_external_browser_callback
+
+        core_options
+    }
+}
+
+#[napi]
+pub struct Connection {
+    session: Session,
+}
+
+#[napi]
+impl Connection {
+    #[napi(constructor)]
+    pub fn new(env: &Env, params: ConnectionParams) -> Result<Self> {
+        let database_handle = BRIDGE.driver.database_new();
+        let conn_handle = BRIDGE.driver.connection_new();
+        let session = Session::new(conn_handle, database_handle);
+
+        let connection_options = params.build_connection_options();
+        let browser_opener = params
+            .open_external_browser_callback
             .map(browser_opener_from_js)
             .transpose()?;
 
@@ -94,15 +101,15 @@ impl Connection {
                 .driver
                 .connection_set_options(
                     conn_handle,
-                    converted_options,
-                    no_connection_details.unwrap_or(false),
+                    connection_options,
+                    params.no_connection_details.unwrap_or(false),
                     None,
                 )
                 .await?;
-            if !session_parameters.is_empty() {
+            if !params.session_parameters.is_empty() {
                 BRIDGE
                     .driver
-                    .connection_set_session_parameters(conn_handle, session_parameters)
+                    .connection_set_session_parameters(conn_handle, params.session_parameters)
                     .await?;
             }
             if let Some(opener) = browser_opener {
@@ -132,7 +139,7 @@ impl Connection {
             // so it is initialized here. This is not cheap yet: it runs the full core connection
             // setup on the JS thread, and on macOS loading the system root certificates alone takes
             // about 100 ms. SNOW-4249447 and SNOW-4249371 track making it cheap.
-            if token_info.is_some() {
+            if params.token_info.is_some() {
                 BRIDGE
                     .driver
                     .connection_init(None, conn_handle, database_handle)
