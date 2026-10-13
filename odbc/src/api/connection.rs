@@ -77,7 +77,7 @@ const DEFAULT_LOGIN_TIMEOUT_SECS: sql::UInteger =
     sf_core::config::param_registry::ODBC_DEFAULT_AUTHENTICATION_TIMEOUT_SECS as sql::UInteger;
 
 /// Normalizes `CRL_ENABLED` values to the uppercase mode strings `sf_core` accepts for
-/// `crl_check_mode` (see `build_crl_config` in `connection_config.rs`).
+/// `crl_check_mode` (see `CrlConfig::from_settings`).
 fn normalize_crl_enabled_value(value: &str) -> String {
     let v = value.trim();
     if v.eq_ignore_ascii_case("true") || v == "1" {
@@ -253,10 +253,24 @@ fn normalize_connection_string_option(
     // that need remapping onto the `DISABLED`/`ENABLED`/`ADVISORY` tokens
     // `sf_core` accepts, so they're normalized here before handing off the
     // canonical key.
-    let value = if def.canonical_name == param_names::CRL_CHECK_MODE.as_str() {
-        normalize_crl_value(&upper, value)
-    } else {
-        value
+    //
+    // `CRL_DOWNLOAD_TIMEOUT` aliases `crl_http_timeout`. 3.x treated `0` as
+    // "use the default" (120 seconds then). `CrlConfig::from_settings` applies
+    // `0` as a zero-second timeout, so this alias's `0` is replaced with the
+    // 4.x registry default (10 seconds). A canonical `crl_http_timeout=0` stays
+    // `0`. Any other `CRL_DOWNLOAD_TIMEOUT` value is forwarded unchanged.
+    let value = match def.canonical_name {
+        name if name == param_names::CRL_CHECK_MODE.as_str() => normalize_crl_value(&upper, value),
+        name if name == param_names::CRL_HTTP_TIMEOUT.as_str()
+            && upper.eq_ignore_ascii_case("CRL_DOWNLOAD_TIMEOUT")
+            && value.trim() == "0" =>
+        {
+            match def.default {
+                Some(sf_core::config::param_registry::DefaultValue::Int(n)) => n.to_string(),
+                _ => "10".to_owned(),
+            }
+        }
+        _ => value,
     };
     Some((def.canonical_name.to_owned(), value.into()))
 }
@@ -2922,38 +2936,66 @@ mod tests {
     }
 
     #[test]
-    fn normalize_connection_string_options_normalizes_crl_enabled_for_core() {
-        let options = normalize_connection_string_options(HashMap::from([(
-            "CRL_ENABLED".to_owned(),
-            "true".to_owned(),
-        )]));
-
-        // CRL_ENABLED is an ODBC alias for the `crl_check_mode` enum: the
-        // wrapper canonicalizes the key and maps the boolean-ish value to the
-        // ENABLED/DISABLED token.
-        assert_eq!(config_string(&options, "crl_check_mode"), Some("ENABLED"));
-        assert!(!options.contains_key("CRL_ENABLED"));
+    fn normalize_connection_string_options_maps_crl_mode_aliases() {
+        for (key, value, expected) in [
+            ("CRL_ENABLED", "true", "ENABLED"),
+            ("CRL_ENABLED", "0", "DISABLED"),
+            ("CRL_MODE", "enabled", "ENABLED"),
+        ] {
+            let options = normalize_connection_string_options(HashMap::from([(
+                key.to_owned(),
+                value.to_owned(),
+            )]));
+            assert_eq!(
+                config_string(&options, "crl_check_mode"),
+                Some(expected),
+                "{key}={value}"
+            );
+            assert!(!options.contains_key(key));
+        }
     }
 
     #[test]
-    fn normalize_connection_string_options_crl_enabled_zero_maps_to_disabled() {
+    fn normalize_connection_string_options_drops_crl_check_pair() {
+        let options = normalize_connection_string_options(HashMap::from([
+            ("CRL_CHECK".to_owned(), "true".to_owned()),
+            ("CRL_ADVISORY".to_owned(), "true".to_owned()),
+        ]));
+        assert!(options.is_empty(), "{options:?}");
+    }
+
+    #[test]
+    fn normalize_connection_string_options_maps_legacy_crl_aliases() {
+        let params = HashMap::from([
+            ("CRL_ALLOW_NO_CRL".to_owned(), "true".to_owned()),
+            ("CRL_DISK_CACHING".to_owned(), "false".to_owned()),
+            ("CRL_MEMORY_CACHING".to_owned(), "false".to_owned()),
+            ("CRL_DOWNLOAD_TIMEOUT".to_owned(), "45".to_owned()),
+        ]);
+        let options = normalize_connection_string_options(params.clone());
+        assert_eq!(
+            config_string(&options, "crl_allow_certificates_without_crl_url"),
+            Some("true")
+        );
+        assert_eq!(
+            config_string(&options, "crl_enable_disk_caching"),
+            Some("false")
+        );
+        assert_eq!(
+            config_string(&options, "crl_enable_memory_caching"),
+            Some("false")
+        );
+        assert_eq!(config_string(&options, "crl_http_timeout"), Some("45"));
+        assert!(deprecated_registry_param_warnings(&params).is_empty());
+    }
+
+    #[test]
+    fn normalize_connection_string_options_crl_download_timeout_zero_uses_default() {
         let options = normalize_connection_string_options(HashMap::from([(
-            "CRL_ENABLED".to_owned(),
+            "CRL_DOWNLOAD_TIMEOUT".to_owned(),
             "0".to_owned(),
         )]));
-
-        assert_eq!(config_string(&options, "crl_check_mode"), Some("DISABLED"));
-    }
-
-    #[test]
-    fn normalize_connection_string_options_uppercases_crl_mode() {
-        let options = normalize_connection_string_options(HashMap::from([(
-            "CRL_MODE".to_owned(),
-            "enabled".to_owned(),
-        )]));
-
-        assert_eq!(config_string(&options, "crl_check_mode"), Some("ENABLED"));
-        assert!(!options.contains_key("CRL_MODE"));
+        assert_eq!(config_string(&options, "crl_http_timeout"), Some("10"));
     }
 
     #[test]
@@ -3508,6 +3550,30 @@ mod tests {
                 "Parameter 'DISABLEOCSPCHECK' is deprecated and has no effect. \
                  Set CRL_MODE=DISABLED to skip revocation checks.",
                 "Parameter 'OCSP_FAIL_OPEN' is deprecated and has no effect. \
+                 Set CRL_MODE=ADVISORY for fail-open revocation checking or CRL_MODE=ENABLED for fail-close.",
+            ]
+        );
+    }
+
+    #[test]
+    fn deprecated_registry_param_warnings_cover_ignored_crl_check_pair() {
+        let params = parse_connection_string("CRL_CHECK=true;CRL_ADVISORY=true").unwrap();
+        let messages: Vec<String> = deprecated_registry_param_warnings(&params)
+            .iter()
+            .map(|warning| match warning {
+                Warning::DeprecatedParameter {
+                    parameter,
+                    deprecation,
+                } => deprecation.message_for(parameter),
+                other => panic!("unexpected warning: {other:?}"),
+            })
+            .collect();
+        assert_eq!(
+            messages,
+            vec![
+                "Parameter 'CRL_ADVISORY' is deprecated and has no effect. \
+                 Set CRL_MODE=ADVISORY for fail-open revocation checking or CRL_MODE=ENABLED for fail-close.",
+                "Parameter 'CRL_CHECK' is deprecated and has no effect. \
                  Set CRL_MODE=ADVISORY for fail-open revocation checking or CRL_MODE=ENABLED for fail-close.",
             ]
         );
@@ -4351,6 +4417,15 @@ mod tests {
         let params =
             parse_connection_string("DSN=my_dsn;DisableOCSPCheck=true;OCSP_FAIL_OPEN=true")
                 .unwrap();
+        assert!(unrecognized_connection_string_keys(&params).is_empty());
+    }
+
+    #[test]
+    fn unrecognized_connection_string_keys_ignores_legacy_crl_keys() {
+        let params = parse_connection_string(
+            "DSN=my_dsn;CRL_CHECK=true;CRL_ADVISORY=true;CRL_ALLOW_NO_CRL=true;CRL_DISK_CACHING=true;CRL_MEMORY_CACHING=true;CRL_DOWNLOAD_TIMEOUT=120",
+        )
+        .unwrap();
         assert!(unrecognized_connection_string_keys(&params).is_empty());
     }
 

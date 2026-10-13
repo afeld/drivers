@@ -338,6 +338,9 @@ pub mod param_names {
     pub const DISABLE_STAGE_BIND_FALLBACK: ParamKey = ParamKey("disable_stage_bind_fallback");
     pub const STAGE_BIND_MAX_FILE_SIZE: ParamKey = ParamKey("stage_bind_max_file_size");
     pub const STAGE_BIND_THRESHOLD: ParamKey = ParamKey("stage_bind_threshold");
+    // ── Deprecated ODBC CRL keys ──────────────────────────────────────
+    pub const CRL_CHECK: ParamKey = ParamKey("crl_check");
+    pub const CRL_ADVISORY: ParamKey = ParamKey("crl_advisory");
     // ── Deprecated ODBC OCSP keys (revocation is CRL) ─────────────────
     pub const DISABLE_OCSP_CHECK: ParamKey = ParamKey("disable_ocsp_check");
     pub const OCSP_FAIL_OPEN: ParamKey = ParamKey("ocsp_fail_open");
@@ -470,9 +473,10 @@ impl Alias {
 /// that wrapper actually accepted the spelling — UD is no more lenient than the
 /// driver it replaces, so a convenience spelling nobody shipped is not added:
 /// * SCREAMING/DSN spellings (`SERVER`, `PRIV_KEY_FILE`, …) are legacy ODBC
-///   connection-string keys from snowflake-odbc's `Snowflake.h`. The exception is
-///   `CRL_MODE`/`CRL_ENABLED`, UD-ODBC's own DSN keys for a feature legacy spelled
-///   `CRL_CHECK`.
+///   connection-string keys from snowflake-odbc's `Snowflake.h`. `CRL_MODE` /
+///   `CRL_ENABLED` are UD-ODBC's current DSN keys for `crl_check_mode`; the 3.x
+///   pair `CRL_CHECK` / `CRL_ADVISORY` is registered separately as ODBC-only
+///   deprecated params the driver accepts and does not apply.
 /// * camelCase spellings (`oauthClientId`, `allowUnderscoresInHost`, …) are JDBC
 ///   `SFSessionProperty` keys. JDBC also has lowercase-underscore properties that
 ///   differ from our canonical name (`private_key_base64`, `private_key_pwd`),
@@ -1583,16 +1587,16 @@ static PARAM_DEFS: &[ParamDef] = &[
     // ── CRL ─────────────────────────────────────────────────────────────
     ParamDef::builder()
         .canonical_name(param_names::CRL_CHECK_MODE.as_str())
-        // UD-ODBC's own DSN spellings for CRL checking (legacy snowflake-odbc
-        // spelled this family `CRL_CHECK` / `CRL_ADVISORY`, `Snowflake.h:197-202`;
-        // UD has not adopted those names). Wired wrapper-side for value
-        // normalization and exercised by `odbc_tests/tests/e2e/tls/crl_enabled.cpp`.
+        // Current ODBC DSN spellings. The 3.x pair `CRL_CHECK` / `CRL_ADVISORY`
+        // cannot 1:1-alias this enum (two keys, last write wins), so those are
+        // ODBC-only deprecated params the driver accepts and does not apply.
         // Python uses the `cert_revocation_check_mode` legacy kwarg, rewritten
         // wrapper-side by `_LEGACY_REWRITES`.
         .aliases(aliases![Odbc; "CRL_MODE", "CRL_ENABLED"])
         // Free-form string in core: the ODBC wrapper maps its `CRL_MODE` /
         // `CRL_ENABLED` wire spellings to the `DISABLED` / `ENABLED` / `ADVISORY`
-        // tokens that `build_crl_config` accepts before the value reaches core.
+        // tokens that `CrlConfig::from_settings` accepts before the value
+        // reaches core.
         .value_type(ValueType::String)
         .default(DefaultValue::String("DISABLED"))
         .sensitive(false)
@@ -1604,6 +1608,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CRL_ENABLE_DISK_CACHING.as_str())
+        .aliases(aliases![Odbc; "CRL_DISK_CACHING"])
         .value_type(ValueType::Bool)
         .default(DefaultValue::Bool(true))
         .sensitive(false)
@@ -1615,6 +1620,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CRL_ENABLE_MEMORY_CACHING.as_str())
+        .aliases(aliases![Odbc; "CRL_MEMORY_CACHING"])
         .value_type(ValueType::Bool)
         .default(DefaultValue::Bool(true))
         .sensitive(false)
@@ -1702,6 +1708,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CRL_ALLOW_CERTIFICATES_WITHOUT_CRL_URL.as_str())
+        .aliases(aliases![Odbc; "CRL_ALLOW_NO_CRL"])
         .value_type(ValueType::Bool)
         .default(DefaultValue::Bool(false))
         .sensitive(false)
@@ -1713,6 +1720,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CRL_HTTP_TIMEOUT.as_str())
+        .aliases(aliases![Odbc; "CRL_DOWNLOAD_TIMEOUT"])
         .value_type(ValueType::Int)
         .default(DefaultValue::Int(10))
         .sensitive(false)
@@ -2651,6 +2659,23 @@ static PARAM_DEFS: &[ParamDef] = &[
             guidance: ODBC_TEST_ONLY_KNOB_REMOVED_GUIDANCE,
         },
     ),
+    // ── Deprecated ODBC CRL keys ──────────────────────────────────────
+    odbc_deprecated(
+        param_names::CRL_CHECK.as_str(),
+        aliases![],
+        "Legacy 3.x CRL enable switch. The driver accepts the key and does not apply it",
+        Deprecation::Ignored {
+            guidance: ODBC_CRL_MODE_GUIDANCE,
+        },
+    ),
+    odbc_deprecated(
+        param_names::CRL_ADVISORY.as_str(),
+        aliases![],
+        "Legacy 3.x CRL advisory switch. The driver accepts the key and does not apply it",
+        Deprecation::Ignored {
+            guidance: ODBC_CRL_MODE_GUIDANCE,
+        },
+    ),
     // ── Deprecated ODBC OCSP keys (revocation is CRL) ─────────────────
     odbc_deprecated(
         param_names::DISABLE_OCSP_CHECK.as_str(),
@@ -2665,13 +2690,16 @@ static PARAM_DEFS: &[ParamDef] = &[
         aliases![],
         "Legacy OCSP fail-open switch. The driver accepts the key and does not apply it; certificate revocation uses CRL",
         Deprecation::Ignored {
-            guidance: "Set CRL_MODE=ADVISORY for fail-open revocation checking or CRL_MODE=ENABLED for fail-close.",
+            guidance: ODBC_CRL_MODE_GUIDANCE,
         },
     ),
 ];
 
 const ODBC_TEST_ONLY_KNOB_REMOVED_GUIDANCE: &str =
     "There is no replacement; remove this key from the connection string.";
+
+const ODBC_CRL_MODE_GUIDANCE: &str =
+    "Set CRL_MODE=ADVISORY for fail-open revocation checking or CRL_MODE=ENABLED for fail-close.";
 
 const fn ignored_odbc_param(canonical: &'static str) -> ParamDef {
     ParamDef::builder()
@@ -3007,9 +3035,19 @@ mod tests {
             // Legacy ODBC `SecondaryRoles` DSN attribute: the parser uppercases
             // the separator-less key to `SECONDARYROLES`.
             ("SECONDARYROLES", "secondary_roles", &[Odbc]),
-            // UD-ODBC's own CRL DSN keys (legacy spelled the family `CRL_CHECK`).
+            // UD-ODBC's current CRL DSN keys. The 3.x pair is registered as
+            // its own ODBC-only deprecated-and-ignored params
+            // (`crl_check` / `crl_advisory`).
             ("CRL_MODE", "crl_check_mode", &[Odbc]),
             ("CRL_ENABLED", "crl_check_mode", &[Odbc]),
+            (
+                "CRL_ALLOW_NO_CRL",
+                "crl_allow_certificates_without_crl_url",
+                &[Odbc],
+            ),
+            ("CRL_DISK_CACHING", "crl_enable_disk_caching", &[Odbc]),
+            ("CRL_MEMORY_CACHING", "crl_enable_memory_caching", &[Odbc]),
+            ("CRL_DOWNLOAD_TIMEOUT", "crl_http_timeout", &[Odbc]),
             ("DisableOCSPCheck", "disable_ocsp_check", &[Odbc]),
             // 3.x ODBC PUT/GET DSN keys (`Snowflake.h`
             // `SF_CON_PUT_MAXRETRIES` / `SF_CON_GET_MAXRETRIES`). Both map
@@ -3336,6 +3374,40 @@ mod tests {
                 panic!("{canonical} should be deprecated with guidance");
             };
             assert_eq!(guidance, *expected_guidance);
+            assert!(def.ignored, "{canonical} should be ignored");
+            assert_eq!(def.visible_to, visible_to!(Odbc));
+            assert!(r.resolve(canonical).is_none());
+            for wrapper in [
+                Wrapper::Jdbc,
+                Wrapper::Python,
+                Wrapper::NodeJs,
+                Wrapper::DotNet,
+            ] {
+                assert!(
+                    r.resolve_for(wrapper, key).is_none(),
+                    "{key} must not resolve for {wrapper:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn odbc_deprecated_crl_check_pair_resolves_only_for_odbc() {
+        let r = registry();
+        let cases: &[(&str, &str)] =
+            &[("CRL_CHECK", "crl_check"), ("CRL_ADVISORY", "crl_advisory")];
+        for (key, canonical) in cases {
+            let def = r
+                .resolve_for(Wrapper::Odbc, key)
+                .unwrap_or_else(|| panic!("{key:?} should resolve for Odbc"));
+            assert_eq!(def.canonical_name, *canonical);
+            let Some(Deprecation::Ignored { guidance }) = def.deprecated else {
+                panic!("{canonical} should be deprecated with guidance");
+            };
+            assert_eq!(
+                guidance,
+                "Set CRL_MODE=ADVISORY for fail-open revocation checking or CRL_MODE=ENABLED for fail-close."
+            );
             assert!(def.ignored, "{canonical} should be ignored");
             assert_eq!(def.visible_to, visible_to!(Odbc));
             assert!(r.resolve(canonical).is_none());

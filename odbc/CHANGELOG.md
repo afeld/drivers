@@ -2,6 +2,9 @@
 
 ## Upcoming Release
 
+New features:
+
+- Added recognition of the ODBC 3.x CRL connection-string keys `CRL_ALLOW_NO_CRL`, `CRL_DISK_CACHING`, `CRL_MEMORY_CACHING`, and `CRL_DOWNLOAD_TIMEOUT` as aliases for the matching 4.x CRL settings. `CRL_DOWNLOAD_TIMEOUT=0` applies the 4.x `crl_http_timeout` default of 10 seconds rather than 3.x's 120. (snowflakedb/drivers#2206)
 - Added `SFGetFipsStatus` so an application can check, before connecting, whether this process loaded the FIPS driver. (snowflakedb/drivers#2562)
 - Added the host application's executable path to login requests as `APPLICATION_PATH`, matching the 3.x driver. (snowflakedb/drivers#2535)
 - Added the Snowflake vendor SQL data type macros (`SQL_SF_TIMESTAMP_LTZ`, `SQL_SF_TIMESTAMP_TZ`, `SQL_SF_TIMESTAMP_NTZ`, `SQL_SF_ARRAY`, `SQL_SF_OBJECT`, `SQL_SF_VARIANT`) to the public `sf_odbc.h`, so applications written against the 3.x header compile without redefining them. (snowflakedb/drivers#2366)
@@ -12,6 +15,10 @@
 - Added the `PUT_TEMPDIR` connection parameter so PUT AUTO_COMPRESS can write gzip tempfiles to a caller-supplied directory. Unset and empty values keep the process temp directory. Nested directories are created. (snowflakedb/drivers#2084)
 - Added the Snowflake vendor SQL data type macros (`SQL_SF_TIMESTAMP_LTZ`, `SQL_SF_TIMESTAMP_TZ`, `SQL_SF_TIMESTAMP_NTZ`, `SQL_SF_ARRAY`, `SQL_SF_OBJECT`, `SQL_SF_VARIANT`) to the public `sf_odbc.h`, so applications written against the 3.x header compile without redefining them. (snowflakedb/drivers#2366)
 - Added `SQL_SF_VECTOR` (2006) to the public `sf_odbc.h` so applications can name the VECTOR type that `SQLGetTypeInfo` already reports. Binding VECTOR remains unsupported. (snowflakedb/drivers#2400)
+
+Changes:
+
+- Changed the leftover ODBC 3.x CRL connection-string keywords `CRL_CHECK` and `CRL_ADVISORY` to be accepted and ignored, posting SQLSTATE `01000` on connect. Set `CRL_MODE` to `ENABLED` for fail-close revocation checking or `ADVISORY` for fail-open. (snowflakedb/drivers#2206)
 
 Bug fixes:
 

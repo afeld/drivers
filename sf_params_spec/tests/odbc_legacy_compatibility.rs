@@ -5,7 +5,7 @@ use sf_params_spec::{Wrapper, registry};
 /// Accepted connection-string keys from snowflake-odbc
 /// `SFConnection::initAcceptedConnectionKeys` and `SF_SESSION_PARAMETERS`,
 /// plus `Snowflake.h` keys `SFConnection` still reads from the connection
-/// map (`CLIENT_CONFIG_FILE`, `CRL_DOWNLOAD_TIMEOUT`).
+/// map (`CLIENT_CONFIG_FILE`).
 ///
 /// `(dsn_key, canonical)` — `resolve_for(Odbc, dsn_key)` returns that name.
 const SUPPORTED_LEGACY_ODBC_DSN_KEYS: &[(&str, &str)] = &[
@@ -111,6 +111,12 @@ const SUPPORTED_LEGACY_ODBC_DSN_KEYS: &[(&str, &str)] = &[
     ("StageBindThreshold", "stage_bind_threshold"),
     ("DisableOCSPCheck", "disable_ocsp_check"),
     ("OCSP_FAIL_OPEN", "ocsp_fail_open"),
+    ("CRL_CHECK", "crl_check"),
+    ("CRL_ADVISORY", "crl_advisory"),
+    ("CRL_ALLOW_NO_CRL", "crl_allow_certificates_without_crl_url"),
+    ("CRL_DISK_CACHING", "crl_enable_disk_caching"),
+    ("CRL_MEMORY_CACHING", "crl_enable_memory_caching"),
+    ("CRL_DOWNLOAD_TIMEOUT", "crl_http_timeout"),
     ("DEFAULT_VARCHAR_SIZE", "default_varchar_size"),
     ("DEFAULT_BINARY_SIZE", "default_binary_size"),
     ("MapToLongVarchar", "map_to_long_varchar"),
@@ -120,16 +126,7 @@ const SUPPORTED_LEGACY_ODBC_DSN_KEYS: &[(&str, &str)] = &[
 /// Accepted by snowflake-odbc but not a registry parameter. Grouped by why
 /// the key stays out of the registry.
 const UNSUPPORTED_LEGACY_ODBC_DSN_KEYS: &[&str] = &[
-    // `CRL_ADVISORY` combines with `CRL_CHECK` in the legacy driver to
-    // choose ENABLED vs ADVISORY. Two keys cannot 1:1-alias one HashMap
-    // entry (last write wins), so this key is not a registry alias.
-    "CRL_ADVISORY",
     // Documented GA keys with no matching registry parameter yet.
-    // `CRL_DOWNLOAD_TIMEOUT` is defined and applied in snowflake-odbc
-    // (`GetOptionalSettingAsUnsigned`) but is not in
-    // `initAcceptedConnectionKeys`; `crl_http_timeout` is the registry
-    // param and has no ODBC alias for this spelling.
-    "CRL_DOWNLOAD_TIMEOUT",
     "ValidateSessionParam",
     "GET_SIZE_THRESHOLD",
     "ODBC_SCHEMA_CACHING",
@@ -149,10 +146,6 @@ const UNSUPPORTED_LEGACY_ODBC_DSN_KEYS: &[&str] = &[
     "disableSamlUrlCheck",
     "singleAuthenticationPrompt",
     "CLIENT_REQUEST_MFA_TOKEN",
-    "CRL_CHECK",
-    "CRL_ALLOW_NO_CRL",
-    "CRL_DISK_CACHING",
-    "CRL_MEMORY_CACHING",
     "CABundleFile",
     // Documented `NETWORK_TIMEOUT`. The legacy driver accepted the key;
     // its `getNetworkTimeout()` reader is unused today.
