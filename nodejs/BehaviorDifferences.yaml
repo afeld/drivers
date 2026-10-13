@@ -1907,3 +1907,26 @@ behavior_differences:
     description: |
       An option that is silently ignored leaves the application believing it took effect,
       so the new driver fails instead.
+
+  103:
+    name: 'TOML connection profiles support connectionName, config.toml and explicit overrides'
+    status: allowed
+    type: enhancement
+    reviewed: false
+    is_breaking_change: false
+    impact: low
+    old_driver_behavior: |
+      createConnection() and createPool() with no options load the profile named by
+      `SNOWFLAKE_DEFAULT_CONNECTION_NAME` (or `default`) from `connections.toml`. A profile is
+      never loaded when any option is passed, there is no option to name a profile, and
+      `config.toml` is not read. When the profile cannot be loaded (missing profile, unsafe
+      file permissions), createConnection() throws `Connection options must be specified.`
+      synchronously and drops the underlying reason.
+    new_driver_behavior: |
+      The no-options path behaves the same. In addition, the `connectionName` option selects a
+      profile, and other options passed alongside it override the profile's values. When
+      `connections.toml` lacks the profile, it is read from `[connections.<name>]` in
+      `config.toml`, whose `default_connection_name` also names the default profile. A profile
+      that cannot be loaded fails connect() with an error that names the reason.
+    description: |
+      Profile loading is done by the core and matches the other universal-driver wrappers.

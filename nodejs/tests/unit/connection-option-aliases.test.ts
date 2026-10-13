@@ -136,6 +136,12 @@ describe('toCoreConnectionOptions', () => {
     );
   });
 
+  it('should map connectionName onto connection_name', () => {
+    expect(toCoreConnectionOptions({ connectionName: 'fromFile' })).toEqual({
+      connection_name: 'fromFile',
+    });
+  });
+
   it('returns an empty object for empty input', () => {
     expect(toCoreConnectionOptions({})).toEqual({});
   });

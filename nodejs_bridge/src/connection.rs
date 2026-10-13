@@ -66,6 +66,7 @@ pub struct ConnectionParams<'a> {
     pub session_parameters: HashMap<String, String>,
     pub open_external_browser_callback: Option<Function<'a, String, ()>>,
     pub token_info: Option<ConnectionTokenInfo>,
+    pub no_connection_details: Option<bool>,
 }
 
 #[napi]
@@ -77,6 +78,7 @@ impl Connection {
             session_parameters,
             open_external_browser_callback,
             token_info,
+            no_connection_details,
         } = params;
         let database_handle = BRIDGE.driver.database_new();
         BRIDGE.driver.database_init(database_handle).map_err(|e| {
@@ -120,7 +122,12 @@ impl Connection {
         block_on(async {
             BRIDGE
                 .driver
-                .connection_set_options(conn_handle, converted_options, false, None)
+                .connection_set_options(
+                    conn_handle,
+                    converted_options,
+                    no_connection_details.unwrap_or(false),
+                    None,
+                )
                 .await?;
             if !session_parameters.is_empty() {
                 BRIDGE

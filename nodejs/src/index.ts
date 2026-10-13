@@ -123,6 +123,15 @@ export type ConnectionOptions = Record<string, unknown> & {
   arrayBindingThreshold?: number;
 
   /**
+   * Named profile in `connections.toml` or `config.toml`. When this is the only
+   * option, the profile supplies the connection. When other options are also
+   * set, they override the profile.
+   *
+   * @default process.env.SNOWFLAKE_DEFAULT_CONNECTION_NAME ?? "default"
+   */
+  connectionName?: string;
+
+  /**
    * Optional string that can be used to tag queries and other SQL statements executed within a
    * connection. The tags are displayed in the output of the QUERY_HISTORY, QUERY_HISTORY_BY_*
    * functions.
@@ -289,7 +298,8 @@ export class Connection {
   #defaultRowOptions: RowOptions;
   #id: string;
 
-  constructor(options: ConnectionOptions) {
+  constructor(options?: ConnectionOptions) {
+    const callerOptions = options ?? {};
     const {
       rowMode,
       fetchAsString,
@@ -299,7 +309,9 @@ export class Connection {
       openExternalBrowserCallback,
       [TOKEN_INFO]: tokenInfo,
       ...coreOptions
-    } = options as InternalConnectionOptions;
+    } = callerOptions as InternalConnectionOptions;
+    const noConnectionDetails =
+      tokenInfo === undefined && Object.values(callerOptions).every((value) => value === undefined);
     this.#id = randomUUID();
 
     this.#defaultRowOptions = {
@@ -324,6 +336,7 @@ export class Connection {
       sessionParameters,
       openExternalBrowserCallback,
       tokenInfo,
+      noConnectionDetails,
     });
   }
 
@@ -478,7 +491,7 @@ export const getFipsStatus: () => FipsStatus = coreGetFipsStatus;
 // - Map to similar shape as old driver where we have core object that has bunch of methods and
 //   it is exported as default
 export const configure = (options: ConfigureOptions) => updateGlobalConfig(options);
-export const createConnection = (options: ConnectionOptions) => new Connection(options);
+export const createConnection = (options?: ConnectionOptions) => new Connection(options);
 export const serializeConnection = (connection: Connection): string => connection.serialize();
 /**
  * Rebuilds a connection from a string produced by {@link Connection.serialize}.

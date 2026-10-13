@@ -129,9 +129,8 @@ Review when working on structured-types support in the new driver:
     keep-alive performance gain**, then drop this file. There is currently no equivalent
     integration test in `_old-driver-reference/` (`unit/snowflake_config_test.js` only validates
     the config knob, not the runtime behavior).
-  - `Connection file configuration test` — see "Missing coverage" below; this is the only existing
-    coverage for `.toml`-driven connection creation and should drive the e2e migration of that
-    surface.
+  - `Connection file configuration test` — password and default-profile cases are covered by
+    `nodejs/tests/e2e/session/connection-config-file.test.ts`. The oauth name variants stay here.
 
 
 ### PUT / GET
@@ -223,14 +222,12 @@ Drop each of these once no remaining old test file imports it:
 
 ### Missing coverage
 
-- The only existing coverage of `.toml`-driven connection creation lives in the
+- Automated coverage of `.toml`-driven connection creation lives in
+  `nodejs/tests/e2e/session/connection-config-file.test.ts`
+  (`tests/definitions/shared/session/connection_config_file.feature`). The
   `Connection file configuration test` block of
-  [`integration/testManualConnection.js`](./integration/testManualConnection.js) (manual-only,
-  gated behind `RUN_MANUAL_TESTS_ONLY`). It exercises `snowflake.createConnection(null)` and
-  `snowflake.createPool(null, …)` against `connections.toml` with `SNOWFLAKE_HOME` /
-  `SNOWFLAKE_DEFAULT_CONNECTION_NAME`, including the `aws-oauth`, `aws-oauth-accessUrl`, and
-  `aws-oauth-file` connection-name variants. Migrate this to an automated e2e test when
-  `.toml`-driven connection creation lands in the new driver.
+  [`integration/testManualConnection.js`](./integration/testManualConnection.js) stays
+  manual-only for the `aws-oauth`, `aws-oauth-accessUrl`, and `aws-oauth-file` variants.
 
 ## Unit tests (`unit/`)
 

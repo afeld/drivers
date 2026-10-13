@@ -44,6 +44,7 @@ const CONNECTION_OPTION_ALIASES: Record<string, string> = {
   crlAllowCertificatesWithoutCrlURL: 'crl_allow_certificates_without_crl_url',
   crlInMemoryCache: 'crl_enable_memory_caching',
   crlOnDiskCache: 'crl_enable_disk_caching',
+  connectionName: 'connection_name',
 };
 
 export function toCoreConnectionOptions(options: Record<string, unknown>): Record<string, string> {

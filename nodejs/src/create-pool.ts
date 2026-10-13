@@ -17,9 +17,9 @@ type WaitingClientsQueue = {
 };
 
 class ConnectionFactory implements Factory<Connection> {
-  readonly #connectionOptions: ConnectionOptions;
+  readonly #connectionOptions?: ConnectionOptions;
 
-  constructor(connectionOptions: ConnectionOptions) {
+  constructor(connectionOptions?: ConnectionOptions) {
     this.#connectionOptions = connectionOptions;
   }
 
@@ -43,14 +43,9 @@ class ConnectionFactory implements Factory<Connection> {
 }
 
 export function createPool(
-  options?: ConnectionOptions | null,
+  options?: ConnectionOptions,
   poolOptions?: PoolOptions,
 ): Pool<Connection> {
-  // TODO: SNOW-4218289 load connection options from connections.toml when they are omitted or null.
-  if (options == null) {
-    throw new Error('createPool requires connection options');
-  }
-
   const connectionPool = createGenericPool(new ConnectionFactory(options), poolOptions);
 
   connectionPool.on('factoryCreateError', (err: Error) => {

@@ -96,6 +96,7 @@ export interface ConnectionParams {
   sessionParameters: Record<string, string>
   openExternalBrowserCallback?: (arg: string) => void
   tokenInfo?: ConnectionTokenInfo
+  noConnectionDetails?: boolean
 }
 
 export interface ConnectionTokenInfo {
