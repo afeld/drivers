@@ -503,6 +503,58 @@ TEST_CASE("SQLColAttribute returns correct attributes for DECFLOAT.", "[query][c
 }
 
 // =============================================================================
+// Semi-structured type names (ARRAY/OBJECT/VARIANT)
+// =============================================================================
+
+TEST_CASE("should return correct type name for ARRAY.", "[query][col_attribute]") {
+  // Given A table with an ARRAY column is queried
+  Connection conn;
+  Schema::use_temp_session_schema(conn);
+  conn.execute("CREATE TEMPORARY TABLE t (val ARRAY)");
+  auto stmt = conn.execute("SELECT val FROM t");
+
+  // When SQLColAttribute is called for the type name fields
+  CHECK(get_numeric_attr(stmt, 1, SQL_DESC_CONCISE_TYPE) == SQL_VARCHAR);
+  CHECK(get_numeric_attr(stmt, 1, SQL_DESC_TYPE) == SQL_VARCHAR);
+  // Then The type name should be ARRAY, not VARCHAR
+  CHECK(get_string_attr(stmt, 1, SQL_DESC_TYPE_NAME) == "ARRAY");
+  OLD_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "VARCHAR"); }
+  NEW_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "ARRAY"); }
+}
+
+TEST_CASE("should return correct type name for OBJECT.", "[query][col_attribute]") {
+  // Given A table with an OBJECT column is queried
+  Connection conn;
+  Schema::use_temp_session_schema(conn);
+  conn.execute("CREATE TEMPORARY TABLE t (val OBJECT)");
+  auto stmt = conn.execute("SELECT val FROM t");
+
+  // When SQLColAttribute is called for the type name fields
+  CHECK(get_numeric_attr(stmt, 1, SQL_DESC_CONCISE_TYPE) == SQL_VARCHAR);
+  CHECK(get_numeric_attr(stmt, 1, SQL_DESC_TYPE) == SQL_VARCHAR);
+  // Then The type name should be STRUCT, not VARCHAR
+  CHECK(get_string_attr(stmt, 1, SQL_DESC_TYPE_NAME) == "STRUCT");
+  OLD_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "VARCHAR"); }
+  NEW_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "STRUCT"); }
+}
+
+TEST_CASE("should return correct type name for VARIANT.", "[query][col_attribute]") {
+  // Given A table with a VARIANT column is queried
+  Connection conn;
+  Schema::use_temp_session_schema(conn);
+  conn.execute("CREATE TEMPORARY TABLE t (val VARIANT)");
+  auto stmt = conn.execute("SELECT val FROM t");
+
+  // When SQLColAttribute is called for the type name fields
+  CHECK(get_numeric_attr(stmt, 1, SQL_DESC_CONCISE_TYPE) == SQL_VARCHAR);
+  CHECK(get_numeric_attr(stmt, 1, SQL_DESC_TYPE) == SQL_VARCHAR);
+  // Then The type name should be VARIANT, not VARCHAR
+  CHECK(get_string_attr(stmt, 1, SQL_DESC_TYPE_NAME) == "VARIANT");
+  OLD_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "VARCHAR"); }
+  NEW_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "VARIANT"); }
+}
+
+// =============================================================================
 // Nullable behavior
 // =============================================================================
 

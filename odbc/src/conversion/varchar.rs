@@ -27,8 +27,14 @@ use crate::conversion::{ReadArrowType, SnowflakeType, WriteODBCType};
 
 pub(crate) struct SnowflakeVarchar {
     pub len: u32,
-    pub is_semi_structured: bool,
+    pub semi_structured_type_name: Option<&'static str>,
     pub map_to_long_varchar: Option<u32>,
+}
+
+impl SnowflakeVarchar {
+    pub(crate) fn type_name(&self) -> &'static str {
+        self.semi_structured_type_name.unwrap_or("VARCHAR")
+    }
 }
 
 impl SnowflakeType for SnowflakeVarchar {
@@ -217,7 +223,7 @@ impl WriteODBCType for SnowflakeVarchar {
         binding: &Binding,
         get_data_offset: &mut Option<usize>,
     ) -> Result<Warnings, WriteOdbcError> {
-        if self.is_semi_structured {
+        if self.semi_structured_type_name.is_some() {
             match binding.target_type {
                 CDataType::Default | CDataType::Char | CDataType::WChar | CDataType::Binary => {}
                 _ => {

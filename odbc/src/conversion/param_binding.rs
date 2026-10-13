@@ -307,7 +307,7 @@ pub(crate) fn make_converter(
         | sql::SqlDataType::EXT_W_LONG_VARCHAR => Ok(Box::new(WireParamConverter {
             snowflake_type: SnowflakeVarchar {
                 len: 0,
-                is_semi_structured: false,
+                semi_structured_type_name: None,
                 map_to_long_varchar: None,
             },
         })),

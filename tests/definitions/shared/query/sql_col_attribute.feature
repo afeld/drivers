@@ -99,6 +99,28 @@ Feature: ODBC SQLColAttribute function behavior (ODBC 3.x)
     Then All metadata attributes should match expected values for DECFLOAT
 
   # =========================================================================
+  # Semi-Structured Type Names (ARRAY/OBJECT/VARIANT)
+  # =========================================================================
+
+  @odbc_e2e
+  Scenario: should return correct type name for ARRAY.
+    Given A table with an ARRAY column is queried
+    When SQLColAttribute is called for the type name fields
+    Then The type name should be ARRAY, not VARCHAR
+
+  @odbc_e2e
+  Scenario: should return correct type name for OBJECT.
+    Given A table with an OBJECT column is queried
+    When SQLColAttribute is called for the type name fields
+    Then The type name should be STRUCT, not VARCHAR
+
+  @odbc_e2e
+  Scenario: should return correct type name for VARIANT.
+    Given A table with a VARIANT column is queried
+    When SQLColAttribute is called for the type name fields
+    Then The type name should be VARIANT, not VARCHAR
+
+  # =========================================================================
   # Column Naming
   # =========================================================================
 

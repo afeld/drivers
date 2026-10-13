@@ -503,7 +503,7 @@ impl SnowflakeFieldType {
                 let len = text_len_from_field(field, numeric_settings)?;
                 Ok(Self::Varchar(varchar::SnowflakeVarchar {
                     len,
-                    is_semi_structured: false,
+                    semi_structured_type_name: None,
                     map_to_long_varchar: numeric_settings.map_to_long_varchar,
                 }))
             }
@@ -576,9 +576,15 @@ impl SnowflakeFieldType {
                     }
                     Err(e) => return Err(e),
                 };
+                let semi_structured_type_name = Some(match logical_type {
+                    "OBJECT" => "STRUCT",
+                    "ARRAY" => "ARRAY",
+                    "VARIANT" => "VARIANT",
+                    _ => unreachable!(),
+                });
                 Ok(Self::Varchar(varchar::SnowflakeVarchar {
                     len,
-                    is_semi_structured: true,
+                    semi_structured_type_name,
                     map_to_long_varchar: numeric_settings.map_to_long_varchar,
                 }))
             }
@@ -629,7 +635,7 @@ impl SnowflakeFieldType {
                 };
                 Ok(Self::Varchar(varchar::SnowflakeVarchar {
                     len,
-                    is_semi_structured: false,
+                    semi_structured_type_name: None,
                     map_to_long_varchar: numeric_settings.map_to_long_varchar,
                 }))
             }
@@ -702,7 +708,7 @@ impl SnowflakeFieldType {
 
     fn type_name(&self) -> &'static str {
         match self {
-            Self::Varchar(_) => "VARCHAR",
+            Self::Varchar(t) => t.type_name(),
             Self::Number(_) => "DECIMAL",
             Self::Date(_) => "TYPE_DATE",
             Self::Time(_) => "TYPE_TIME",
@@ -1199,7 +1205,7 @@ mod concise_sql_type_override_tests {
 
 #[cfg(test)]
 mod map_to_long_varchar_sql_type_tests {
-    use super::{NumericSettings, sql_type_from_field};
+    use super::{NumericSettings, sql_type_from_field, type_name_from_field};
     use arrow::datatypes::{DataType, Field};
     use odbc_sys as sql;
     use std::collections::HashMap;
@@ -1268,6 +1274,22 @@ mod map_to_long_varchar_sql_type_tests {
                 sql_type_from_field(&semi_structured_field(logical_type, "8000"), &settings)
                     .unwrap(),
                 sql::SqlDataType::VARCHAR,
+            );
+        }
+    }
+
+    #[test]
+    fn type_name_from_field_preserves_semi_structured_names() {
+        let settings = NumericSettings::default();
+        for (logical_type, expected) in [
+            ("ARRAY", "ARRAY"),
+            ("OBJECT", "STRUCT"),
+            ("VARIANT", "VARIANT"),
+        ] {
+            assert_eq!(
+                type_name_from_field(&semi_structured_field(logical_type, "8000"), &settings)
+                    .unwrap(),
+                expected
             );
         }
     }
