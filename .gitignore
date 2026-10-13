@@ -83,3 +83,6 @@ tests/auth/wif/parameters/parameters_wif.json
 
 # Cross-language MFA TOTP used-code / lockout state written by auth-browser CI
 .ud-mfa-totp-state/
+
+# Lean-CTX instructions
+/.kiro/steering/lean-ctx.md
