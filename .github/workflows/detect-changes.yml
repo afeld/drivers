@@ -271,7 +271,6 @@ jobs:
               - 'scripts/old_python/**'
               - '.github/workflows/test-python.yml'
               - '.github/workflows/_build-python-wheels.yml'
-              - '.github/workflows/build-python-release.yml'
               - '.github/actions/setup-windows-openssl/**'
               - 'ci/test_matrix/models/python.py'
               - 'ci/test_matrix/mappings/python.py'

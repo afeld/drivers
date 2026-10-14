@@ -930,8 +930,8 @@ jobs:
       # arm64 wheel publishing in early 2026). We follow the same pattern as
       # test-python.yml and build cryptography from source against vcpkg's
       # static OpenSSL — Rust toolchain is already on the runner. The cache key
-      # is intentionally identical to the one used in test-python.yml /
-      # build-python-release.yml so we hit their cache when it's warm.
+      # is intentionally identical to the one used in test-python.yml so we hit
+      # that cache when it's warm.
       - name: Restore vcpkg ARM64 static OpenSSL cache (for cryptography)
         if: always()
         id: vcpkg-static-cache

@@ -5,7 +5,7 @@ name: Driver CI
 # nightly, and dispatch all resolve which suites to run in one place (the
 # `plan` job below).
 #
-# Packaging / release builds (build-python-release.yml, build-jdbc-jars.yml,
+# Packaging / release builds (build-jdbc-jars.yml,
 # build-odbc-packages.yml, build-nodejs-packages.yml, cold-wheel-check.yml)
 # stay as their own workflows.
 on:

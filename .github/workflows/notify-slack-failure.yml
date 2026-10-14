@@ -31,12 +31,10 @@ on:
   workflow_run:
     workflows:
       # Driver test CI is orchestrated by Driver CI; called workflows do not
-      # emit workflow_run events. Release/packaging builds stay independent
-      # and keep their own names on this list.
+      # emit workflow_run events.
       - "Driver CI"
       - "Pre-commit"
       - "Validate generated data"
-      - "Python Release Build"
     types: [completed]
   # For manual testing only — remove before merging to main.
   workflow_dispatch:
