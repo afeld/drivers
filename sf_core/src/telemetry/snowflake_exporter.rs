@@ -11,20 +11,32 @@ use crate::log_foreign_error;
 use crate::rest::snowflake::SessionTokens;
 use crate::rest::snowflake::telemetry as rest;
 
-use super::SESSION_ID_FIELD;
+use super::TELEMETRY_ID_FIELD;
 
-/// Shared registry mapping session IDs to their exporter sessions.
-/// Connections register on init, deregister on release.
-pub type SessionRegistry = Arc<RwLock<HashMap<i64, Arc<ExporterSession>>>>;
+/// Shared registry mapping connection telemetry ids to their exporter sessions.
+/// Connections register on init, deregister on close.
+pub type SessionRegistry = Arc<RwLock<HashMap<u64, Arc<ExporterSession>>>>;
 
 /// Shared session context used to POST telemetry to Snowflake's in-band
 /// `/telemetry/send` endpoint. Both telemetry producers (span lane, raw-log
-/// lane) look this up by session id via [`SessionRegistry`] and egress through
+/// lane) look this up by telemetry id via [`SessionRegistry`] and egress through
 /// [`send_with_token`], so they share one wire path and one auth path.
 pub struct ExporterSession {
     pub client: reqwest::Client,
     pub query_parameters: QueryParameters,
     pub session_token: Arc<AsyncRwLock<Option<SessionTokens>>>,
+}
+
+impl ExporterSession {
+    /// The session id from the connection's current tokens. `None` for a
+    /// connection that adopted session tokens without learning one.
+    pub(crate) async fn session_id(&self) -> Option<i64> {
+        self.session_token
+            .read()
+            .await
+            .as_ref()
+            .and_then(|tokens| tokens.session_id)
+    }
 }
 
 impl std::fmt::Debug for ExporterSession {
@@ -69,15 +81,17 @@ pub(crate) async fn send_with_token(
     Ok(())
 }
 
-/// Extract the `snowflake.session.id` attribute value from a span's attributes.
-/// Handles both I64 (from tracing i64 fields) and String representations.
-pub(crate) fn extract_session_id(attrs: &[KeyValue]) -> Option<i64> {
+/// Extract the `snowflake.telemetry.id` attribute value from a span's
+/// attributes. A `u64` tracing field reaches OpenTelemetry as a String
+/// (`tracing-opentelemetry` records it through its Debug fallback); I64 is
+/// accepted for attributes built directly.
+pub(crate) fn extract_telemetry_id(attrs: &[KeyValue]) -> Option<u64> {
     use opentelemetry::Value;
     attrs.iter().find_map(|kv| {
-        if kv.key.as_str() == SESSION_ID_FIELD {
+        if kv.key.as_str() == TELEMETRY_ID_FIELD {
             match &kv.value {
-                Value::I64(id) => Some(*id),
-                Value::String(s) => s.as_str().parse::<i64>().ok(),
+                Value::I64(id) => u64::try_from(*id).ok(),
+                Value::String(s) => s.as_str().parse::<u64>().ok(),
                 _ => None,
             }
         } else {
@@ -91,20 +105,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn extract_session_id_handles_i64_value() {
-        let attrs = vec![KeyValue::new(SESSION_ID_FIELD, 42i64)];
-        assert_eq!(extract_session_id(&attrs), Some(42));
+    fn extract_telemetry_id_handles_i64_value() {
+        let attrs = vec![KeyValue::new(TELEMETRY_ID_FIELD, 42i64)];
+        assert_eq!(extract_telemetry_id(&attrs), Some(42));
     }
 
     #[test]
-    fn extract_session_id_handles_string_value() {
-        let attrs = vec![KeyValue::new(SESSION_ID_FIELD, "99")];
-        assert_eq!(extract_session_id(&attrs), Some(99));
+    fn extract_telemetry_id_handles_string_value() {
+        let attrs = vec![KeyValue::new(TELEMETRY_ID_FIELD, "99")];
+        assert_eq!(extract_telemetry_id(&attrs), Some(99));
     }
 
     #[test]
-    fn extract_session_id_returns_none_when_missing() {
+    fn extract_telemetry_id_returns_none_when_missing() {
         let attrs = vec![KeyValue::new("other.attr", "value")];
-        assert_eq!(extract_session_id(&attrs), None);
+        assert_eq!(extract_telemetry_id(&attrs), None);
     }
 }

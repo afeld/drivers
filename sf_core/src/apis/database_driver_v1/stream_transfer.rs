@@ -257,7 +257,7 @@ impl DatabaseDriverV1 {
         sql: String,
         source: ByteSource,
     ) -> Result<ResultSetInfo, ApiError> {
-        let session_id = self.session_id_for_conn(conn_handle).await;
+        let telemetry_id = self.telemetry_id_for_conn(conn_handle).await;
         async {
             let conn_ptr = self
                 .connections
@@ -337,7 +337,7 @@ impl DatabaseDriverV1 {
         }
         .instrument(crate::snowflake_op_span!(
             "run_put_stream_via_gs",
-            session_id
+            telemetry_id
         ))
         .await
     }
@@ -357,7 +357,7 @@ impl DatabaseDriverV1 {
         source_filename: String,
         decompress: bool,
     ) -> Result<(Handle, Option<i64>), ApiError> {
-        let session_id = self.session_id_for_conn(conn_handle).await;
+        let telemetry_id = self.telemetry_id_for_conn(conn_handle).await;
         async {
             let conn_ptr = self
                 .connections
@@ -469,7 +469,7 @@ impl DatabaseDriverV1 {
         }
         .instrument(crate::snowflake_op_span!(
             "download_stream_begin",
-            session_id
+            telemetry_id
         ))
         .await
     }

@@ -23,12 +23,18 @@ pub(crate) fn log_entry(message: Value, timestamp: impl std::fmt::Display) -> Va
 ///
 /// Format: `{"logs": [{"message": {...}, "timestamp": "..."}]}`
 pub fn spans_to_snowflake_payload(spans: &[SpanData]) -> Value {
-    let logs: Vec<Value> = spans.iter().flat_map(span_to_log_entries).collect();
+    let logs: Vec<Value> = spans
+        .iter()
+        .flat_map(|span| span_to_log_entries(span, None))
+        .collect();
     logs_payload(logs)
 }
 
-pub(crate) fn span_to_log_entries(span: &SpanData) -> Vec<Value> {
+/// Convert one span into log entries, stamping `session_id` (when known) as
+/// [`super::SESSION_ID_FIELD`] on each of them.
+pub(crate) fn span_to_log_entries(span: &SpanData, session_id: Option<i64>) -> Vec<Value> {
     let mut entries = Vec::new();
+    let session_attr = session_id.map(|id| KeyValue::new(super::SESSION_ID_FIELD, id));
 
     // Events on the span (wrapper api_call, exception, session_init) —
     // each becomes its own log entry, inheriting span attributes. We override
@@ -42,6 +48,7 @@ pub(crate) fn span_to_log_entries(span: &SpanData) -> Vec<Value> {
             .cloned()
             .collect();
         attrs.push(KeyValue::new("event_kind", "event"));
+        attrs.extend(session_attr.clone());
         for kv in &event.attributes {
             attrs.push(kv.clone());
         }
@@ -53,6 +60,7 @@ pub(crate) fn span_to_log_entries(span: &SpanData) -> Vec<Value> {
     // and status. The span's `event_kind="span"` attribute carries through.
     if span.events.is_empty() {
         let mut attrs = span.attributes.clone();
+        attrs.extend(session_attr);
         if let Ok(duration) = span.end_time.duration_since(span.start_time) {
             attrs.push(KeyValue::new("duration_ms", duration.as_millis() as i64));
         }
@@ -78,7 +86,7 @@ fn attrs_to_log_entry(
 
     for kv in attributes {
         let key = kv.key.as_str();
-        if key == "type" {
+        if key == "type" || key == super::TELEMETRY_ID_FIELD {
             continue;
         }
         message.insert(key.to_string(), otel_value_to_json(&kv.value));
@@ -207,6 +215,60 @@ mod tests {
         let payload = spans_to_snowflake_payload(&[]);
         let logs = payload["logs"].as_array().unwrap();
         assert!(logs.is_empty());
+    }
+
+    fn span_with_telemetry_id_and_event() -> SpanData {
+        let mut span = make_test_span(
+            "statement_execute_query",
+            vec![
+                KeyValue::new(crate::telemetry::TELEMETRY_ID_FIELD, "7"),
+                KeyValue::new("db.system", "snowflake"),
+            ],
+        );
+        span.events.events.push(opentelemetry::trace::Event::new(
+            "session_init",
+            UNIX_EPOCH,
+            vec![KeyValue::new("service.name", "snowflake-sdk")],
+            0,
+        ));
+        span
+    }
+
+    #[test]
+    fn span_entries_carry_session_id_and_drop_telemetry_id() {
+        let mut span = span_with_telemetry_id_and_event();
+        let event_entries = span_to_log_entries(&span, Some(42));
+        span.events.events.clear();
+        let span_entries = span_to_log_entries(&span, Some(42));
+
+        for entry in event_entries.iter().chain(&span_entries) {
+            let msg = &entry["message"];
+            assert_eq!(msg[crate::telemetry::SESSION_ID_FIELD], 42, "{msg}");
+            assert_eq!(msg["db.system"], "snowflake", "{msg}");
+            assert!(
+                msg.get(crate::telemetry::TELEMETRY_ID_FIELD).is_none(),
+                "{msg}"
+            );
+        }
+        assert_eq!(event_entries[0]["message"]["type"], "session_init");
+        assert_eq!(
+            span_entries[0]["message"]["type"],
+            "statement_execute_query"
+        );
+    }
+
+    #[test]
+    fn span_entries_omit_session_id_when_unknown() {
+        let entries = span_to_log_entries(&span_with_telemetry_id_and_event(), None);
+        let msg = &entries[0]["message"];
+        assert!(
+            msg.get(crate::telemetry::SESSION_ID_FIELD).is_none(),
+            "{msg}"
+        );
+        assert!(
+            msg.get(crate::telemetry::TELEMETRY_ID_FIELD).is_none(),
+            "{msg}"
+        );
     }
 
     #[test]

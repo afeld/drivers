@@ -85,9 +85,9 @@ pub struct WrapperPresets {
     pub serialize_session_operations: bool,
     /// When true, a login with pre-acquired session and master tokens proves the pair
     /// with a token-request RENEW, which costs a round-trip, rotates the pair, and
-    /// reports the session id telemetry is keyed by. When false the pair is adopted as
-    /// handed over: no per-operation telemetry, and a gone session surfaces on the
-    /// first real request. Only Node.js sets this false, for `deserializeConnection`.
+    /// reports the session id that telemetry entries carry. When false the pair is
+    /// adopted as handed over: telemetry is sent without a session id, and a gone
+    /// session surfaces on the first real request. Only Node.js sets this false, for `deserializeConnection`.
     pub validate_session_token: bool,
 }
 
@@ -317,40 +317,40 @@ impl DatabaseDriverV1 {
         }
     }
 
-    /// Resolve the Snowflake session id for a connection handle by reading
-    /// `Connection::session_id` under the connection mutex. Returns `None`
+    /// Resolve the telemetry id for a connection handle by reading
+    /// `Connection::telemetry_id` under the connection mutex. Returns `None`
     /// when the handle is unknown, login has not completed, or the connection
     /// has been released.
-    pub(crate) async fn session_id_for_conn(&self, conn_handle: Handle) -> Option<i64> {
+    pub(crate) async fn telemetry_id_for_conn(&self, conn_handle: Handle) -> Option<u64> {
         let conn_ptr = self.connections.get_obj(conn_handle)?;
         let conn = conn_ptr.lock().await;
-        conn.session_id
+        conn.telemetry_id
     }
 
-    /// Read both `session_id` and `wrapper_identity` under a single lock guard,
+    /// Read both `telemetry_id` and `wrapper_identity` under a single lock guard,
     /// eliminating the TOCTOU window that exists when the two fields are fetched
     /// with separate awaits.
     #[cfg(feature = "protobuf")]
-    pub(crate) async fn session_id_and_identity_for_conn(
+    pub(crate) async fn telemetry_id_and_identity_for_conn(
         &self,
         conn_handle: Handle,
-    ) -> (Option<i64>, Option<WrapperIdentity>) {
+    ) -> (Option<u64>, Option<WrapperIdentity>) {
         let Some(conn_ptr) = self.connections.get_obj(conn_handle) else {
             return (None, None);
         };
         let conn = conn_ptr.lock().await;
-        (conn.session_id, conn.wrapper_identity.clone())
+        (conn.telemetry_id, conn.wrapper_identity.clone())
     }
 
-    /// Flush buffered telemetry spans for a specific session.
-    pub(super) async fn flush_telemetry_session(&self, session_id: i64) {
+    /// Flush buffered telemetry for a specific connection.
+    pub(super) async fn flush_telemetry_connection(&self, telemetry_id: u64) {
         if let Some(ref lm) = self.log_manager {
-            lm.flush_session(session_id).await;
+            lm.flush_connection(telemetry_id).await;
         }
     }
 
     /// Forward one caller-produced telemetry entry to the core's in-band batch.
-    /// No-ops when telemetry is unconfigured or the session id is not yet known
+    /// No-ops when telemetry is unconfigured or the telemetry id is not yet known
     /// (login incomplete / handle released). Core owns batching, flush threshold,
     /// and egress.
     pub(crate) async fn telemetry_send_log(
@@ -364,12 +364,12 @@ impl DatabaseDriverV1 {
             tracing::debug!("telemetry_send_log: exit");
             return;
         };
-        let Some(session_id) = self.session_id_for_conn(conn_handle).await else {
+        let Some(telemetry_id) = self.telemetry_id_for_conn(conn_handle).await else {
             tracing::debug!("telemetry_send_log: exit");
             return;
         };
         lm.telemetry()
-            .add_log(session_id, message_json, timestamp_ms);
+            .add_log(telemetry_id, message_json, timestamp_ms);
         tracing::debug!("telemetry_send_log: exit");
     }
 

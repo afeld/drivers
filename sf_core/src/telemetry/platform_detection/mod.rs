@@ -256,7 +256,7 @@ impl PlatformDetector {
         self.started.load(Ordering::Relaxed)
     }
 
-    pub(crate) fn report(&self, telemetry: &SessionTelemetry, session_id: i64) {
+    pub(crate) fn report(&self, telemetry: &SessionTelemetry, telemetry_id: u64) {
         let Some(platforms) = self.platforms() else {
             return;
         };
@@ -268,6 +268,6 @@ impl PlatformDetector {
             "type": "platform_detection_status",
             "value": platforms,
         });
-        telemetry.add_log(session_id, message.to_string(), timestamp_ms);
+        telemetry.add_log(telemetry_id, message.to_string(), timestamp_ms);
     }
 }

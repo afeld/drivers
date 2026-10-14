@@ -1,3 +1,4 @@
+mod adopted_session;
 mod common;
 mod exporter_pipeline;
 mod log_batch;

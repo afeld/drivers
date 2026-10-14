@@ -6,7 +6,7 @@ pub mod types;
 pub mod serialization;
 // Internal machinery shared by both telemetry lanes (span + raw-log).
 pub(crate) mod session_batch;
-// Unified per-session buffer both lanes push into (public for integration tests).
+// Unified per-connection buffer both lanes push into (public for integration tests).
 #[doc(hidden)]
 pub mod session_telemetry;
 #[doc(hidden)]
@@ -19,35 +19,41 @@ pub mod platform_detection;
 
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-/// Span attribute key for the Snowflake session id. Read by the exporter to
-/// route spans to the right session. The [`snowflake_op_span!`] macro stamps
-/// the same string as a literal field name (it has to — `tracing::info_span!`
-/// requires field names at macro-expansion time, not runtime values), so any
-/// rename here must be mirrored in the macro.
+/// Log-entry key for the Snowflake session id. The span lane writes it into
+/// each entry at send time from the connection's session tokens and omits it
+/// when the connection never learned a session id.
 pub const SESSION_ID_FIELD: &str = "snowflake.session.id";
 
+/// Span attribute key for the connection's telemetry id (its handle id). Read
+/// by the processor to route spans to the right connection and dropped before
+/// the entry is sent. The [`snowflake_op_span!`] macro stamps the same string
+/// as a literal field name (it has to — `tracing::info_span!` requires field
+/// names at macro-expansion time, not runtime values), so any rename here must
+/// be mirrored in the macro.
+pub const TELEMETRY_ID_FIELD: &str = "snowflake.telemetry.id";
+
 /// Build a bounded span for a single FFI / driver operation tagged with the
-/// owning session id. Each entry-point method opens one of these and lets it
-/// end with the operation — there is no long-lived parent span.
+/// owning connection's telemetry id. Each entry-point method opens one of these
+/// and lets it end with the operation — there is no long-lived parent span.
 ///
-/// `$session_id` must be `Option<i64>`. When `None` (handle unknown, login
+/// `$telemetry_id` must be `Option<u64>`. When `None` (handle unknown, login
 /// not yet completed, mid-teardown) the macro returns `Span::none()` so the
 /// span is silently disabled rather than stamped with a sentinel that could
-/// collide with a real session id and route telemetry to the wrong tenant.
+/// collide with a real id and route telemetry to the wrong connection.
 ///
 /// `event_kind = "span"` is stamped so downstream consumers can distinguish
 /// per-operation span records from event records (`session_init`, `api_call`,
 /// `exception`) that share the same `/telemetry/send` payload shape.
 ///
-/// The `"snowflake.session.id"` literal must match [`SESSION_ID_FIELD`].
+/// The `"snowflake.telemetry.id"` literal must match [`TELEMETRY_ID_FIELD`].
 #[macro_export]
 macro_rules! snowflake_op_span {
-    ($name:expr, $session_id:expr) => {
-        match $session_id {
+    ($name:expr, $telemetry_id:expr) => {
+        match $telemetry_id {
             ::std::option::Option::Some(id) => ::tracing::info_span!(
                 $name,
                 "db.system" = "snowflake",
-                "snowflake.session.id" = id,
+                "snowflake.telemetry.id" = id,
                 "event_kind" = "span",
             ),
             ::std::option::Option::None => ::tracing::Span::none(),
@@ -57,7 +63,7 @@ macro_rules! snowflake_op_span {
 
 /// Record a session_init event on the **current** tracing span.
 ///
-/// The caller must have entered a span tagged with `snowflake.session.id`
+/// The caller must have entered a span tagged with `snowflake.telemetry.id`
 /// (e.g. one built by [`snowflake_op_span!`]) before calling this. Uses
 /// `OpenTelemetrySpanExt::add_event` (rather than `tracing::event!`) because
 /// events with dotted field names (e.g. `service.name`) are not supported by

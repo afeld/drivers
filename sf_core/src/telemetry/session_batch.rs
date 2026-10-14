@@ -6,7 +6,7 @@
 //! scalar span attributes). The entry types and the code that turns a batch into
 //! an HTTP send genuinely differ — but the bookkeeping is identical: a
 //! per-session `Vec`, a flush threshold, fire-and-forget spawning on overflow,
-//! and a time-bounded flush on connection release. That machinery lives here once.
+//! and a time-bounded flush on connection close. That machinery lives here once.
 
 use std::collections::HashMap;
 use std::future::Future;
@@ -15,7 +15,7 @@ use std::time::Duration;
 
 use crate::utils::sync::MutexRecoverExt;
 
-/// Bounded wait for the awaited flush path (connection release), shared by both
+/// Bounded wait for the awaited flush path (connection close), shared by both
 /// lanes so a slow `/telemetry/send` cannot stall `connection_close`. Sized to
 /// accommodate p99 latency in degraded regions (observed 3-4s).
 pub(crate) const FLUSH_TIMEOUT: Duration = Duration::from_secs(5);
@@ -26,7 +26,7 @@ pub(crate) const FLUSH_TIMEOUT: Duration = Duration::from_secs(5);
 /// flush handle observe the same buffers.
 #[derive(Debug)]
 pub(crate) struct SessionBuffer<T> {
-    buffers: Arc<Mutex<HashMap<i64, Vec<T>>>>,
+    buffers: Arc<Mutex<HashMap<u64, Vec<T>>>>,
     threshold: usize,
 }
 
@@ -49,12 +49,12 @@ impl<T> SessionBuffer<T> {
         }
     }
 
-    /// Append `entry` to `session_id`'s buffer. When the buffer reaches the
+    /// Append `entry` to `telemetry_id`'s buffer. When the buffer reaches the
     /// threshold, drain it and return the batch for the caller to send;
     /// otherwise return `None`. A single lock covers the push and the drain.
-    pub(crate) fn push(&self, session_id: i64, entry: T) -> Option<Vec<T>> {
+    pub(crate) fn push(&self, telemetry_id: u64, entry: T) -> Option<Vec<T>> {
         let mut bufs = self.buffers.lock_recover();
-        let buf = bufs.entry(session_id).or_default();
+        let buf = bufs.entry(telemetry_id).or_default();
         buf.push(entry);
         // `>=` (not `==`) so an over-full buffer still drains rather than growing
         // unbounded. `mem::take` swaps the batch out and leaves an empty Vec.
@@ -66,23 +66,23 @@ impl<T> SessionBuffer<T> {
     }
 
     /// Drain and return one session's buffer, removing the key.
-    pub(crate) fn take(&self, session_id: i64) -> Vec<T> {
+    pub(crate) fn take(&self, telemetry_id: u64) -> Vec<T> {
         let mut bufs = self.buffers.lock_recover();
-        bufs.remove(&session_id).unwrap_or_default()
+        bufs.remove(&telemetry_id).unwrap_or_default()
     }
 
     /// Drain every session's buffer. Used by the span lane's `force_flush`.
-    pub(crate) fn drain_all(&self) -> Vec<(i64, Vec<T>)> {
+    pub(crate) fn drain_all(&self) -> Vec<(u64, Vec<T>)> {
         let mut bufs = self.buffers.lock_recover();
         bufs.drain().collect()
     }
 
     #[cfg(test)]
-    pub(crate) fn len(&self, session_id: i64) -> usize {
+    pub(crate) fn len(&self, telemetry_id: u64) -> usize {
         self.buffers
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .get(&session_id)
+            .get(&telemetry_id)
             .map(|v| v.len())
             .unwrap_or(0)
     }
@@ -104,12 +104,12 @@ where
 /// send is cancelled (its already-drained batch is dropped) so a hung endpoint
 /// cannot stall `connection_close`. The future is expected to swallow its own
 /// send errors and yield `()`.
-pub(crate) async fn flush_bounded<F>(session_id: i64, fut: F)
+pub(crate) async fn flush_bounded<F>(telemetry_id: u64, fut: F)
 where
     F: Future<Output = ()>,
 {
     if tokio::time::timeout(FLUSH_TIMEOUT, fut).await.is_err() {
-        tracing::debug!(session_id, "telemetry flush timed out; continuing");
+        tracing::debug!(telemetry_id, "telemetry flush timed out; continuing");
     }
 }
 

@@ -592,7 +592,6 @@ impl DatabaseDriverV1 {
                 {
                     let logout_config = LogoutConfig::from_settings(&resolved_snapshot)
                         .context(ConfigurationSnafu)?;
-                    let session_id = login_result.tokens.session_id;
                     let mut conn = conn_ptr.lock().await;
 
                     conn.initialize(
@@ -614,16 +613,17 @@ impl DatabaseDriverV1 {
                     )
                     .await;
 
-                    // Cache the session id on the Connection so entry-point
-                    // methods can stamp `snowflake.session.id` on their spans
+                    // Cache the telemetry id on the Connection so entry-point
+                    // methods can stamp `snowflake.telemetry.id` on their spans
                     // by reading the field under the same mutex they already
                     // take to do their work.
-                    conn.session_id = session_id;
+                    let telemetry_id = conn_handle.id;
+                    conn.telemetry_id = Some(telemetry_id);
 
                     // Telemetry setup: check if the server has opted this session
                     // into in-band telemetry and a session registry is configured,
-                    // then register the session so spans tagged with this
-                    // session_id are routed to /telemetry/send.
+                    // then register the connection so spans tagged with its
+                    // telemetry id are routed to /telemetry/send.
                     let telemetry_enabled = self.telemetry_sessions().is_some()
                         && conn
                             .session_parameters
@@ -633,10 +633,7 @@ impl DatabaseDriverV1 {
                             .map(|v| v.coerce_bool().unwrap_or(false))
                             .unwrap_or(true);
 
-                    // The registry is keyed by the server-assigned session id, so a
-                    // connection that never learned one is left unregistered rather
-                    // than filed under a placeholder.
-                    if let Some(session_id) = session_id.filter(|_| telemetry_enabled) {
+                    if telemetry_enabled {
                         use crate::telemetry::snowflake_exporter::ExporterSession;
 
                         let Some(http_client) = conn.http_client.clone() else {
@@ -658,14 +655,14 @@ impl DatabaseDriverV1 {
                             sessions
                                 .write()
                                 .unwrap_or_else(|e| e.into_inner())
-                                .insert(session_id, exporter_session);
+                                .insert(telemetry_id, exporter_session);
                         } else {
                             // `telemetry_enabled` implies `telemetry_sessions()`
                             // was Some (checked above); reaching None here means
                             // the registry was cleared concurrently.
                             tracing::error!(
                                 "telemetry session registry unexpectedly absent after \
-                                 telemetry_enabled check; session {session_id} not \
+                                 telemetry_enabled check; connection {telemetry_id} not \
                                  registered for telemetry"
                             );
                         }
@@ -676,15 +673,16 @@ impl DatabaseDriverV1 {
                             .map(crate::telemetry::environment::EnvironmentInfo::with_wrapper)
                             .unwrap_or_else(crate::telemetry::environment::EnvironmentInfo::detect);
                         // Bounded `session_init` span: an event-carrier span whose
-                        // sole purpose is to attach `snowflake.session.id` to the
+                        // sole purpose is to attach `snowflake.telemetry.id` to the
                         // session_init OTEL event. It does NOT measure connection_init
                         // duration — login has already completed by the time this span
                         // opens. Each subsequent driver operation emits its own bounded
-                        // span tagged with the same session id; they share no trace_id
+                        // span tagged with the same telemetry id; they share no trace_id
                         // with this span.
                         // TODO: instrument the surrounding connection_init future so we
                         // capture login duration + Status::Error on failure.
-                        let init_span = crate::snowflake_op_span!("session_init", Some(session_id));
+                        let init_span =
+                            crate::snowflake_op_span!("session_init", Some(telemetry_id));
                         let _guard = init_span.enter();
                         crate::telemetry::record_session_init(&env_info);
                     }
@@ -728,24 +726,26 @@ impl DatabaseDriverV1 {
         }
     }
 
-    /// Flush all telemetry for this connection and clean up the session registry.
+    /// Flush all telemetry for this connection and remove it from the telemetry
+    /// registry. Called from `connection_close`; `connection_release` does not
+    /// call it.
     ///
     /// Order matters:
-    /// 1. Flush per-session buffered spans — awaited export to `/telemetry/send`
-    ///    while session tokens are still alive for authentication.
-    /// 2. Remove the session from the exporter registry so it no longer resolves.
+    /// 1. Flush the connection's buffered telemetry — awaited export to
+    ///    `/telemetry/send` while session tokens are still alive for authentication.
+    /// 2. Remove the connection from the exporter registry so it no longer resolves.
     ///
     /// Must be called while session tokens are still alive (before logout).
     /// Idempotent. Each driver operation emits a bounded span that ends when the
     /// operation returns, so there is no long-lived parent span to drop here.
     pub async fn flush_connection_telemetry(&self, conn_handle: Handle) {
-        let session_id = self.session_id_for_conn(conn_handle).await;
+        let telemetry_id = self.telemetry_id_for_conn(conn_handle).await;
 
-        if let Some(id) = session_id {
+        if let Some(id) = telemetry_id {
             if let Some(telemetry) = self.session_telemetry() {
                 self.platform_detector.report(telemetry, id);
             }
-            self.flush_telemetry_session(id).await;
+            self.flush_telemetry_connection(id).await;
 
             if let Some(sessions) = self.telemetry_sessions() {
                 sessions
@@ -1192,11 +1192,12 @@ pub struct Connection {
     pub server_version: RwLock<Option<String>>,
     /// Wrapper identity for telemetry, set once via ConnectionInit.
     pub wrapper_identity: Option<WrapperIdentity>,
-    /// Snowflake session id, populated from `tokens.session_id` once
-    /// `connection_init` succeeds. Read by entry-point methods (under the
-    /// connection mutex) to stamp `snowflake.session.id` on telemetry spans.
-    /// `None` until login completes; cleared on connection release.
-    pub(crate) session_id: Option<i64>,
+    /// This connection's handle id, populated once `connection_init` succeeds.
+    /// Telemetry is keyed by it rather than by the session id, which a
+    /// connection that adopted session tokens never learns. Read by entry-point
+    /// methods (under the connection mutex) to stamp `snowflake.telemetry.id` on
+    /// telemetry spans. `None` until login completes.
+    pub(crate) telemetry_id: Option<u64>,
     /// Handle to the per-connection heartbeat background task (if keep-alive is enabled).
     pub(crate) heartbeat_handle: Option<HeartbeatHandle>,
     /// Set for `PAT_WITH_EXTERNAL_SESSION`. Query headers and
@@ -1261,7 +1262,7 @@ impl Connection {
             final_session_names: RwLock::new(FinalSessionNames::default()),
             server_version: RwLock::new(None),
             wrapper_identity: None,
-            session_id: None,
+            telemetry_id: None,
             heartbeat_handle: None,
             external_session_id: None,
             stage_state: Arc::new(AtomicStageState::new(StageState::Unknown)),
@@ -2727,7 +2728,7 @@ impl DatabaseDriverV1 {
         conn_handle: Handle,
         timeout: Option<Duration>,
     ) -> Result<bool, ApiError> {
-        let session_id = self.session_id_for_conn(conn_handle).await;
+        let telemetry_id = self.telemetry_id_for_conn(conn_handle).await;
         async {
             let conn_ptr = self
                 .connections
@@ -2784,7 +2785,7 @@ impl DatabaseDriverV1 {
         }
         .instrument(crate::snowflake_op_span!(
             "connection_heartbeat",
-            session_id
+            telemetry_id
         ))
         .await
     }

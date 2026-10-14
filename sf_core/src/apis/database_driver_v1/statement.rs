@@ -250,7 +250,7 @@ impl DatabaseDriverV1 {
         // keep the lock for the whole execution
         let mut stmt = stmt_ptr.lock().await;
 
-        let session_id = stmt.conn.lock().await.session_id;
+        let telemetry_id = stmt.conn.lock().await.telemetry_id;
         let report = AbortReport::default();
         let prepare = Box::pin(async {
             let query = stmt.query.clone().unwrap_or_default();
@@ -312,7 +312,7 @@ impl DatabaseDriverV1 {
             })
         });
         run_reporting_abort(operation_ctx, "statement_prepare", &report, prepare)
-            .instrument(crate::snowflake_op_span!("statement_prepare", session_id))
+            .instrument(crate::snowflake_op_span!("statement_prepare", telemetry_id))
             .await
     }
 
@@ -334,7 +334,7 @@ impl DatabaseDriverV1 {
         // keep the lock for the whole execution
         let mut stmt = stmt_ptr.lock().await;
 
-        let session_id = stmt.conn.lock().await.session_id;
+        let telemetry_id = stmt.conn.lock().await.telemetry_id;
         let report = AbortReport::default();
         run_reporting_abort(
             operation_ctx,
@@ -352,7 +352,7 @@ impl DatabaseDriverV1 {
         )
         .instrument(crate::snowflake_op_span!(
             "statement_execute_query",
-            session_id
+            telemetry_id
         ))
         .await
     }
@@ -671,8 +671,8 @@ impl DatabaseDriverV1 {
         describe_only: Option<bool>,
     ) -> Result<AsyncExecuteResult, ApiError> {
         let report = AbortReport::default();
-        let session_id = match self.statements.get_obj(stmt_handle) {
-            Some(stmt_ptr) => stmt_ptr.lock().await.conn.lock().await.session_id,
+        let telemetry_id = match self.statements.get_obj(stmt_handle) {
+            Some(stmt_ptr) => stmt_ptr.lock().await.conn.lock().await.telemetry_id,
             None => None,
         };
         // `async move`, so `bindings` is owned by this future rather than borrowed
@@ -807,7 +807,7 @@ impl DatabaseDriverV1 {
         run_reporting_abort(operation_ctx, "statement_execute_async", &report, submit)
             .instrument(crate::snowflake_op_span!(
                 "statement_execute_async",
-                session_id
+                telemetry_id
             ))
             .await
     }
@@ -822,7 +822,7 @@ impl DatabaseDriverV1 {
         conn_handle: Handle,
         query_id: String,
     ) -> Result<ExecuteQueryResult, ApiError> {
-        let session_id = self.session_id_for_conn(conn_handle).await;
+        let telemetry_id = self.telemetry_id_for_conn(conn_handle).await;
         let fetch = Box::pin(async {
             let conn_ptr = self.connections.get_obj(conn_handle).with_context(|| {
                 InvalidArgumentSnafu {
@@ -876,7 +876,7 @@ impl DatabaseDriverV1 {
         }
         .instrument(crate::snowflake_op_span!(
             "connection_get_query_result",
-            session_id
+            telemetry_id
         )));
         run_opt(operation_ctx, "connection_get_query_result", fetch).await
     }
@@ -886,7 +886,7 @@ impl DatabaseDriverV1 {
         conn_handle: Handle,
         query_id: String,
     ) -> Result<AbortOutcome, ApiError> {
-        let session_id = self.session_id_for_conn(conn_handle).await;
+        let telemetry_id = self.telemetry_id_for_conn(conn_handle).await;
         async {
             let conn_ptr =
                 self.connections
@@ -915,7 +915,7 @@ impl DatabaseDriverV1 {
         }
         .instrument(crate::snowflake_op_span!(
             "connection_abort_query",
-            session_id
+            telemetry_id
         ))
         .await
     }
@@ -2239,18 +2239,18 @@ mod tests {
     }
 
     #[derive(Default)]
-    struct SessionIdCaptureLayer {
-        captured: std::sync::Arc<std::sync::Mutex<Vec<(String, i64)>>>,
+    struct TelemetryIdCaptureLayer {
+        captured: std::sync::Arc<std::sync::Mutex<Vec<(String, u64)>>>,
     }
 
-    impl<S: tracing::Subscriber> tracing_subscriber::Layer<S> for SessionIdCaptureLayer {
+    impl<S: tracing::Subscriber> tracing_subscriber::Layer<S> for TelemetryIdCaptureLayer {
         fn on_new_span(
             &self,
             attrs: &tracing::span::Attributes<'_>,
             _id: &tracing::Id,
             _ctx: tracing_subscriber::layer::Context<'_, S>,
         ) {
-            struct Visitor(Option<i64>);
+            struct Visitor(Option<u64>);
             impl tracing::field::Visit for Visitor {
                 fn record_debug(
                     &mut self,
@@ -2258,35 +2258,40 @@ mod tests {
                     _value: &dyn std::fmt::Debug,
                 ) {
                 }
-                fn record_i64(&mut self, field: &tracing::field::Field, value: i64) {
-                    if field.name() == crate::telemetry::SESSION_ID_FIELD {
+                fn record_u64(&mut self, field: &tracing::field::Field, value: u64) {
+                    if field.name() == crate::telemetry::TELEMETRY_ID_FIELD {
                         self.0 = Some(value);
                     }
                 }
             }
             let mut visitor = Visitor(None);
             attrs.record(&mut visitor);
-            if let Some(session_id) = visitor.0 {
+            if let Some(telemetry_id) = visitor.0 {
                 self.captured
                     .lock()
                     .unwrap_or_else(|e| e.into_inner())
-                    .push((attrs.metadata().name().to_string(), session_id));
+                    .push((attrs.metadata().name().to_string(), telemetry_id));
             }
         }
     }
 
     #[tokio::test]
-    async fn statement_execute_async_span_carries_session_id() {
+    async fn statement_execute_async_span_carries_telemetry_id() {
         use tracing_subscriber::layer::SubscriberExt;
 
-        let layer = SessionIdCaptureLayer::default();
+        let layer = TelemetryIdCaptureLayer::default();
         let captured = layer.captured.clone();
         let subscriber = tracing_subscriber::registry().with(layer);
         let _guard = tracing::subscriber::set_default(subscriber);
 
         let ds = DatabaseDriverV1::new();
         let ch = ds.connection_new();
-        ds.connections.get_obj(ch).unwrap().lock().await.session_id = Some(4242);
+        ds.connections
+            .get_obj(ch)
+            .unwrap()
+            .lock()
+            .await
+            .telemetry_id = Some(4242);
         let sh = ds.statement_new(ch).unwrap();
         ds.statements.get_obj(sh).unwrap().lock().await.query = Some("SELECT 1".to_string());
 

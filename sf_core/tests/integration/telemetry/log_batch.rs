@@ -1,5 +1,5 @@
 //! End-to-end tests for the raw log-telemetry lane: drive the real
-//! [`SessionTelemetry`] raw-log path (`add_log` / `flush_session`) against a
+//! [`SessionTelemetry`] raw-log path (`add_log` / `flush_connection`) against a
 //! wiremock `/telemetry/send` and assert the exact bytes that leave the process.
 //! Faults are injected at the wire (real HTTP statuses); assertions are on
 //! observable outcomes (payload, request count).
@@ -10,7 +10,7 @@ use wiremock::matchers::{header, header_regex, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 use super::common::{
-    SESSION_ID, decompress_gzip_json, empty_registry, make_active_session, make_registry,
+    TELEMETRY_ID, decompress_gzip_json, empty_registry, make_active_session, make_registry,
 };
 
 #[tokio::test]
@@ -26,15 +26,15 @@ async fn should_post_exact_wire_body_and_auth_header() {
         .await;
 
     let telemetry = SessionTelemetry::new(make_registry(
-        SESSION_ID,
+        TELEMETRY_ID,
         make_active_session(&server.uri()),
     ));
     telemetry.add_log(
-        SESSION_ID,
+        TELEMETRY_ID,
         r#"{"type":"client_time_consume_last_result","query_id":"abc","value":42}"#.to_string(),
         1700000000123,
     );
-    telemetry.flush_session(SESSION_ID).await;
+    telemetry.flush_connection(TELEMETRY_ID).await;
 
     let requests = server.received_requests().await.unwrap();
     assert_eq!(requests.len(), 1);
@@ -65,12 +65,12 @@ async fn should_send_all_buffered_entries_in_one_post() {
         .await;
 
     let telemetry = SessionTelemetry::new(make_registry(
-        SESSION_ID,
+        TELEMETRY_ID,
         make_active_session(&server.uri()),
     ));
-    telemetry.add_log(SESSION_ID, r#"{"type":"a"}"#.to_string(), 1700000000000);
-    telemetry.add_log(SESSION_ID, r#"{"type":"b"}"#.to_string(), 1700000000001);
-    telemetry.flush_session(SESSION_ID).await;
+    telemetry.add_log(TELEMETRY_ID, r#"{"type":"a"}"#.to_string(), 1700000000000);
+    telemetry.add_log(TELEMETRY_ID, r#"{"type":"b"}"#.to_string(), 1700000000001);
+    telemetry.flush_connection(TELEMETRY_ID).await;
 
     let requests = server.received_requests().await.unwrap();
     assert_eq!(requests.len(), 1);
@@ -95,8 +95,8 @@ async fn should_not_post_when_session_not_registered() {
 
     // Empty registry == CLIENT_TELEMETRY_ENABLED off for every session.
     let telemetry = SessionTelemetry::new(empty_registry());
-    telemetry.add_log(SESSION_ID, r#"{"type":"x"}"#.to_string(), 1);
-    telemetry.flush_session(SESSION_ID).await;
+    telemetry.add_log(TELEMETRY_ID, r#"{"type":"x"}"#.to_string(), 1);
+    telemetry.flush_connection(TELEMETRY_ID).await;
 
     assert!(server.received_requests().await.unwrap().is_empty());
 }
@@ -112,15 +112,15 @@ async fn should_drop_batch_without_retry_on_server_error() {
         .await;
 
     let telemetry = SessionTelemetry::new(make_registry(
-        SESSION_ID,
+        TELEMETRY_ID,
         make_active_session(&server.uri()),
     ));
-    telemetry.add_log(SESSION_ID, r#"{"type":"x"}"#.to_string(), 1);
-    telemetry.flush_session(SESSION_ID).await;
+    telemetry.add_log(TELEMETRY_ID, r#"{"type":"x"}"#.to_string(), 1);
+    telemetry.flush_connection(TELEMETRY_ID).await;
 
     // The batch was taken before the send, so a second flush sends nothing:
     // the failed batch is dropped, never requeued.
-    telemetry.flush_session(SESSION_ID).await;
+    telemetry.flush_connection(TELEMETRY_ID).await;
     assert_eq!(
         server.received_requests().await.unwrap().len(),
         1,
@@ -129,7 +129,7 @@ async fn should_drop_batch_without_retry_on_server_error() {
 }
 
 #[tokio::test]
-async fn flush_session_posts_remaining_entries() {
+async fn flush_connection_posts_remaining_entries() {
     let server = MockServer::start().await;
     Mock::given(method("POST"))
         .and(path("/telemetry/send"))
@@ -139,17 +139,17 @@ async fn flush_session_posts_remaining_entries() {
         .await;
 
     // Mirrors connection-release: entries buffered below threshold are flushed
-    // by flush_session (the close hook).
+    // by flush_connection (the close hook).
     let telemetry = SessionTelemetry::new(make_registry(
-        SESSION_ID,
+        TELEMETRY_ID,
         make_active_session(&server.uri()),
     ));
     telemetry.add_log(
-        SESSION_ID,
+        TELEMETRY_ID,
         r#"{"type":"on_close"}"#.to_string(),
         1700000000000,
     );
-    telemetry.flush_session(SESSION_ID).await;
+    telemetry.flush_connection(TELEMETRY_ID).await;
 
     let requests = server.received_requests().await.unwrap();
     assert_eq!(requests.len(), 1);

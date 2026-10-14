@@ -1,4 +1,4 @@
-//! Unified per-session telemetry buffering for both producers.
+//! Unified per-connection telemetry buffering for both producers.
 //!
 //! The driver feeds `/telemetry/send` from two producers that differ in only one
 //! step — how a buffered item becomes a log entry:
@@ -10,19 +10,21 @@
 //!
 //! Everything after that is identical — both build the same `{message, timestamp}`
 //! shape via [`log_entry`]/[`logs_payload`] and POST through the same
-//! [`send_with_token`] to the same endpoint. So both share one per-session buffer
-//! here, keyed by `snowflake.session.id`. Conversion to JSON is deferred to send
-//! time, so the span-end hot path only enqueues the `SpanData`.
+//! [`send_with_token`] to the same endpoint. So both share one per-connection
+//! buffer here, keyed by the connection's telemetry id. Conversion to JSON is
+//! deferred to send time, so the span-end hot path only enqueues the `SpanData`.
+//! The session id is read from the connection's tokens at that point and stamped
+//! on span entries when known.
 
 use opentelemetry_sdk::trace::SpanData;
 use serde_json::Value;
 
 use super::serialization::{log_entry, logs_payload, span_to_log_entries};
 use super::session_batch::{SessionBuffer, flush_bounded, spawn_best_effort};
-use super::snowflake_exporter::{SessionRegistry, extract_session_id, send_with_token};
+use super::snowflake_exporter::{SessionRegistry, extract_telemetry_id, send_with_token};
 use crate::utils::sync::RwLockRecoverExt;
 
-/// Buffered records per session before an automatic flush. One record is one
+/// Buffered records per connection before an automatic flush. One record is one
 /// span or one raw-log entry (a span may expand to several log entries at send).
 /// Matches the legacy drivers' `DEFAULT_FORCE_FLUSH_SIZE`.
 const FLUSH_THRESHOLD: usize = 100;
@@ -62,17 +64,17 @@ pub(crate) enum TelemetryRecord {
 }
 
 impl TelemetryRecord {
-    fn into_log_entries(self) -> Vec<Value> {
+    fn into_log_entries(self, session_id: Option<i64>) -> Vec<Value> {
         match self {
-            TelemetryRecord::Span(span) => span_to_log_entries(&span),
+            TelemetryRecord::Span(span) => span_to_log_entries(&span, session_id),
             TelemetryRecord::RawLog(entry) => entry.into_log_entries(),
         }
     }
 }
 
-/// Per-session telemetry buffer shared by the span lane and the raw-log lane.
+/// Per-connection telemetry buffer shared by the span lane and the raw-log lane.
 /// Owns the one [`SessionBuffer`] both producers push into and the
-/// [`SessionRegistry`] used to look up per-session auth at send time. Cloneable;
+/// [`SessionRegistry`] used to look up per-connection auth at send time. Cloneable;
 /// every clone shares the same buffer and registry.
 #[derive(Debug, Clone)]
 pub struct SessionTelemetry {
@@ -82,7 +84,7 @@ pub struct SessionTelemetry {
 
 impl SessionTelemetry {
     /// Create a telemetry buffer over `sessions`. Registry membership is the
-    /// `CLIENT_TELEMETRY_ENABLED` gate — sessions are registered only when
+    /// `CLIENT_TELEMETRY_ENABLED` gate — connections are registered only when
     /// telemetry is enabled, so gating rides on membership with no second flag.
     pub fn new(sessions: SessionRegistry) -> Self {
         Self {
@@ -92,18 +94,18 @@ impl SessionTelemetry {
     }
 
     /// The shared session registry. Connections register on init and deregister
-    /// on release.
+    /// on close.
     pub(crate) fn sessions(&self) -> &SessionRegistry {
         &self.sessions
     }
 
-    /// Buffer one caller-produced entry. Drops silently when the session is not
-    /// registered (telemetry disabled / login incomplete). On threshold overflow
-    /// the drained batch's POST is spawned best-effort.
-    pub fn add_log(&self, session_id: i64, message_json: String, timestamp_ms: i64) {
+    /// Buffer one caller-produced entry. Drops silently when the connection is
+    /// not registered (telemetry disabled / login incomplete). On threshold
+    /// overflow the drained batch's POST is spawned best-effort.
+    pub fn add_log(&self, telemetry_id: u64, message_json: String, timestamp_ms: i64) {
         {
             let sessions = self.sessions.read_recover();
-            if !sessions.contains_key(&session_id) {
+            if !sessions.contains_key(&telemetry_id) {
                 return;
             }
         }
@@ -111,91 +113,96 @@ impl SessionTelemetry {
             message_json,
             timestamp_ms,
         });
-        if let Some(batch) = self.buffer.push(session_id, record) {
-            self.spawn_send(session_id, batch);
+        if let Some(batch) = self.buffer.push(telemetry_id, record) {
+            self.spawn_send(telemetry_id, batch);
         }
     }
 
-    /// Buffer one driver-instrumented span, routed by its `snowflake.session.id`
-    /// attribute. A span without it doesn't belong to a Snowflake session and is
-    /// dropped. On threshold overflow the drained batch's POST is spawned. No
+    /// Buffer one driver-instrumented span, routed by its `snowflake.telemetry.id`
+    /// attribute. A span without it doesn't belong to a Snowflake connection and
+    /// is dropped. On threshold overflow the drained batch's POST is spawned. No
     /// JSON work here — serialization is deferred to [`Self::send_records`], so
     /// the span-end hot path stays cheap.
     pub fn add_span(&self, span: SpanData) {
-        let Some(session_id) = extract_session_id(&span.attributes) else {
+        let Some(telemetry_id) = extract_telemetry_id(&span.attributes) else {
             return;
         };
         if let Some(batch) = self
             .buffer
-            .push(session_id, TelemetryRecord::Span(Box::new(span)))
+            .push(telemetry_id, TelemetryRecord::Span(Box::new(span)))
         {
-            self.spawn_send(session_id, batch);
+            self.spawn_send(telemetry_id, batch);
         }
     }
 
-    /// Connection-release hook: flush this session's buffer, bounded by
+    /// Connection-close hook: flush this connection's buffer, bounded by
     /// `FLUSH_TIMEOUT` so a hung endpoint cannot stall `connection_close`. The
     /// buffer is drained synchronously before the awaited send, so it is empty by
     /// the time this returns even on timeout.
-    pub async fn flush_session(&self, session_id: i64) {
-        let records = self.buffer.take(session_id);
-        flush_bounded(session_id, self.send_records(session_id, records)).await;
+    pub async fn flush_connection(&self, telemetry_id: u64) {
+        let records = self.buffer.take(telemetry_id);
+        flush_bounded(telemetry_id, self.send_records(telemetry_id, records)).await;
     }
 
-    /// Drain every session best-effort. Backs the span processor's `force_flush`
+    /// Drain every connection best-effort. Backs the span processor's `force_flush`
     /// (tracer-provider shutdown); the authoritative, awaited flush is
-    /// [`Self::flush_session`] on connection release.
+    /// [`Self::flush_connection`] on connection close.
     pub(crate) fn force_flush_all(&self) {
-        for (session_id, records) in self.buffer.drain_all() {
+        for (telemetry_id, records) in self.buffer.drain_all() {
             if !records.is_empty() {
-                self.spawn_send(session_id, records);
+                self.spawn_send(telemetry_id, records);
             }
         }
     }
 
-    /// Serialize a session's records into one `/telemetry/send` body and POST it.
-    /// Empty batch (or all entries dropped as malformed) → no HTTP. Records are
-    /// converted here, at send — not at enqueue. The batch is dropped if the
-    /// session is unregistered or has no token: best-effort, no retry.
-    async fn send_records(&self, session_id: i64, records: Vec<TelemetryRecord>) {
+    /// Serialize a connection's records into one `/telemetry/send` body and POST
+    /// it. Empty batch (or all entries dropped as malformed) → no HTTP. Records
+    /// are converted here, at send — not at enqueue. The batch is dropped if the
+    /// connection is unregistered or has no token: best-effort, no retry.
+    async fn send_records(&self, telemetry_id: u64, records: Vec<TelemetryRecord>) {
         if records.is_empty() {
             return;
         }
         let session = {
             let sessions = self.sessions.read_recover();
-            sessions.get(&session_id).cloned()
+            sessions.get(&telemetry_id).cloned()
         };
         let Some(session) = session else {
             tracing::debug!(
-                session_id,
-                "No registered session for telemetry; dropping batch"
+                telemetry_id,
+                "No registered connection for telemetry; dropping batch"
             );
             return;
         };
+        let session_id = session.session_id().await;
         let logs: Vec<Value> = records
             .into_iter()
-            .flat_map(TelemetryRecord::into_log_entries)
+            .flat_map(|record| record.into_log_entries(session_id))
             .collect();
         if logs.is_empty() {
             return;
         }
-        tracing::debug!(session_id, entries = logs.len(), "flushing telemetry batch");
+        tracing::debug!(
+            telemetry_id,
+            entries = logs.len(),
+            "flushing telemetry batch"
+        );
         let payload = logs_payload(logs);
         let _ = send_with_token(session.as_ref(), &payload).await;
     }
 
     /// Fire-and-forget the POST of an already-drained batch (no-op outside a
     /// tokio runtime). Threshold overflow / shutdown must not block the caller.
-    fn spawn_send(&self, session_id: i64, records: Vec<TelemetryRecord>) {
+    fn spawn_send(&self, telemetry_id: u64, records: Vec<TelemetryRecord>) {
         let this = self.clone();
         spawn_best_effort(async move {
-            this.send_records(session_id, records).await;
+            this.send_records(telemetry_id, records).await;
         });
     }
 
     #[cfg(test)]
-    pub(crate) fn buffer_len(&self, session_id: i64) -> usize {
-        self.buffer.len(session_id)
+    pub(crate) fn buffer_len(&self, telemetry_id: u64) -> usize {
+        self.buffer.len(telemetry_id)
     }
 }
 
@@ -205,7 +212,7 @@ mod tests {
     use crate::config::rest_parameters::QueryParameters;
     use crate::rest::snowflake::SessionTokens;
     use crate::sensitive::SensitiveString;
-    use crate::telemetry::SESSION_ID_FIELD;
+    use crate::telemetry::TELEMETRY_ID_FIELD;
     use opentelemetry::InstrumentationScope;
     use opentelemetry::KeyValue;
     use opentelemetry::trace::{
@@ -243,18 +250,18 @@ mod tests {
         })
     }
 
-    fn registry_with(session_id: i64) -> SessionRegistry {
+    fn registry_with(telemetry_id: u64) -> SessionRegistry {
         let mut map = HashMap::new();
         // A dead port: any send attempt fails fast (connection refused) and is
         // swallowed. These tests assert buffering/drain, never a successful POST.
-        map.insert(session_id, exporter_session("http://127.0.0.1:1"));
+        map.insert(telemetry_id, exporter_session("http://127.0.0.1:1"));
         Arc::new(RwLock::new(map))
     }
 
-    fn test_span(session_id: Option<i64>) -> SpanData {
+    fn test_span(telemetry_id: Option<u64>) -> SpanData {
         let mut attributes = vec![];
-        if let Some(id) = session_id {
-            attributes.push(KeyValue::new(SESSION_ID_FIELD, id.to_string()));
+        if let Some(id) = telemetry_id {
+            attributes.push(KeyValue::new(TELEMETRY_ID_FIELD, id.to_string()));
         }
         SpanData {
             span_context: SpanContext::new(
@@ -279,35 +286,35 @@ mod tests {
     }
 
     #[test]
-    fn should_buffer_raw_log_for_registered_session() {
+    fn should_buffer_raw_log_for_registered_connection() {
         let t = SessionTelemetry::new(registry_with(1));
         t.add_log(1, r#"{"type":"ct"}"#.to_string(), 1700000000000);
         assert_eq!(t.buffer_len(1), 1);
     }
 
     #[test]
-    fn should_drop_raw_log_for_unregistered_session() {
+    fn should_drop_raw_log_for_unregistered_connection() {
         let t = SessionTelemetry::new(Arc::new(RwLock::new(HashMap::new())));
         t.add_log(1, r#"{"type":"ct"}"#.to_string(), 1700000000000);
         assert_eq!(t.buffer_len(1), 0);
     }
 
     #[test]
-    fn should_buffer_span_with_session_id() {
+    fn should_buffer_span_with_telemetry_id() {
         let t = SessionTelemetry::new(registry_with(1));
         t.add_span(test_span(Some(1)));
         assert_eq!(t.buffer_len(1), 1);
     }
 
     #[test]
-    fn should_drop_span_without_session_id() {
+    fn should_drop_span_without_telemetry_id() {
         let t = SessionTelemetry::new(registry_with(1));
         t.add_span(test_span(None));
         assert_eq!(t.buffer_len(1), 0);
     }
 
     #[test]
-    fn should_buffer_span_and_raw_log_in_one_session_buffer() {
+    fn should_buffer_span_and_raw_log_in_one_connection_buffer() {
         let t = SessionTelemetry::new(registry_with(1));
         t.add_span(test_span(Some(1)));
         t.add_log(1, r#"{"type":"ct"}"#.to_string(), 1700000000000);
@@ -326,21 +333,21 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn should_swap_and_clear_on_flush_session() {
+    async fn should_swap_and_clear_on_flush_connection() {
         let t = SessionTelemetry::new(registry_with(1));
         t.add_log(1, r#"{"type":"a"}"#.to_string(), 1700000000000);
         t.add_span(test_span(Some(1)));
         assert_eq!(t.buffer_len(1), 2);
 
         // Send fails against the dead port, but the batch is taken first.
-        t.flush_session(1).await;
+        t.flush_connection(1).await;
         assert_eq!(t.buffer_len(1), 0, "flush must swap-and-clear");
     }
 
     #[tokio::test]
-    async fn should_be_noop_on_empty_flush_session() {
+    async fn should_be_noop_on_empty_flush_connection() {
         let t = SessionTelemetry::new(registry_with(1));
-        t.flush_session(1).await;
+        t.flush_connection(1).await;
         assert_eq!(t.buffer_len(1), 0);
     }
 

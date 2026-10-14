@@ -146,12 +146,12 @@ impl LogManager {
         &self.telemetry
     }
 
-    /// Flush this session's buffered telemetry (span + raw-log entries together)
-    /// during connection release, before the connection span is dropped. Awaits
-    /// the export so it completes while session tokens are still alive
-    /// (see [`SessionTelemetry::flush_session`]).
-    pub async fn flush_session(&self, session_id: i64) {
-        self.telemetry.flush_session(session_id).await;
+    /// Flush this connection's buffered telemetry (span + raw-log entries
+    /// together) during connection close, before logout. Awaits the export so it
+    /// completes while session tokens are still alive (see
+    /// [`SessionTelemetry::flush_connection`]).
+    pub async fn flush_connection(&self, telemetry_id: u64) {
+        self.telemetry.flush_connection(telemetry_id).await;
     }
 
     /// Lazily detects and caches OS details (e.g. `/etc/os-release` on Linux).
@@ -743,9 +743,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn flush_session_is_noop_when_nothing_buffered() {
+    async fn flush_connection_is_noop_when_nothing_buffered() {
         let lm = LogManager::with_none_subscriber(Arc::new(crate::fs_adapter::RealFs));
         // No span processor is installed and nothing is buffered — must not panic.
-        lm.flush_session(42).await;
+        lm.flush_connection(42).await;
     }
 }

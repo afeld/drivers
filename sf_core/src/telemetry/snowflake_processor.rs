@@ -7,10 +7,10 @@ use opentelemetry_sdk::trace::{Span, SpanData, SpanProcessor};
 use super::session_telemetry::SessionTelemetry;
 
 /// Custom [`SpanProcessor`] that feeds driver-instrumented spans into the shared
-/// per-session telemetry buffer ([`SessionTelemetry`]). It is a thin adapter:
+/// per-connection telemetry buffer ([`SessionTelemetry`]). It is a thin adapter:
 /// the OTel SDK hands it every ended span via [`Self::on_end`]; it drops
 /// unsampled spans and forwards the rest to [`SessionTelemetry::add_span`], which
-/// routes by the `snowflake.session.id` attribute and buffers alongside the
+/// routes by the `snowflake.telemetry.id` attribute and buffers alongside the
 /// raw-log lane. No serialization or I/O happens here — the span-end hot path
 /// only enqueues.
 #[derive(Debug)]
@@ -21,7 +21,7 @@ pub struct SnowflakeSpanProcessor {
 impl SnowflakeSpanProcessor {
     /// Wrap the shared [`SessionTelemetry`] as an OTel span processor. The same
     /// `SessionTelemetry` is held by `LogManager` for the raw-log lane and for
-    /// the awaited connection-release flush, so both producers share one buffer.
+    /// the awaited connection-close flush, so both producers share one buffer.
     pub fn new(telemetry: SessionTelemetry) -> Self {
         Self { telemetry }
     }
@@ -44,8 +44,8 @@ impl SpanProcessor for SnowflakeSpanProcessor {
     /// The `SpanProcessor` trait requires a sync `force_flush`, so we cannot
     /// await here. The authoritative flush that guarantees the POST completes
     /// while session tokens are still alive is
-    /// [`SessionTelemetry::flush_session`], called from
-    /// `flush_connection_telemetry` on connection release.
+    /// [`SessionTelemetry::flush_connection`], called from
+    /// `flush_connection_telemetry` on connection close.
     fn force_flush(&self) -> OTelSdkResult {
         self.telemetry.force_flush_all();
         Ok(())
@@ -59,7 +59,7 @@ impl SpanProcessor for SnowflakeSpanProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::telemetry::SESSION_ID_FIELD;
+    use crate::telemetry::TELEMETRY_ID_FIELD;
     use crate::telemetry::snowflake_exporter::SessionRegistry;
     use opentelemetry::InstrumentationScope;
     use opentelemetry::KeyValue;
@@ -77,10 +77,10 @@ mod tests {
         SessionTelemetry::new(registry)
     }
 
-    fn test_span(session_id: Option<i64>, sampled: bool) -> SpanData {
+    fn test_span(telemetry_id: Option<u64>, sampled: bool) -> SpanData {
         let mut attributes = vec![];
-        if let Some(id) = session_id {
-            attributes.push(KeyValue::new(SESSION_ID_FIELD, id.to_string()));
+        if let Some(id) = telemetry_id {
+            attributes.push(KeyValue::new(TELEMETRY_ID_FIELD, id.to_string()));
         }
         let flags = if sampled {
             TraceFlags::SAMPLED
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn sampled_span_with_session_id_is_buffered() {
+    fn sampled_span_with_telemetry_id_is_buffered() {
         let telemetry = empty_telemetry();
         let processor = SnowflakeSpanProcessor::new(telemetry.clone());
         processor.on_end(test_span(Some(1), true));
@@ -126,11 +126,38 @@ mod tests {
     }
 
     #[test]
-    fn sampled_span_without_session_id_is_dropped() {
+    fn sampled_span_without_telemetry_id_is_dropped() {
         let telemetry = empty_telemetry();
         let processor = SnowflakeSpanProcessor::new(telemetry.clone());
         processor.on_end(test_span(None, true));
         assert_eq!(telemetry.buffer_len(1), 0);
+    }
+
+    #[test]
+    fn op_span_routes_through_the_otel_layer_by_its_telemetry_id() {
+        use opentelemetry::trace::TracerProvider as _;
+        use tracing_subscriber::layer::SubscriberExt;
+
+        let telemetry = empty_telemetry();
+        let provider = opentelemetry_sdk::trace::SdkTracerProvider::builder()
+            .with_span_processor(SnowflakeSpanProcessor::new(telemetry.clone()))
+            .build();
+        let subscriber = tracing_subscriber::registry().with(
+            tracing_opentelemetry::OpenTelemetryLayer::new(provider.tracer("test")),
+        );
+
+        tracing::subscriber::with_default(subscriber, || {
+            drop(crate::snowflake_op_span!(
+                "statement_execute_query",
+                Some(7_u64)
+            ));
+            drop(crate::snowflake_op_span!(
+                "statement_execute_query",
+                Option::<u64>::None
+            ));
+        });
+
+        assert_eq!(telemetry.buffer_len(7), 1);
     }
 
     #[test]

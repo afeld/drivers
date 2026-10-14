@@ -19,6 +19,9 @@ use tokio::sync::RwLock as AsyncRwLock;
 /// [`make_active_session`]'s token.
 pub const SESSION_ID: i64 = 42;
 
+/// Connection telemetry id the fixtures register sessions under.
+pub const TELEMETRY_ID: u64 = 7;
+
 pub fn test_query_parameters(server_url: &str) -> QueryParameters {
     QueryParameters {
         server_url: server_url.to_string(),
@@ -63,10 +66,10 @@ pub fn make_active_session(server_url: &str) -> Arc<ExporterSession> {
     make_session(server_url, Some(tokens))
 }
 
-/// A registry holding a single `session_id -> session` mapping.
-pub fn make_registry(session_id: i64, session: Arc<ExporterSession>) -> SessionRegistry {
+/// A registry holding a single `telemetry_id -> session` mapping.
+pub fn make_registry(telemetry_id: u64, session: Arc<ExporterSession>) -> SessionRegistry {
     let mut map = HashMap::new();
-    map.insert(session_id, session);
+    map.insert(telemetry_id, session);
     Arc::new(RwLock::new(map))
 }
 
