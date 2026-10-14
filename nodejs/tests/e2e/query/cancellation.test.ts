@@ -1,52 +1,72 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import type { Connection, RowStatement, SnowflakeError } from '../../types/sdk-types.js';
+import { describe, it, beforeAll, beforeEach, afterAll, expect } from 'vitest';
+import type {
+  Connection,
+  QueryStatus,
+  RowStatement,
+  SnowflakeError,
+} from '../../types/sdk-types.js';
+import { createLiveConnection } from '../utils/fixtures.js';
 import {
   cancelStatementAsync,
-  createTestConnection,
+  connectionGetQueryStatusWithBD,
   destroyConnectionAsync,
   executeAsync,
+  isRunningNewDriverWithBD,
   NOT_IMPLEMENTED_IN_NEW_DRIVER,
+  randomizeName,
+  sendExecute,
   sleepAsync,
 } from '../utils/index.js';
+import {
+  jsonResponse,
+  loginSuccess,
+  logoutSuccess,
+  WiremockServer,
+} from '../utils/wiremock/index.js';
 
 const NOT_EXECUTING_CODE = '000605';
 const POLL_MS = 250;
-const CANCEL_START_DEADLINE_MS = 30_000;
+const STATUS_DEADLINE_MS = 30_000;
 
-function isNotCurrentlyExecuting(err: unknown): boolean {
-  return (err as SnowflakeError).code === NOT_EXECUTING_CODE;
+async function waitForStatus(
+  connection: Connection,
+  queryId: string,
+  accept: (status: QueryStatus) => boolean,
+): Promise<QueryStatus> {
+  const deadline = Date.now() + STATUS_DEADLINE_MS;
+  let status: QueryStatus | undefined;
+  while (Date.now() < deadline) {
+    status = await connectionGetQueryStatusWithBD(connection, queryId);
+    if (accept(status)) {
+      return status;
+    }
+    await sleepAsync(POLL_MS);
+  }
+  throw new Error(`query ${queryId} status stayed ${status ?? 'unknown'}`);
 }
 
-// Cancel uses requestId until GS returns a query id (old SDK: getQueryId() stays
-// empty while the query HTTP request is still open). Retry 000605 until the
-// generator is executing. Do not treat 000605 as success.
-async function cancelOnceExecuting(statement: RowStatement): Promise<void> {
-  const deadline = Date.now() + CANCEL_START_DEADLINE_MS;
-  let lastError: unknown;
+async function waitForRunningQueryId(connection: Connection, queryTag: string): Promise<string> {
+  const deadline = Date.now() + STATUS_DEADLINE_MS;
   while (Date.now() < deadline) {
-    try {
-      await cancelStatementAsync(statement);
-      return;
-    } catch (err) {
-      if (!isNotCurrentlyExecuting(err)) {
-        throw err;
-      }
-      lastError = err;
-      await sleepAsync(POLL_MS);
+    const { rows } = await executeAsync(
+      connection,
+      `select query_id from table(information_schema.query_history_by_session())
+       where execution_status = 'RUNNING' and query_tag = ?`,
+      { binds: [queryTag] },
+    );
+    if (rows.length > 0) {
+      return rows[0].QUERY_ID as string;
     }
+    await sleepAsync(POLL_MS);
   }
-  if (lastError) {
-    throw lastError;
-  }
-  throw new Error(`query was not executing in time to cancel (${CANCEL_START_DEADLINE_MS}ms)`);
+  throw new Error(`query tagged ${queryTag} did not start running`);
 }
 
 describe('Query Cancellation', () => {
   let connection: Connection;
 
   beforeAll(async () => {
-    connection = createTestConnection();
-    await connection.connectAsync();
+    connection = await createLiveConnection({}, false);
   });
 
   afterAll(async () => {
@@ -54,23 +74,103 @@ describe('Query Cancellation', () => {
   });
 
   it('cancels a running query', async () => {
-    const statement = connection.execute({
-      sqlText: 'select count(*) from table(generator(timeLimit => 3600))',
-    });
-    await cancelOnceExecuting(statement);
+    const queryTag = randomizeName('CANCEL');
+    const { statement, completion } = sendExecute(
+      connection,
+      'select count(*) from table(generator(timeLimit => 60))',
+      { parameters: { QUERY_TAG: queryTag } },
+    );
+    const failure = completion.then(
+      () => undefined,
+      (rejection: { error: SnowflakeError }) => rejection.error,
+    );
+    const queryId = await waitForRunningQueryId(connection, queryTag);
+
+    await cancelStatementAsync(statement as RowStatement);
+
+    expect(await failure).toMatchObject(
+      isRunningNewDriverWithBD('BD#105')
+        ? { name: 'Error', message: 'Operation was cancelled' }
+        : {
+            name: 'OperationFailedError',
+            code: '000604',
+            sqlState: '57014',
+            message: 'SQL execution canceled',
+          },
+    );
+    expect(
+      await waitForStatus(connection, queryId, (status) => !connection.isStillRunning(status)),
+    ).toBe('FAILED_WITH_ERROR');
   });
 
-  // TODO: We need to have 2 tests
-  // 1. A wiremock that simulates network failure - it should throw
-  // 2. A BD that 000605 "Identified SQL statement is not currently executing" is a silient no-op
-  //    instead of failure
-  // Also maybe should check query status from server after the cancelation
-  it.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)('throws when failing to cancel a query', async () => {
+  it('does nothing when the query is already complete', async () => {
     const { statement } = await executeAsync(connection, 'select 1');
-    // Query is completed = nothing to cancel
+    if (isRunningNewDriverWithBD('BD#104')) {
+      await cancelStatementAsync(statement);
+      expect(await connectionGetQueryStatusWithBD(connection, statement.getQueryId()!)).toBe(
+        'SUCCESS',
+      );
+      return;
+    }
     await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
       code: NOT_EXECUTING_CODE,
       sqlState: '01000',
+    } satisfies Partial<SnowflakeError>);
+  });
+});
+
+// TODO: the new driver's statement.cancel() resolves without waiting for the server abort,
+// so a failed abort-request is not surfaced and this block is skipped for it.
+describe.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)('Query Cancellation with Wiremock', () => {
+  const queryId = '01baf79b-0108-1a60-0000-01110354a6ce';
+  let wiremock: WiremockServer;
+
+  beforeAll(async () => {
+    wiremock = await WiremockServer.spawn();
+  });
+
+  beforeEach(async () => {
+    await wiremock.reset();
+    await wiremock.stub(loginSuccess());
+    await wiremock.stub(logoutSuccess());
+    await wiremock.stub({
+      request: {
+        method: 'POST',
+        urlPathPattern: '/queries/v1/query-request.*',
+      },
+      response: jsonResponse(200, {
+        success: true,
+        code: '333333',
+        data: { queryId },
+      }),
+    });
+  });
+
+  afterAll(async () => {
+    await wiremock.destroy();
+  });
+
+  it('should throw when the abort request fails', async () => {
+    await wiremock.stub({
+      request: {
+        method: 'POST',
+        urlPathPattern: `/queries/${queryId}/abort-request.*`,
+      },
+      response: jsonResponse(403, {
+        success: false,
+        code: null,
+        message: null,
+        data: null,
+      }),
+    });
+    const connection = await createLiveConnection(wiremock.connectionOptions);
+    const { statement } = await executeAsync(connection, 'select 1', {
+      asyncExec: true,
+    });
+
+    await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
+      name: 'RequestFailedError',
+      code: 401002,
     });
   });
 });

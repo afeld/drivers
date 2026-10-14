@@ -1929,3 +1929,32 @@ behavior_differences:
       that cannot be loaded fails connect() with an error that names the reason.
     description: |
       Profile loading is done by the core and matches the other universal-driver wrappers.
+
+  104:
+    name: 'Cancel of a finished query is a no-op'
+    status: unknown
+    type: bugfix
+    reviewed: false
+    is_breaking_change: true
+    impact: low
+    old_driver_behavior: |
+      statement.cancel() on a finished query throws 000605
+      ("Identified SQL statement is not currently executing."), SQLSTATE 01000.
+    new_driver_behavior: |
+      statement.cancel() on a finished query succeeds and leaves the query as it is.
+    status_rationale: |
+      Cancelling after the query has already finished should not be an error.
+
+  105:
+    name: 'Cancelled query fails with a plain Error'
+    status: todo
+    type: bug
+    reviewed: false
+    is_breaking_change: true
+    impact: low
+    old_driver_behavior: |
+      The cancelled execute fails with OperationFailedError, code 000604,
+      SQLSTATE 57014, "SQL execution canceled".
+    new_driver_behavior: |
+      The cancelled execute fails with a plain Error "Operation was cancelled",
+      with no code or SQLSTATE.
