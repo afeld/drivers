@@ -434,9 +434,11 @@ impl DatabaseDriverV1 {
                         &config.tls,
                         Some(&config.proxy),
                         self.crl_manager.clone(),
+                        self.root_store_provider.clone(),
                         timeout_config.connect_timeout,
                         effective_diag.is_some(),
                     )
+                    .await
                     .context(TlsClientCreationSnafu)?;
 
                 let mut diag_runner = match (effective_diag, diag_rustls) {
@@ -512,6 +514,7 @@ impl DatabaseDriverV1 {
                     prebuilt_credentials,
                     xp_backend.as_deref(),
                     self.crl_manager.clone(),
+                    self.root_store_provider.clone(),
                     timeout_config
                         .login_timeout
                         .map(|budget| std::time::Instant::now() + budget),

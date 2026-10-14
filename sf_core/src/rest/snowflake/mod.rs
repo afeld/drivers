@@ -52,7 +52,8 @@ use crate::rest::snowflake::external_browser::{
 };
 use crate::rest::snowflake::native_okta::fetch_native_okta_saml;
 use crate::sensitive::SensitiveString;
-use crate::tls::client::create_tls_client_with_proxy;
+use crate::tls::RootStoreProvider;
+use crate::tls::client::create_tls_client_with_proxy_prepared;
 use crate::tls::error::TlsError;
 use crate::token_cache::{CacheKey, TokenCache, TokenType, normalize_identifier, normalize_url};
 use reqwest::{self, Method, StatusCode, header};
@@ -816,6 +817,7 @@ pub async fn auth_request_data(
     retry_policy: &RetryPolicy,
     prebuilt_credentials: Option<Credentials>,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
 ) -> Result<AuthRequestData, RestError> {
     let mut data = base_auth_request_data(login_parameters);
 
@@ -967,11 +969,13 @@ pub async fn auth_request_data(
             ) {
                 let tls_config = aws_wif_tls_config(&login_parameters.client_info.tls_config);
                 Some(
-                    crate::tls::aws_http_client::AwsSdkReqwestClient::build(
+                    crate::tls::aws_http_client::AwsSdkReqwestClient::build_prepared(
                         &tls_config,
                         Some(&login_parameters.client_info.proxy_config),
                         crl_manager,
+                        roots,
                     )
+                    .await
                     .context(WifSdkHttpClientSnafu)?,
                 )
             } else {
@@ -1325,15 +1329,21 @@ struct DPoPSigner {
 }
 
 #[tracing::instrument(
-    skip(login_parameters, session_parameters, crl_manager),
+    skip(login_parameters, session_parameters, crl_manager, roots),
     fields(account_name, login_name)
 )]
 pub async fn snowflake_login(
     login_parameters: &LoginParameters,
     session_parameters: Option<&HashMap<String, String>>,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
 ) -> Result<LoginResult, RestError> {
-    let client = build_tls_http_client(&login_parameters.client_info, crl_manager.clone())?;
+    let client = build_tls_http_client(
+        &login_parameters.client_info,
+        crl_manager.clone(),
+        roots.clone(),
+    )
+    .await?;
     let policy = RetryPolicy::default();
     snowflake_login_with_client(
         &client,
@@ -1345,6 +1355,7 @@ pub async fn snowflake_login(
         None,
         None,
         crl_manager,
+        roots,
         None,
     )
     .await
@@ -1360,6 +1371,7 @@ pub async fn snowflake_login(
         prebuilt_credentials,
         xp_backend,
         crl_manager,
+        roots,
         login_deadline
     ),
     fields(account_name, login_name)
@@ -1375,6 +1387,7 @@ pub async fn snowflake_login_with_client(
     prebuilt_credentials: Option<Credentials>,
     xp_backend: Option<&dyn crate::xp_backend::SnowflakeBackend>,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
     login_deadline: Option<Instant>,
 ) -> Result<LoginResult, RestError> {
     tracing::info!("Starting Snowflake login process");
@@ -1534,6 +1547,7 @@ pub async fn snowflake_login_with_client(
         retry_policy,
         prebuilt_credentials,
         crl_manager.clone(),
+        roots.clone(),
     )
     .await?;
     tracing::Span::current().record("login_name", &login_request_data.login_name);
@@ -1607,6 +1621,7 @@ pub async fn snowflake_login_with_client(
                     retry_policy,
                     None,
                     crl_manager.clone(),
+                    roots.clone(),
                 )
                 .await?;
                 let retry_request = AuthRequest {
@@ -1682,6 +1697,7 @@ pub async fn snowflake_login_with_client(
                     retry_policy,
                     None,
                     crl_manager.clone(),
+                    roots.clone(),
                 )
                 .await?;
                 let retry_request = AuthRequest {
@@ -2091,7 +2107,7 @@ pub async fn token_request(
 }
 
 #[tracing::instrument(
-    skip(query_parameters, session_token, query_input, crl_manager),
+    skip(query_parameters, session_token, query_input, crl_manager, roots),
     fields(sql)
 )]
 pub async fn snowflake_query<'a>(
@@ -2100,8 +2116,9 @@ pub async fn snowflake_query<'a>(
     query_input: QueryInput<'a>,
     options: QueryOptions,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
 ) -> Result<query_response::Response, RestError> {
-    let client = build_tls_http_client(&query_parameters.client_info, crl_manager)?;
+    let client = build_tls_http_client(&query_parameters.client_info, crl_manager, roots).await?;
     snowflake_query_with_client(
         &client,
         query_parameters,
@@ -2958,16 +2975,18 @@ where
     Ok(parsed)
 }
 
-#[track_caller]
-fn build_tls_http_client(
+async fn build_tls_http_client(
     client_info: &ClientInfo,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
 ) -> Result<reqwest::Client, RestError> {
-    create_tls_client_with_proxy(
+    create_tls_client_with_proxy_prepared(
         client_info.tls_config.clone(),
         Some(&client_info.proxy_config),
         crl_manager,
+        roots,
     )
+    .await
     .context(CrlValidationSnafu)
 }
 
@@ -3812,6 +3831,7 @@ mod tests {
             None,
             Some(&backend),
             crate::crl::CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
             None,
         )
         .await;
@@ -4322,6 +4342,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4357,6 +4378,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4480,6 +4502,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4508,6 +4531,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4540,6 +4564,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4567,6 +4592,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4620,6 +4646,7 @@ mod tests {
                 None,
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
                 None,
             ))
             .unwrap();
@@ -4657,6 +4684,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4699,6 +4727,7 @@ mod tests {
                     &RetryPolicy::default(),
                     None,
                     crate::crl::CrlManager::new(),
+                    crate::tls::RootStoreProvider::new(),
                 ))
                 .unwrap();
             assert_eq!(
@@ -4724,6 +4753,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -4748,6 +4778,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             ))
             .unwrap();
 
@@ -5103,6 +5134,7 @@ mod tests {
                 None,
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
                 None,
             )
             .await
@@ -5405,6 +5437,7 @@ mod tests {
                 None,
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
                 None,
             )
             .await
@@ -5449,6 +5482,7 @@ mod tests {
                 None,
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
                 None,
             )
             .await
@@ -6297,6 +6331,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             )
             .await
             .expect_err("disallowed WIF host must fail closed");
@@ -6332,6 +6367,7 @@ mod tests {
                 &RetryPolicy::default(),
                 None,
                 crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
             )
             .await
             .expect_err("missing OIDC token must fail");

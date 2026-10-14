@@ -814,6 +814,7 @@ mod tests {
             &crate::tls::TlsConfig::default(),
             Some(&proxy),
             crate::crl::CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
         )
         .expect("SDK HTTP client must build");
         (sdk_http, request_rx)

@@ -2,7 +2,6 @@ use crate::crl::CrlManager;
 use crate::crl::config::{CertRevocationCheckMode, CrlConfig};
 use crate::crl::validator::CrlValidator;
 use crate::crl::worker::SharedCrlWorker;
-use crate::tls::x509_utils::load_system_root_store;
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
 use rustls::client::{WebPkiServerVerifier, verify_server_cert_signed_by_trust_anchor};
 use rustls::crypto::WebPkiSupportedAlgorithms;
@@ -35,16 +34,10 @@ pub(crate) struct CrlServerCertVerifier {
 impl CrlServerCertVerifier {
     pub(crate) fn new_with_root_store(
         crl_config: CrlConfig,
-        root_store_override: Option<rustls::RootCertStore>,
+        root_store: Arc<RootCertStore>,
         verify_hostname: bool,
         crl: CrlManager,
     ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
-        let root_store = match root_store_override {
-            Some(store) => store,
-            None => load_system_root_store()
-                .map_err(|err| -> Box<dyn std::error::Error + Send + Sync> { Box::new(err) })?,
-        };
-        let root_store = Arc::new(root_store);
         let supported_algs = default_supported_algs();
         let webpki_verifier = WebPkiServerVerifier::builder_with_provider(
             root_store.clone(),
@@ -233,7 +226,7 @@ mod tests {
         let cache = crl.cache(crl_config.clone()).expect("cache");
         cache.wait_for_scheduler(true);
         let verifier =
-            CrlServerCertVerifier::new_with_root_store(crl_config, Some(root_store), true, crl)
+            CrlServerCertVerifier::new_with_root_store(crl_config, Arc::new(root_store), true, crl)
                 .expect("verifier");
         assert!(cache.scheduler_is_published());
         drop(verifier);
@@ -266,8 +259,9 @@ mod tests {
             check_mode: crate::crl::config::CertRevocationCheckMode::Advisory,
             ..Default::default()
         };
-        let ver = CrlServerCertVerifier::new_with_root_store(crl_cfg, Some(root_store), true, crl)
-            .unwrap();
+        let ver =
+            CrlServerCertVerifier::new_with_root_store(crl_cfg, Arc::new(root_store), true, crl)
+                .unwrap();
 
         let ee_der = rustls::pki_types::CertificateDer::from(ee_cert.to_der().unwrap());
         let inter_der = rustls::pki_types::CertificateDer::from(inter_cert.to_der().unwrap());
@@ -323,7 +317,7 @@ mod tests {
         };
         let ver = CrlServerCertVerifier::new_with_root_store(
             crl_cfg,
-            Some(root_store.clone()),
+            Arc::new(root_store.clone()),
             true,
             crl.clone(),
         )
@@ -346,7 +340,7 @@ mod tests {
             ..Default::default()
         };
         let ver2 =
-            CrlServerCertVerifier::new_with_root_store(crl_cfg2, Some(root_store), true, crl)
+            CrlServerCertVerifier::new_with_root_store(crl_cfg2, Arc::new(root_store), true, crl)
                 .unwrap();
         let res2 = ver2.verify_server_cert(
             &ee_der,
@@ -413,8 +407,9 @@ mod tests {
             allow_certificates_without_crl_url: true,
             ..Default::default()
         };
-        let ver = CrlServerCertVerifier::new_with_root_store(crl_cfg, Some(root_store), true, crl)
-            .unwrap();
+        let ver =
+            CrlServerCertVerifier::new_with_root_store(crl_cfg, Arc::new(root_store), true, crl)
+                .unwrap();
 
         // Presented intermediates include both InterA variants
         let ee_der = rustls::pki_types::CertificateDer::from(ee.to_der().unwrap());
@@ -463,7 +458,7 @@ mod tests {
         let crl = test_crl();
         let ver = CrlServerCertVerifier::new_with_root_store(
             crl_cfg,
-            Some(root_store.clone()),
+            Arc::new(root_store.clone()),
             true,
             crl.clone(),
         )
@@ -506,7 +501,7 @@ mod tests {
             ..Default::default()
         };
         let ver2 =
-            CrlServerCertVerifier::new_with_root_store(crl_cfg2, Some(root_store), true, crl)
+            CrlServerCertVerifier::new_with_root_store(crl_cfg2, Arc::new(root_store), true, crl)
                 .unwrap();
         let res2 = ver2.verify_server_cert(
             &ee_der,
@@ -574,8 +569,9 @@ mod tests {
             allow_certificates_without_crl_url: true,
             ..Default::default()
         };
-        let ver = CrlServerCertVerifier::new_with_root_store(crl_cfg, Some(root_store), true, crl)
-            .unwrap();
+        let ver =
+            CrlServerCertVerifier::new_with_root_store(crl_cfg, Arc::new(root_store), true, crl)
+                .unwrap();
 
         let ee_der = rustls::pki_types::CertificateDer::from(ee.to_der().unwrap());
         let inters = vec![
@@ -664,8 +660,9 @@ mod tests {
             allow_certificates_without_crl_url: true,
             ..Default::default()
         };
-        let ver = CrlServerCertVerifier::new_with_root_store(crl_cfg, Some(root_store), true, crl)
-            .unwrap();
+        let ver =
+            CrlServerCertVerifier::new_with_root_store(crl_cfg, Arc::new(root_store), true, crl)
+                .unwrap();
 
         let ee_der = rustls::pki_types::CertificateDer::from(ee.to_der().unwrap());
         let inters = vec![
@@ -719,7 +716,7 @@ mod tests {
         // verify_hostname=false should succeed despite mismatched server_name
         let ver = CrlServerCertVerifier::new_with_root_store(
             crl_cfg.clone(),
-            Some(root_store.clone()),
+            Arc::new(root_store.clone()),
             false,
             crl.clone(),
         )
@@ -740,8 +737,9 @@ mod tests {
         );
 
         // verify_hostname=true should fail with the same mismatched server_name
-        let ver2 = CrlServerCertVerifier::new_with_root_store(crl_cfg, Some(root_store), true, crl)
-            .unwrap();
+        let ver2 =
+            CrlServerCertVerifier::new_with_root_store(crl_cfg, Arc::new(root_store), true, crl)
+                .unwrap();
         let res2 = ver2.verify_server_cert(
             &ee_der,
             std::slice::from_ref(&inter_der),

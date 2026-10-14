@@ -37,17 +37,6 @@ pub enum X509Error {
     },
 }
 
-/// Load the platform's default TLS trust anchors into a `rustls::RootCertStore`.
-pub fn load_system_root_store() -> Result<rustls::RootCertStore, rustls_native_certs::Error> {
-    let mut result = rustls_native_certs::load_native_certs();
-    if let Some(err) = result.errors.pop() {
-        return Err(err);
-    }
-    let mut store = rustls::RootCertStore::empty();
-    store.add_parsable_certificates(result.certs);
-    Ok(store)
-}
-
 pub fn extract_skid(cert_der: &[u8]) -> Result<Option<Vec<u8>>, X509Error> {
     let (_, cert) = X509Certificate::from_der(cert_der).context(CertParseSnafu)?;
     for ext in cert.extensions() {
@@ -637,6 +626,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tls::RootStoreProvider;
     use rustls::pki_types::CertificateDer;
 
     fn make_cert(subject_cn: &str, issuer_cn: &str) -> Vec<u8> {
@@ -737,8 +727,8 @@ mod tests {
         };
 
         // Build default root store (system roots)
-        let store = match load_system_root_store() {
-            Ok(store) => store,
+        let store = match RootStoreProvider::new().snapshot().native_store_strict() {
+            Ok(store) => store.as_ref().clone(),
             Err(err) => {
                 eprintln!("Unable to load native root store for anchor resolution test: {err}");
                 return;

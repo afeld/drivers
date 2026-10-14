@@ -47,6 +47,7 @@ use aws_smithy_types::body::SdkBody;
 use snafu::ResultExt;
 
 use crate::crl::CrlManager;
+use crate::tls::RootStoreProvider;
 use crate::tls::client::configure_http1_tls_builder;
 use crate::tls::config::{ProxyConfig, TlsConfig};
 use crate::tls::error::{ClientBuildSnafu, TlsError};
@@ -79,12 +80,30 @@ impl AwsSdkReqwestClient {
         tls_config: &TlsConfig,
         proxy: Option<&ProxyConfig>,
         crl_manager: CrlManager,
+        roots: RootStoreProvider,
     ) -> Result<Self, TlsError> {
         Self::finish(configure_http1_tls_builder(
             reqwest::Client::builder(),
             tls_config,
             proxy,
             crl_manager,
+            &roots.snapshot(),
+        )?)
+    }
+
+    pub(crate) async fn build_prepared(
+        tls_config: &TlsConfig,
+        proxy: Option<&ProxyConfig>,
+        crl_manager: CrlManager,
+        roots: RootStoreProvider,
+    ) -> Result<Self, TlsError> {
+        let snapshot = roots.prepare_native_if_needed(tls_config).await?;
+        Self::finish(configure_http1_tls_builder(
+            reqwest::Client::builder(),
+            tls_config,
+            proxy,
+            crl_manager,
+            &snapshot,
         )?)
     }
 
@@ -103,7 +122,12 @@ impl AwsSdkReqwestClient {
     /// (including insecure TLS) depend on it; unrelated raw clients that
     /// do not call the gate are outside this constructor's guarantee.
     pub(crate) fn with_default_tls() -> Result<Self, TlsError> {
-        Self::build(&TlsConfig::default(), None, crate::crl::CrlManager::new())
+        Self::build(
+            &TlsConfig::default(),
+            None,
+            crate::crl::CrlManager::new(),
+            RootStoreProvider::new(),
+        )
     }
 
     fn finish(builder: reqwest::ClientBuilder) -> Result<Self, TlsError> {
@@ -235,9 +259,14 @@ mod tests {
     use tokio::net::TcpListener;
 
     fn default_client() -> reqwest::Client {
-        AwsSdkReqwestClient::build(&TlsConfig::default(), None, CrlManager::new())
-            .expect("default SDK reqwest client must build")
-            .into_inner()
+        AwsSdkReqwestClient::build(
+            &TlsConfig::default(),
+            None,
+            CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
+        )
+        .expect("default SDK reqwest client must build")
+        .into_inner()
     }
 
     /// Serves exactly one HTTP/1.1 request on a fresh loopback port, replying
@@ -299,8 +328,13 @@ mod tests {
             },
             ..TlsConfig::default()
         };
-        AwsSdkReqwestClient::build(&cfg, None, CrlManager::new())
-            .expect("TLS 1.3-only window must build");
+        AwsSdkReqwestClient::build(
+            &cfg,
+            None,
+            CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
+        )
+        .expect("TLS 1.3-only window must build");
     }
 
     #[test]
@@ -312,8 +346,13 @@ mod tests {
             },
             ..TlsConfig::default()
         };
-        AwsSdkReqwestClient::build(&cfg, None, CrlManager::new())
-            .expect("TLS 1.2-only window must build");
+        AwsSdkReqwestClient::build(
+            &cfg,
+            None,
+            CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
+        )
+        .expect("TLS 1.2-only window must build");
     }
 
     #[test]
@@ -323,8 +362,13 @@ mod tests {
             port: Some(3128),
             ..Default::default()
         };
-        AwsSdkReqwestClient::build(&TlsConfig::default(), Some(&proxy), CrlManager::new())
-            .expect("explicit-proxy client must build");
+        AwsSdkReqwestClient::build(
+            &TlsConfig::default(),
+            Some(&proxy),
+            CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
+        )
+        .expect("explicit-proxy client must build");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -475,6 +519,7 @@ mod tests {
             },
             None,
             CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
         )
         .expect("client must build")
         .into_inner();
@@ -495,6 +540,7 @@ mod tests {
             },
             None,
             CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
         )
         .expect("client must build")
         .into_inner();
@@ -586,6 +632,7 @@ mod tests {
             },
             None,
             CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
         )
         .expect("client must build")
         .into_inner();
@@ -631,6 +678,7 @@ mod tests {
             &config,
             Some(&crate::tls::config::ProxyConfig::default()),
             CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
         )
         .expect("configure storage TLS client")
         .http1_only()
@@ -667,6 +715,7 @@ mod tests {
             config,
             Some(&crate::tls::config::ProxyConfig::default()),
             CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
         )
         .expect("build connection-level TLS client");
 
@@ -698,9 +747,11 @@ mod tests {
             },
             Some(&crate::tls::config::ProxyConfig::default()),
             CrlManager::new(),
+            crate::tls::RootStoreProvider::new(),
             None,
             true,
         )
+        .await
         .expect("build connection with diagnostic config");
         let connector = tokio_rustls::TlsConnector::from(diagnostic.expect("diagnostic config"));
         let server_name = rustls::pki_types::ServerName::try_from("127.0.0.1".to_string())

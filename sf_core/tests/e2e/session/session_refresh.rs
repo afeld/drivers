@@ -101,9 +101,12 @@ fn should_refresh_session_proactively() {
             browser_opener: None,
         };
 
-        let http_client =
-            create_tls_client_with_config(TlsConfig::default(), sf_core::crl::CrlManager::new())
-                .expect("Failed to create HTTP client");
+        let http_client = create_tls_client_with_config(
+            TlsConfig::default(),
+            sf_core::crl::CrlManager::new(),
+            sf_core::tls::RootStoreProvider::new(),
+        )
+        .expect("Failed to create HTTP client");
 
         // When we login and immediately call refresh
         let policy = sf_core::config::retry::RetryPolicy::default();
@@ -117,6 +120,7 @@ fn should_refresh_session_proactively() {
             None,
             None,
             sf_core::crl::CrlManager::new(),
+            sf_core::tls::RootStoreProvider::new(),
             None,
         )
         .await

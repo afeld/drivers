@@ -96,6 +96,13 @@ pub enum TlsError {
         location: Location,
     },
 
+    #[snafu(display("Failed to load system root certificates"))]
+    NativeRootLoad {
+        source: Box<dyn std::error::Error + Send + Sync>,
+        #[snafu(implicit)]
+        location: Location,
+    },
+
     #[snafu(display("Failed to parse PEM root certificates"))]
     PemParse {
         source: std::io::Error,

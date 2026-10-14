@@ -17,6 +17,7 @@ use crate::file_manager::{
 };
 use crate::query_types::RowType;
 use crate::rest;
+use crate::tls::RootStoreProvider;
 use crate::utils::sync::MutexRecoverExt;
 use arrow::array::{Array, Int64Array, RecordBatchReader, StringArray};
 use arrow::datatypes::DataType;
@@ -89,6 +90,7 @@ pub(super) async fn perform_put_get_transfer(
     tls_config: crate::tls::config::TlsConfig,
     proxy_config: crate::tls::config::ProxyConfig,
     crl_manager: crate::crl::CrlManager,
+    root_store_provider: RootStoreProvider,
 ) -> Result<RowsetData, QueryResponseProcessingError> {
     // Seed the refresher's cache with the initial snapshot.
     let initial_snapshot = data
@@ -113,6 +115,7 @@ pub(super) async fn perform_put_get_transfer(
         tls_config,
         proxy_config,
         crl_manager,
+        root_store_provider,
     };
 
     match command {

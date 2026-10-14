@@ -39,6 +39,8 @@ use sf_core::rest::snowflake::{
 #[cfg(target_os = "linux")]
 use sf_core::sensitive::SensitiveString;
 #[cfg(target_os = "linux")]
+use sf_core::tls::RootStoreProvider;
+#[cfg(target_os = "linux")]
 use sf_core::xp_backend::SnowflakeBackend;
 #[cfg(target_os = "linux")]
 use sf_core::xp_backend::error_codes;
@@ -204,6 +206,7 @@ async fn xp_mode_registers_once_and_routes_query_and_login_to_the_host() {
         None,
         xp_backend,
         CrlManager::new(),
+        RootStoreProvider::new(),
         None,
     )
     .await

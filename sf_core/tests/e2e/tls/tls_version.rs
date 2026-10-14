@@ -82,8 +82,12 @@ async fn should_negotiate_tls_when_the_server_offers_a_version_inside_the_window
         custom_root_store_path: Some(pem_file.path().to_path_buf()),
         ..Default::default()
     };
-    let client =
-        create_tls_client_with_config(cfg, sf_core::crl::CrlManager::new()).expect("client");
+    let client = create_tls_client_with_config(
+        cfg,
+        sf_core::crl::CrlManager::new(),
+        sf_core::tls::RootStoreProvider::new(),
+    )
+    .expect("client");
 
     // When a request is sent to the server
     let resp = client.get(format!("https://localhost:{port}")).send().await;
@@ -115,8 +119,12 @@ async fn should_fail_the_handshake_when_the_server_only_offers_a_version_below_t
     .into_iter()
     .collect();
     let cfg = TlsConfig::from_settings(&settings).expect("tls13-only window is valid");
-    let client =
-        create_tls_client_with_config(cfg, sf_core::crl::CrlManager::new()).expect("client");
+    let client = create_tls_client_with_config(
+        cfg,
+        sf_core::crl::CrlManager::new(),
+        sf_core::tls::RootStoreProvider::new(),
+    )
+    .expect("client");
 
     // When a request is sent to the server
     let resp = client.get(format!("https://localhost:{port}")).send().await;
@@ -134,8 +142,12 @@ async fn should_fail_the_handshake_when_the_server_only_offers_a_version_below_t
         custom_root_store_path: Some(pem_file.path().to_path_buf()),
         ..Default::default()
     };
-    let permissive_client =
-        create_tls_client_with_config(permissive, sf_core::crl::CrlManager::new()).expect("client");
+    let permissive_client = create_tls_client_with_config(
+        permissive,
+        sf_core::crl::CrlManager::new(),
+        sf_core::tls::RootStoreProvider::new(),
+    )
+    .expect("client");
     let ok = permissive_client
         .get(format!("https://localhost:{port}"))
         .send()

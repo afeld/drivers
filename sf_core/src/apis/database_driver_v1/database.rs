@@ -103,10 +103,12 @@ impl DatabaseDriverV1 {
                 // TODO(SNOW-3801967): when no conn handle, we fall back to a fresh TLS client and
                 //  default prefetch config, but we could restore proper configuration if it's
                 //  serialized with the result chunk
-                let client = tls::create_tls_client_with_config(
+                let client = tls::client::create_tls_client_with_config_prepared(
                     tls::TlsConfig::default(),
                     self.crl_manager.clone(),
+                    self.root_store_provider.clone(),
                 )
+                .await
                 .context(TlsClientCreationSnafu)?;
                 (client, PrefetchConfig::default(), None)
             }

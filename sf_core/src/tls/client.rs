@@ -3,19 +3,226 @@ use crate::crl::config::{CertRevocationCheckMode, CrlConfig};
 use crate::tls::CrlServerCertVerifier;
 use crate::tls::config::{ProxyConfig, TlsConfig};
 use crate::tls::error::{
-    ClientBuildSnafu, PemParseSnafu, ProxyBuildSnafu, RedactedUrl, RootStoreAddSnafu,
-    RustlsConfigSnafu, TlsError, VerifierBuildSnafu,
+    ClientBuildSnafu, NativeRootLoadSnafu, PemParseSnafu, ProxyBuildSnafu, RedactedUrl,
+    RootStoreAddSnafu, RustlsConfigSnafu, TlsError, VerifierBuildSnafu,
 };
+use once_cell::sync::OnceCell;
 use reqwest::{Client, ClientBuilder, NoProxy, Proxy};
 use rustls::ClientConfig;
 use snafu::ResultExt;
 use std::sync::Arc;
 use std::time::Duration;
 
+#[derive(Clone, Debug)]
+pub struct RootStoreProvider(Arc<RootStoreInner>);
+
+#[derive(Debug)]
+struct RootStoreInner {
+    roots: OnceCell<PlatformRoots>,
+    load_native: fn() -> rustls_native_certs::CertificateResult,
+}
+
+#[derive(Debug)]
+struct PlatformRoots {
+    platform_error: Option<Arc<rustls_native_certs::Error>>,
+    native_certs: Vec<rustls::pki_types::CertificateDer<'static>>,
+    native: Arc<rustls::RootCertStore>,
+    with_bundled: OnceCell<Arc<rustls::RootCertStore>>,
+}
+
 enum RootCertificates {
     Default,
     Custom(Vec<u8>),
     Extra(Vec<u8>),
+}
+
+impl RootStoreProvider {
+    pub fn new() -> Self {
+        Self::with_native_loader(rustls_native_certs::load_native_certs)
+    }
+
+    fn with_native_loader(load_native: fn() -> rustls_native_certs::CertificateResult) -> Self {
+        Self(Arc::new(RootStoreInner {
+            roots: OnceCell::new(),
+            load_native,
+        }))
+    }
+
+    pub(crate) fn snapshot(&self) -> RootStoreSnapshot<'_> {
+        RootStoreSnapshot {
+            provider: self,
+            platform: OnceCell::new(),
+        }
+    }
+
+    pub(crate) async fn prepare_native_if_needed(
+        &self,
+        tls_config: &TlsConfig,
+    ) -> Result<RootStoreSnapshot<'_>, TlsError> {
+        let snapshot = self.snapshot();
+        if !needs_native_roots(tls_config) || self.0.roots.get().is_some() {
+            return Ok(snapshot);
+        }
+        let provider = self.clone();
+        let loaded = tokio::task::spawn_blocking(move || provider.platform().map(|_| ()))
+            .await
+            .boxed()
+            .context(NativeRootLoadSnafu)?;
+        if let Err(err) = loaded {
+            let _ = snapshot.platform.set(Err(Arc::new(err)));
+        }
+        Ok(snapshot)
+    }
+
+    fn platform(&self) -> Result<&PlatformRoots, rustls_native_certs::Error> {
+        self.0
+            .roots
+            .get_or_try_init(|| load_platform_roots(self.0.load_native))
+    }
+}
+
+/// One client build's view of a [`RootStoreProvider`]. A failed OS load is
+/// remembered only for the lifetime of this view, so every store a single
+/// build asks for sees the same outcome while the next build retries.
+pub(crate) struct RootStoreSnapshot<'a> {
+    provider: &'a RootStoreProvider,
+    platform: OnceCell<Result<&'a PlatformRoots, Arc<rustls_native_certs::Error>>>,
+}
+
+impl<'a> RootStoreSnapshot<'a> {
+    fn platform(&self) -> Result<&'a PlatformRoots, Arc<rustls_native_certs::Error>> {
+        let provider = self.provider;
+        self.platform
+            .get_or_init(|| provider.platform().map_err(Arc::new))
+            .clone()
+    }
+
+    pub(crate) fn native_store_lenient(&self) -> Arc<rustls::RootCertStore> {
+        match self.platform() {
+            Ok(platform) => Arc::clone(&platform.native),
+            Err(_) => Arc::new(native_store_from_certs(&[])),
+        }
+    }
+
+    pub(crate) fn native_store_strict(
+        &self,
+    ) -> Result<Arc<rustls::RootCertStore>, Arc<rustls_native_certs::Error>> {
+        let platform = self.platform()?;
+        match &platform.platform_error {
+            None => Ok(Arc::clone(&platform.native)),
+            Some(err) => Err(Arc::clone(err)),
+        }
+    }
+
+    pub(crate) fn with_bundled(&self) -> Result<Arc<rustls::RootCertStore>, TlsError> {
+        match self.platform() {
+            Ok(platform) => {
+                let store = platform
+                    .with_bundled
+                    .get_or_try_init(|| build_bundled_store(&platform.native_certs))?;
+                Ok(Arc::clone(store))
+            }
+            Err(_) => build_bundled_store(&[]),
+        }
+    }
+
+    fn with_bundled_and_pem(
+        &self,
+        extra_pem: Option<&[u8]>,
+    ) -> Result<Arc<rustls::RootCertStore>, TlsError> {
+        extend_with_optional_pem(self.with_bundled()?, extra_pem)
+    }
+
+    fn with_native_and_pem(
+        &self,
+        extra_pem: &[u8],
+    ) -> Result<Arc<rustls::RootCertStore>, TlsError> {
+        extend_with_optional_pem(self.native_store_lenient(), Some(extra_pem))
+    }
+
+    fn plain_store(
+        &self,
+        root_certificates: &RootCertificates,
+    ) -> Result<Arc<rustls::RootCertStore>, TlsError> {
+        match root_certificates {
+            RootCertificates::Custom(pem) => create_root_store_from_pem(pem).map(Arc::new),
+            RootCertificates::Extra(pem) => self.with_bundled_and_pem(Some(pem)),
+            RootCertificates::Default => self.with_bundled_and_pem(None),
+        }
+    }
+
+    fn crl_store(
+        &self,
+        root_certificates: &RootCertificates,
+    ) -> Result<Arc<rustls::RootCertStore>, TlsError> {
+        match root_certificates {
+            RootCertificates::Default => self
+                .native_store_strict()
+                .boxed()
+                .context(VerifierBuildSnafu),
+            RootCertificates::Custom(pem) => create_root_store_from_pem(pem).map(Arc::new),
+            RootCertificates::Extra(pem) => self.with_native_and_pem(pem),
+        }
+    }
+}
+
+impl Default for RootStoreProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn needs_native_roots(tls_config: &TlsConfig) -> bool {
+    tls_config.verify_certificates && tls_config.custom_root_store_path.is_none()
+}
+
+fn load_platform_roots(
+    load_native: fn() -> rustls_native_certs::CertificateResult,
+) -> Result<PlatformRoots, rustls_native_certs::Error> {
+    let mut result = load_native();
+    if result.certs.is_empty()
+        && let Some(err) = result.errors.pop()
+    {
+        return Err(err);
+    }
+    let platform_error = result.errors.pop().map(Arc::new);
+    let native = Arc::new(native_store_from_certs(&result.certs));
+    Ok(PlatformRoots {
+        platform_error,
+        native_certs: result.certs,
+        native,
+        with_bundled: OnceCell::new(),
+    })
+}
+
+fn native_store_from_certs(
+    certs: &[rustls::pki_types::CertificateDer<'static>],
+) -> rustls::RootCertStore {
+    let mut root_store = rustls::RootCertStore::empty();
+    root_store.add_parsable_certificates(certs.iter().cloned());
+    root_store
+}
+
+fn build_bundled_store(
+    native_certs: &[rustls::pki_types::CertificateDer<'static>],
+) -> Result<Arc<rustls::RootCertStore>, TlsError> {
+    let mut store = rustls::RootCertStore::empty();
+    store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+    add_native_roots_like_reqwest(&mut store, native_certs)?;
+    Ok(Arc::new(store))
+}
+
+fn extend_with_optional_pem(
+    base: Arc<rustls::RootCertStore>,
+    extra_pem: Option<&[u8]>,
+) -> Result<Arc<rustls::RootCertStore>, TlsError> {
+    let Some(pem) = extra_pem else {
+        return Ok(base);
+    };
+    let extra = create_root_store_from_pem(pem)?;
+    let mut store = base.as_ref().clone();
+    store.extend(extra.roots);
+    Ok(Arc::new(store))
 }
 
 /// Create a reqwest Client with TLS configuration
@@ -25,8 +232,9 @@ enum RootCertificates {
 pub fn create_tls_client_with_config(
     tls_config: TlsConfig,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
 ) -> Result<Client, TlsError> {
-    create_tls_client_with_proxy(tls_config, None, crl_manager)
+    create_tls_client_with_proxy(tls_config, None, crl_manager, roots)
 }
 
 /// Create a reqwest Client with TLS configuration and an optional explicit proxy.
@@ -40,8 +248,36 @@ pub fn create_tls_client_with_proxy(
     tls_config: TlsConfig,
     proxy: Option<&ProxyConfig>,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
 ) -> Result<Client, TlsError> {
-    build_tls_client_and_rustls_config(&tls_config, proxy, crl_manager, None, false).map(|(c, _)| c)
+    build_tls_client_and_rustls_config_sync(
+        &tls_config,
+        proxy,
+        crl_manager,
+        &roots.snapshot(),
+        None,
+        false,
+    )
+    .map(|(c, _)| c)
+}
+
+pub(crate) async fn create_tls_client_with_proxy_prepared(
+    tls_config: TlsConfig,
+    proxy: Option<&ProxyConfig>,
+    crl_manager: CrlManager,
+    roots: RootStoreProvider,
+) -> Result<Client, TlsError> {
+    let snapshot = roots.prepare_native_if_needed(&tls_config).await?;
+    build_tls_client_and_rustls_config_sync(&tls_config, proxy, crl_manager, &snapshot, None, false)
+        .map(|(c, _)| c)
+}
+
+pub(crate) async fn create_tls_client_with_config_prepared(
+    tls_config: TlsConfig,
+    crl_manager: CrlManager,
+    roots: RootStoreProvider,
+) -> Result<Client, TlsError> {
+    create_tls_client_with_proxy_prepared(tls_config, None, crl_manager, roots).await
 }
 
 /// Build a reqwest [`Client`] and, only when `need_diag_config` is set, its
@@ -51,10 +287,30 @@ pub fn create_tls_client_with_proxy(
 /// trust-store load) but does not advertise h2: the diagnostic sends HTTP/1.0.
 /// On the CRL path it deliberately omits the revocation verifier so it can
 /// still show the chain when a CRL endpoint is unavailable.
-pub(crate) fn build_tls_client_and_rustls_config(
+pub(crate) async fn build_tls_client_and_rustls_config(
     tls_config: &TlsConfig,
     proxy: Option<&ProxyConfig>,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
+    connect_timeout: Option<Duration>,
+    need_diag_config: bool,
+) -> Result<(Client, Option<Arc<rustls::ClientConfig>>), TlsError> {
+    let snapshot = roots.prepare_native_if_needed(tls_config).await?;
+    build_tls_client_and_rustls_config_sync(
+        tls_config,
+        proxy,
+        crl_manager,
+        &snapshot,
+        connect_timeout,
+        need_diag_config,
+    )
+}
+
+fn build_tls_client_and_rustls_config_sync(
+    tls_config: &TlsConfig,
+    proxy: Option<&ProxyConfig>,
+    crl_manager: CrlManager,
+    roots: &RootStoreSnapshot<'_>,
     connect_timeout: Option<Duration>,
     need_diag_config: bool,
 ) -> Result<(Client, Option<Arc<rustls::ClientConfig>>), TlsError> {
@@ -101,7 +357,7 @@ pub(crate) fn build_tls_client_and_rustls_config(
                 tracing::debug!("CRL disabled, using native and bundled roots");
             }
             let reqwest_rustls_cfg = build_verified_rustls_config(
-                build_plain_root_store(&root_certificates)?,
+                roots.plain_store(&root_certificates)?,
                 &protocol_versions,
                 tls_config.verify_hostname,
                 ClientAlpn::Default,
@@ -128,10 +384,10 @@ pub(crate) fn build_tls_client_and_rustls_config(
             // `crl_config` into the builder. reqwest's min/max_tls_version are
             // ignored on the preconfigured-rustls path, so the window must be
             // baked into the rustls ClientConfig instead.
-            let root_store_override = root_store_for_crl(&root_certificates)?;
+            let root_store = roots.crl_store(&root_certificates)?;
             let reqwest_rustls_cfg = build_crl_rustls_config(
                 tls_config.crl_config.clone(),
-                root_store_override,
+                root_store,
                 tls_config.verify_hostname,
                 &protocol_versions,
                 ClientAlpn::Default,
@@ -149,7 +405,7 @@ pub(crate) fn build_tls_client_and_rustls_config(
             // which is exactly when a user reaches for the diagnostic tool.
             let diag_rustls_cfg = need_diag_config
                 .then(|| {
-                    build_plain_rustls_client_config(&root_certificates, &protocol_versions)
+                    build_plain_rustls_client_config(roots, &root_certificates, &protocol_versions)
                         .map(Arc::new)
                 })
                 .transpose()?;
@@ -165,10 +421,18 @@ pub fn create_tls_client_with_proxy_and_timeouts(
     tls_config: TlsConfig,
     proxy: Option<&ProxyConfig>,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
     connect_timeout: Option<Duration>,
 ) -> Result<Client, TlsError> {
-    build_tls_client_and_rustls_config(&tls_config, proxy, crl_manager, connect_timeout, false)
-        .map(|(c, _)| c)
+    build_tls_client_and_rustls_config_sync(
+        &tls_config,
+        proxy,
+        crl_manager,
+        &roots.snapshot(),
+        connect_timeout,
+        false,
+    )
+    .map(|(c, _)| c)
 }
 
 #[cfg(not(feature = "fips"))]
@@ -196,12 +460,14 @@ pub(crate) fn configure_http1_tls_builder(
     tls_config: &TlsConfig,
     proxy: Option<&ProxyConfig>,
     crl_manager: CrlManager,
+    roots: &RootStoreSnapshot<'_>,
 ) -> Result<ClientBuilder, TlsError> {
     configure_tls_builder(
         builder.http1_only(),
         tls_config,
         proxy,
         crl_manager,
+        roots,
         ClientAlpn::Http1Only,
     )
 }
@@ -230,6 +496,7 @@ fn configure_tls_builder(
     tls_config: &TlsConfig,
     proxy: Option<&ProxyConfig>,
     crl_manager: CrlManager,
+    roots: &RootStoreSnapshot<'_>,
     alpn: ClientAlpn,
 ) -> Result<ClientBuilder, TlsError> {
     #[cfg(feature = "fips")]
@@ -255,7 +522,7 @@ fn configure_tls_builder(
     match tls_config.crl_config.check_mode {
         CertRevocationCheckMode::Disabled => {
             let rustls_cfg = build_verified_rustls_config(
-                build_plain_root_store(&root_certificates)?,
+                roots.plain_store(&root_certificates)?,
                 &tls_config.versions.enabled_rustls_versions(),
                 tls_config.verify_hostname,
                 alpn,
@@ -265,10 +532,10 @@ fn configure_tls_builder(
         CertRevocationCheckMode::Enabled | CertRevocationCheckMode::Advisory => {
             tracing::debug!("CRL validation enabled, configuring storage TLS client");
             let protocol_versions = tls_config.versions.enabled_rustls_versions();
-            let root_store_override = root_store_for_crl(&root_certificates)?;
+            let root_store = roots.crl_store(&root_certificates)?;
             let rustls_cfg = build_crl_rustls_config(
                 tls_config.crl_config.clone(),
-                root_store_override,
+                root_store,
                 tls_config.verify_hostname,
                 &protocol_versions,
                 alpn,
@@ -298,12 +565,14 @@ pub(crate) fn configure_storage_client_builder(
     tls_config: &TlsConfig,
     proxy: Option<&ProxyConfig>,
     crl_manager: CrlManager,
+    roots: RootStoreProvider,
 ) -> Result<ClientBuilder, TlsError> {
     configure_tls_builder(
         builder,
         tls_config,
         proxy,
         crl_manager,
+        &roots.snapshot(),
         ClientAlpn::Http1Only,
     )
     .map(ClientBuilder::no_gzip)
@@ -314,7 +583,7 @@ pub(crate) fn configure_storage_client_builder(
 /// [`build_tls_client_and_rustls_config`] (connection-level client).
 fn build_crl_rustls_config(
     crl_config: CrlConfig,
-    root_store_override: Option<rustls::RootCertStore>,
+    root_store: Arc<rustls::RootCertStore>,
     verify_hostname: bool,
     protocol_versions: &[&'static rustls::SupportedProtocolVersion],
     alpn: ClientAlpn,
@@ -332,7 +601,7 @@ fn build_crl_rustls_config(
 
     let crl_verifier = CrlServerCertVerifier::new_with_root_store(
         crl_config,
-        root_store_override,
+        root_store,
         verify_hostname,
         crl_manager,
     )
@@ -354,13 +623,14 @@ fn build_crl_rustls_config(
 /// the verified reqwest client, CRL verification currently uses native roots;
 /// keep its diagnostic on the same roots instead of the native ∪ webpki union.
 fn build_plain_rustls_client_config(
+    roots: &RootStoreSnapshot<'_>,
     root_certificates: &RootCertificates,
     protocol_versions: &[&'static rustls::SupportedProtocolVersion],
 ) -> Result<rustls::ClientConfig, TlsError> {
     let root_store = match root_certificates {
-        RootCertificates::Default => create_native_root_store(),
-        RootCertificates::Custom(pem) => create_root_store_from_pem(pem)?,
-        RootCertificates::Extra(pem) => create_extended_root_store(pem)?,
+        RootCertificates::Default => roots.native_store_lenient(),
+        RootCertificates::Custom(pem) => Arc::new(create_root_store_from_pem(pem)?),
+        RootCertificates::Extra(pem) => roots.with_native_and_pem(pem)?,
     };
     let provider = crate::tls::crypto_module::CryptoModule::get().provider();
     let builder = if protocol_versions.is_empty() {
@@ -388,7 +658,7 @@ pub(crate) fn default_verified_client_builder() -> Result<ClientBuilder, TlsErro
 
 fn build_default_verified_rustls_config() -> Result<rustls::ClientConfig, TlsError> {
     build_verified_rustls_config(
-        build_plain_root_store(&RootCertificates::Default)?,
+        RootStoreProvider::new().snapshot().with_bundled()?,
         rustls::DEFAULT_VERSIONS,
         true,
         ClientAlpn::Default,
@@ -399,7 +669,7 @@ fn build_default_verified_rustls_config() -> Result<rustls::ClientConfig, TlsErr
 /// provider. The root store supplied here already reflects custom/extra/default
 /// precedence; reqwest ignores builder TLS settings after use_preconfigured_tls.
 fn build_verified_rustls_config(
-    root_store: rustls::RootCertStore,
+    root_store: Arc<rustls::RootCertStore>,
     protocol_versions: &[&'static rustls::SupportedProtocolVersion],
     verify_hostname: bool,
     alpn: ClientAlpn,
@@ -432,7 +702,7 @@ fn build_verified_rustls_config(
 
 #[derive(Debug)]
 struct IgnoreHostnameCertVerifier {
-    roots: rustls::RootCertStore,
+    roots: Arc<rustls::RootCertStore>,
     supported_algs: rustls::crypto::WebPkiSupportedAlgorithms,
 }
 
@@ -606,27 +876,13 @@ fn load_root_certificates(tls_config: &TlsConfig) -> Result<RootCertificates, Tl
     Ok(RootCertificates::Default)
 }
 
-/// Reqwest's built-in verified rustls client trusts custom roots instead of
-/// bundled roots, extra roots alongside them, or the native ∪ webpki default.
-/// A preconfigured config must make that choice itself: reqwest ignores its
-/// `.add_root_certificate` and `.tls_built_in_root_certs` settings in that mode.
-fn build_plain_root_store(
-    root_certificates: &RootCertificates,
-) -> Result<rustls::RootCertStore, TlsError> {
-    let mut store = match root_certificates {
-        RootCertificates::Custom(pem) => return create_root_store_from_pem(pem),
-        RootCertificates::Extra(pem) => create_root_store_from_pem(pem)?,
-        RootCertificates::Default => rustls::RootCertStore::empty(),
-    };
-    store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    add_native_roots_like_reqwest(&mut store)?;
-    Ok(store)
-}
-
-fn add_native_roots_like_reqwest(store: &mut rustls::RootCertStore) -> Result<(), TlsError> {
+fn add_native_roots_like_reqwest(
+    store: &mut rustls::RootCertStore,
+    native_certs: &[rustls::pki_types::CertificateDer<'static>],
+) -> Result<(), TlsError> {
     let mut valid_count = 0;
     let mut last_invalid = None;
-    for cert in rustls_native_certs::load_native_certs().certs {
+    for cert in native_certs.iter().cloned() {
         match store.add(cert) {
             Ok(()) => valid_count += 1,
             Err(err) => {
@@ -643,31 +899,6 @@ fn add_native_roots_like_reqwest(store: &mut rustls::RootCertStore) -> Result<()
         return Err(err).context(RootStoreAddSnafu);
     }
     Ok(())
-}
-
-fn root_store_for_crl(
-    root_certificates: &RootCertificates,
-) -> Result<Option<rustls::RootCertStore>, TlsError> {
-    match root_certificates {
-        RootCertificates::Default => Ok(None),
-        RootCertificates::Custom(pem) => create_root_store_from_pem(pem).map(Some),
-        RootCertificates::Extra(pem) => create_extended_root_store(pem).map(Some),
-    }
-}
-
-fn create_extended_root_store(pem_data: &[u8]) -> Result<rustls::RootCertStore, TlsError> {
-    let extra = create_root_store_from_pem(pem_data)?;
-    let mut root_store = create_native_root_store();
-    root_store.extend(extra.roots);
-    Ok(root_store)
-}
-
-fn create_native_root_store() -> rustls::RootCertStore {
-    let mut native = rustls_native_certs::load_native_certs();
-    native.errors.clear();
-    let mut root_store = rustls::RootCertStore::empty();
-    root_store.add_parsable_certificates(native.certs);
-    root_store
 }
 
 fn ensure_pem_not_empty<T>(certs: &[T]) -> Result<(), TlsError> {
@@ -812,8 +1043,12 @@ mod tests {
     /// which is exactly the ambiguity being removed.
     #[test]
     fn plain_config_uses_the_module_provider() {
-        let config = build_plain_rustls_client_config(&RootCertificates::Default, &[])
-            .expect("plain rustls config");
+        let config = build_plain_rustls_client_config(
+            &RootStoreProvider::new().snapshot(),
+            &RootCertificates::Default,
+            &[],
+        )
+        .expect("plain rustls config");
         assert!(
             Arc::ptr_eq(
                 config.crypto_provider(),
@@ -852,6 +1087,7 @@ mod tests {
     #[test]
     fn version_window_does_not_change_the_provider() {
         let config = build_plain_rustls_client_config(
+            &RootStoreProvider::new().snapshot(),
             &RootCertificates::Default,
             &[&rustls::version::TLS13],
         )
@@ -895,15 +1131,194 @@ mod tests {
             &config,
             None,
             crate::crl::CrlManager::new(),
+            RootStoreProvider::new(),
         );
 
         assert!(matches!(result, Err(TlsError::PemParse { .. })));
     }
 
     #[test]
+    fn one_provider_reuses_the_loaded_root_stores() {
+        let provider = RootStoreProvider::new();
+        let first = provider.snapshot().with_bundled().expect("bundled");
+        let second = provider.snapshot().with_bundled().expect("bundled");
+        assert!(Arc::ptr_eq(&first, &second));
+        assert!(Arc::ptr_eq(
+            &provider.snapshot().native_store_lenient(),
+            &provider.snapshot().native_store_lenient(),
+        ));
+    }
+
+    static FAILED_NATIVE_LOADS: std::sync::atomic::AtomicUsize =
+        std::sync::atomic::AtomicUsize::new(0);
+
+    fn count_failed_native_load() -> rustls_native_certs::CertificateResult {
+        FAILED_NATIVE_LOADS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        empty_native_error()
+    }
+
+    #[tokio::test]
+    async fn prepared_client_build_reuses_a_failed_native_load() {
+        let provider = RootStoreProvider::with_native_loader(count_failed_native_load);
+        build_tls_client_and_rustls_config(
+            &TlsConfig::default(),
+            Some(&ProxyConfig::default()),
+            CrlManager::new(),
+            provider.clone(),
+            None,
+            true,
+        )
+        .await
+        .expect("bundled fallback client");
+        assert_eq!(
+            FAILED_NATIVE_LOADS.load(std::sync::atomic::Ordering::Relaxed),
+            1
+        );
+        assert!(provider.0.roots.get().is_none());
+    }
+
+    fn empty_native_error() -> rustls_native_certs::CertificateResult {
+        let mut result = rustls_native_certs::CertificateResult::default();
+        result.errors.push(rustls_native_certs::Error {
+            context: "opening root store",
+            kind: rustls_native_certs::ErrorKind::Os(Box::new(std::io::Error::other(
+                "native store unavailable",
+            ))),
+        });
+        result
+    }
+
+    fn native_load_must_not_run() -> rustls_native_certs::CertificateResult {
+        panic!("native load must not run when custom_root_store_path replaces the OS store");
+    }
+
+    fn fail_once_then_empty_ok() -> rustls_native_certs::CertificateResult {
+        thread_local! {
+            static CALLS: std::cell::Cell<u8> = const { std::cell::Cell::new(0) };
+        }
+        CALLS.with(|calls| {
+            let n = calls.get();
+            calls.set(n.saturating_add(1));
+            if n == 0 {
+                empty_native_error()
+            } else {
+                rustls_native_certs::CertificateResult::default()
+            }
+        })
+    }
+
+    fn test_ca_pem() -> Vec<u8> {
+        use rcgen::{BasicConstraints, CertificateParams, IsCa, KeyPair};
+
+        let key = KeyPair::generate().expect("generate private CA key");
+        let mut params = CertificateParams::new(vec![]).expect("CA parameters");
+        params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
+        params
+            .self_signed(&key)
+            .expect("sign CA")
+            .pem()
+            .into_bytes()
+    }
+
+    #[test]
+    fn failed_native_load_does_not_block_custom_pem() {
+        let pem = test_ca_pem();
+        let mut pem_file = tempfile::NamedTempFile::new().expect("custom PEM");
+        pem_file.write_all(&pem).expect("write custom PEM");
+        let config = TlsConfig {
+            custom_root_store_path: Some(pem_file.path().to_path_buf()),
+            ..Default::default()
+        };
+        let provider = RootStoreProvider::with_native_loader(native_load_must_not_run);
+        create_tls_client_with_proxy(
+            config,
+            Some(&ProxyConfig::default()),
+            crate::crl::CrlManager::new(),
+            provider.clone(),
+        )
+        .expect("custom PEM client");
+        assert!(provider.0.roots.get().is_none());
+    }
+
+    #[test]
+    fn failed_native_load_falls_back_to_bundled_roots() {
+        let provider = RootStoreProvider::with_native_loader(empty_native_error);
+        let default = provider
+            .snapshot()
+            .plain_store(&RootCertificates::Default)
+            .expect("bundled fallback");
+        assert!(default.roots.contains(&webpki_roots::TLS_SERVER_ROOTS[0]));
+
+        let pem = test_ca_pem();
+        let extra = provider
+            .snapshot()
+            .plain_store(&RootCertificates::Extra(pem.clone()))
+            .expect("extra PEM plus bundled fallback");
+        let extra_anchor = &create_root_store_from_pem(&pem)
+            .expect("parse extra CA")
+            .roots[0];
+        assert!(extra.roots.contains(extra_anchor));
+        assert!(extra.roots.contains(&webpki_roots::TLS_SERVER_ROOTS[0]));
+        assert!(
+            provider.0.roots.get().is_none(),
+            "a failed native load must not be cached"
+        );
+    }
+
+    #[test]
+    fn failed_native_load_retries_on_the_next_plain_client() {
+        let provider = RootStoreProvider::with_native_loader(fail_once_then_empty_ok);
+        let _first = provider
+            .snapshot()
+            .plain_store(&RootCertificates::Default)
+            .expect("bundled fallback");
+        assert!(provider.0.roots.get().is_none());
+
+        let second = provider
+            .snapshot()
+            .plain_store(&RootCertificates::Default)
+            .expect("retry native load");
+        assert!(provider.0.roots.get().is_some());
+        assert!(second.roots.contains(&webpki_roots::TLS_SERVER_ROOTS[0]));
+        assert!(Arc::ptr_eq(
+            &second,
+            &provider
+                .snapshot()
+                .with_bundled()
+                .expect("cached bundled store")
+        ));
+    }
+
+    #[test]
+    fn failed_native_load_still_fails_the_crl_default_path() {
+        let provider = RootStoreProvider::with_native_loader(empty_native_error);
+        assert!(provider.snapshot().native_store_strict().is_err());
+        let config = TlsConfig {
+            crl_config: CrlConfig {
+                check_mode: CertRevocationCheckMode::Enabled,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = create_tls_client_with_proxy(
+            config,
+            Some(&ProxyConfig::default()),
+            crate::crl::CrlManager::new(),
+            provider,
+        );
+        assert!(
+            matches!(result, Err(TlsError::VerifierBuild { .. })),
+            "CRL default path must surface the native load error: {result:?}"
+        );
+    }
+
+    #[test]
     fn default_roots_include_bundled_webpki_and_native_anchors() {
-        let roots =
-            build_plain_root_store(&RootCertificates::Default).expect("build default trust store");
+        let provider = RootStoreProvider::new();
+        let roots = provider
+            .snapshot()
+            .plain_store(&RootCertificates::Default)
+            .expect("build default trust store");
         assert!(
             roots.roots.contains(&webpki_roots::TLS_SERVER_ROOTS[0]),
             "default roots must include the bundled webpki trust anchors"
@@ -934,15 +1349,20 @@ mod tests {
         let private = create_root_store_from_pem(&pem).expect("parse private CA");
         let anchor = &private.roots[0];
 
-        let custom = build_plain_root_store(&RootCertificates::Custom(pem.clone()))
+        let provider = RootStoreProvider::new();
+        let custom = provider
+            .snapshot()
+            .plain_store(&RootCertificates::Custom(pem.clone()))
             .expect("build custom trust store");
         assert_eq!(
             custom.roots, private.roots,
             "custom CA must replace defaults"
         );
 
-        let extra =
-            build_plain_root_store(&RootCertificates::Extra(pem)).expect("build extra trust store");
+        let extra = provider
+            .snapshot()
+            .plain_store(&RootCertificates::Extra(pem))
+            .expect("build extra trust store");
         assert!(extra.roots.contains(anchor), "extra CA must be trusted");
         assert!(
             extra.roots.contains(&webpki_roots::TLS_SERVER_ROOTS[0]),
@@ -974,6 +1394,7 @@ mod tests {
                 config,
                 Some(&ProxyConfig::default()),
                 crate::crl::CrlManager::new(),
+                RootStoreProvider::new(),
             );
             assert!(
                 matches!(&result, Err(TlsError::RustlsConfig { .. })),
@@ -1169,10 +1590,11 @@ mod tests {
             TlsConfig::insecure(),
         ] {
             for need_diag_config in [false, true] {
-                let result = build_tls_client_and_rustls_config(
+                let result = build_tls_client_and_rustls_config_sync(
                     &config,
                     None,
                     CrlManager::new(),
+                    &RootStoreProvider::new().snapshot(),
                     None,
                     need_diag_config,
                 );
@@ -1190,10 +1612,21 @@ mod tests {
             ..Default::default()
         };
 
-        let s3 = configure_http1_tls_builder(Client::builder(), &config, None, CrlManager::new());
+        let s3 = configure_http1_tls_builder(
+            Client::builder(),
+            &config,
+            None,
+            CrlManager::new(),
+            &RootStoreProvider::new().snapshot(),
+        );
         assert!(matches!(s3, Err(TlsError::InsecureTlsRejected { .. })));
-        let azure_gcs =
-            configure_storage_client_builder(Client::builder(), &config, None, CrlManager::new());
+        let azure_gcs = configure_storage_client_builder(
+            Client::builder(),
+            &config,
+            None,
+            CrlManager::new(),
+            RootStoreProvider::new(),
+        );
         assert!(matches!(
             azure_gcs,
             Err(TlsError::InsecureTlsRejected { .. })
@@ -1204,32 +1637,54 @@ mod tests {
     #[test]
     fn non_fips_builders_accept_insecure_clients() {
         let config = TlsConfig::insecure();
+        let roots = RootStoreProvider::new();
 
-        let (_, diagnostic) =
-            build_tls_client_and_rustls_config(&config, None, CrlManager::new(), None, true)
-                .expect("non-FIPS insecure connection client");
+        let (_, diagnostic) = build_tls_client_and_rustls_config_sync(
+            &config,
+            None,
+            CrlManager::new(),
+            &roots.snapshot(),
+            None,
+            true,
+        )
+        .expect("non-FIPS insecure connection client");
         assert!(diagnostic.is_some());
-        configure_http1_tls_builder(Client::builder(), &config, None, CrlManager::new())
-            .expect("non-FIPS insecure S3 client")
-            .build()
-            .expect("build S3 client");
-        configure_storage_client_builder(Client::builder(), &config, None, CrlManager::new())
-            .expect("non-FIPS insecure Azure/GCS client")
-            .build()
-            .expect("build Azure/GCS client");
+        configure_http1_tls_builder(
+            Client::builder(),
+            &config,
+            None,
+            CrlManager::new(),
+            &roots.snapshot(),
+        )
+        .expect("non-FIPS insecure S3 client")
+        .build()
+        .expect("build S3 client");
+        configure_storage_client_builder(
+            Client::builder(),
+            &config,
+            None,
+            CrlManager::new(),
+            roots,
+        )
+        .expect("non-FIPS insecure Azure/GCS client")
+        .build()
+        .expect("build Azure/GCS client");
     }
 
-    #[test]
-    fn build_tls_client_returns_diag_rustls_config_only_when_requested() {
+    #[tokio::test]
+    async fn build_tls_client_returns_diag_rustls_config_only_when_requested() {
         let config = TlsConfig::default();
 
+        let roots = RootStoreProvider::new();
         let (_, without_diag) = build_tls_client_and_rustls_config(
             &config,
             None,
             crate::crl::CrlManager::new(),
+            roots.clone(),
             None,
             false,
         )
+        .await
         .expect("client must build without a diagnostic config");
         assert!(without_diag.is_none());
 
@@ -1237,9 +1692,11 @@ mod tests {
             &config,
             None,
             crate::crl::CrlManager::new(),
+            roots.clone(),
             None,
             true,
         )
+        .await
         .expect("client must build with a diagnostic config");
         assert!(with_diag.is_some());
     }

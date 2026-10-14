@@ -14,6 +14,7 @@ use sf_core::rest::snowflake::{
     QueryInput, QueryOptions, RestError, snowflake_login, snowflake_query,
 };
 use sf_core::sensitive::SensitiveString;
+use sf_core::tls::RootStoreProvider;
 use sf_core::tls::config::TlsConfig;
 use sf_output_format::datetime::{DateTimeFormat, DateTimeValue, Zone};
 
@@ -747,6 +748,7 @@ async fn run_sql(
         QueryInput::new(sql),
         QueryOptions::default(),
         crl_manager,
+        RootStoreProvider::new(),
     )
     .await
     {
@@ -786,9 +788,14 @@ async fn should_match_session_output_formats_for_date_time_and_timestamps() {
     let client_info = default_client_info();
     let server_url = params.server_url();
     let login_params = build_login_params(&params, client_info.clone(), server_url.clone());
-    let login_result = snowflake_login(&login_params, None, crl_manager.clone())
-        .await
-        .unwrap();
+    let login_result = snowflake_login(
+        &login_params,
+        None,
+        crl_manager.clone(),
+        RootStoreProvider::new(),
+    )
+    .await
+    .unwrap();
     let query_params = QueryParameters {
         server_url,
         client_info,

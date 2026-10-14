@@ -135,6 +135,7 @@ fn presigned_gcs_stage() -> StageInfo {
         use_s3_regional_url: false,
         tls_config: sf_core::tls::config::TlsConfig::default(),
         crl_manager: sf_core::crl::CrlManager::new(),
+        root_store_provider: sf_core::tls::RootStoreProvider::new(),
         proxy_config: sf_core::tls::config::ProxyConfig::default(),
         storage_account: None,
     }

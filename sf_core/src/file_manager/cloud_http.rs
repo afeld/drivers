@@ -53,6 +53,7 @@ pub(super) fn build_azure_client(stage_info: &StageInfo) -> Result<reqwest::Clie
         &stage_info.tls_config,
         Some(&stage_info.proxy_config),
         stage_info.crl_manager.clone(),
+        stage_info.root_store_provider.clone(),
     )?
     .http1_only()
     .build()
@@ -65,6 +66,7 @@ pub(super) fn build_gcs_client(stage_info: &StageInfo) -> Result<reqwest::Client
         &stage_info.tls_config,
         Some(&stage_info.proxy_config),
         stage_info.crl_manager.clone(),
+        stage_info.root_store_provider.clone(),
     )?
     .http1_only()
     .build()
@@ -102,6 +104,7 @@ impl StorageHttp {
                     &stage_info.tls_config,
                     Some(&stage_info.proxy_config),
                     stage_info.crl_manager.clone(),
+                    stage_info.root_store_provider.clone(),
                 )?
                 .into_shared(),
             ),

@@ -373,10 +373,10 @@ impl Data {
         let Some(stage_info) = self.stage_info.as_ref() else {
             return Ok(None);
         };
-        let converted: file_manager::StageInfo = stage_info.try_into()?;
+        let (creds, presigned_url) = stage_info.snapshot()?;
         Ok(Some(file_manager::StageInfoSnapshot {
-            creds: converted.creds,
-            presigned_url: converted.presigned_url,
+            creds,
+            presigned_url,
             // `presigned_urls[]` lives at the `Data` level (it's aligned
             // with `src_locations`), not on the inner `stageInfo` block.
             presigned_urls: self.presigned_urls.clone(),
@@ -428,18 +428,17 @@ impl Data {
             })?
             .clone();
 
-        let mut stage_info: file_manager::StageInfo = self
+        let mut stage_info = self
             .stage_info
             .as_ref()
             .context(MissingParameterSnafu {
                 parameter: "stage info",
             })?
-            .try_into()?;
+            .to_file_manager(transport)?;
 
         if use_s3_regional_url_session_param {
             stage_info.use_s3_regional_url = true;
         }
-        transport.apply_to(&mut stage_info);
 
         let encryption_material: Option<file_manager::EncryptionMaterial> = match &self
             .encryption_material
@@ -525,18 +524,17 @@ impl Data {
         use_s3_regional_url_session_param: bool,
         transport: &file_manager::StageTransport,
     ) -> Result<file_manager::SingleUploadData, QueryResponseError> {
-        let mut stage_info: file_manager::StageInfo = self
+        let mut stage_info = self
             .stage_info
             .as_ref()
             .context(MissingParameterSnafu {
                 parameter: "stage info",
             })?
-            .try_into()?;
+            .to_file_manager(transport)?;
 
         if use_s3_regional_url_session_param {
             stage_info.use_s3_regional_url = true;
         }
-        transport.apply_to(&mut stage_info);
 
         let encryption_material: Option<file_manager::EncryptionMaterial> = match &self
             .encryption_material
@@ -611,18 +609,17 @@ impl Data {
             .fail()?;
         }
 
-        let mut stage_info: file_manager::StageInfo = self
+        let mut stage_info = self
             .stage_info
             .as_ref()
             .context(MissingParameterSnafu {
                 parameter: "stage info",
             })?
-            .try_into()?;
+            .to_file_manager(transport)?;
 
         if use_s3_regional_url_session_param {
             stage_info.use_s3_regional_url = true;
         }
-        transport.apply_to(&mut stage_info);
 
         let encryption_materials: Vec<Option<file_manager::EncryptionMaterial>> =
             match &self.encryption_material {
@@ -1165,55 +1162,35 @@ pub fn read_use_s3_regional_url_session_param(
     }
 }
 
-impl TryFrom<&StageInfo> for file_manager::StageInfo {
-    type Error = QueryResponseError;
+struct StagePlacement {
+    bucket: String,
+    key_prefix: String,
+    region: String,
+}
 
-    fn try_from(value: &StageInfo) -> Result<Self, Self::Error> {
-        // Determine location type (default to S3 for backward compatibility)
-        let location_type = match value.location_type.as_deref() {
-            Some("GCS") => file_manager::LocationType::Gcs,
-            Some("AZURE") => file_manager::LocationType::Azure,
-            Some("S3") | None => file_manager::LocationType::S3,
-            Some(other) => {
-                return InvalidFormatSnafu {
-                    message: format!("Unknown location type: {other}"),
-                }
-                .fail();
+impl StageInfo {
+    fn location_type(&self) -> Result<file_manager::LocationType, QueryResponseError> {
+        // Default to S3 for backward compatibility
+        match self.location_type.as_deref() {
+            Some("GCS") => Ok(file_manager::LocationType::Gcs),
+            Some("AZURE") => Ok(file_manager::LocationType::Azure),
+            Some("S3") | None => Ok(file_manager::LocationType::S3),
+            Some(other) => InvalidFormatSnafu {
+                message: format!("Unknown location type: {other}"),
             }
-        };
-
-        let location = value
-            .location
-            .as_ref()
-            .context(MissingParameterSnafu {
-                parameter: "stage info -> location",
-            })?
-            .clone();
-
-        let bucket_separator = location.find('/').context(InvalidFormatSnafu {
-            message: format!("Invalid location format: {location}"),
-        })?;
-
-        let bucket = location[..bucket_separator].to_string();
-        let mut key_prefix = location[bucket_separator + 1..].to_string();
-        if !key_prefix.is_empty() && !key_prefix.ends_with('/') {
-            key_prefix.push('/');
+            .fail(),
         }
+    }
 
-        let region = value
-            .region
-            .as_ref()
-            .context(MissingParameterSnafu {
-                parameter: "stage info -> region",
-            })?
-            .clone();
-
-        // Build credentials based on location type
-        let creds_data = value.creds.as_ref().context(MissingParameterSnafu {
+    fn cloud_credentials(
+        &self,
+        location_type: file_manager::LocationType,
+    ) -> Result<file_manager::CloudCredentials, QueryResponseError> {
+        let creds_data = self.creds.as_ref().context(MissingParameterSnafu {
             parameter: "stage info -> credentials",
         })?;
 
-        let creds = match location_type {
+        Ok(match location_type {
             file_manager::LocationType::S3 => file_manager::CloudCredentials::S3 {
                 aws_key_id: creds_data
                     .aws_key_id
@@ -1254,45 +1231,105 @@ impl TryFrom<&StageInfo> for file_manager::StageInfo {
                     .clone()
                     .into(),
             },
-        };
+        })
+    }
 
-        let endpoint = value.endpoint.as_ref().filter(|ep| !ep.is_empty()).cloned();
-
-        let presigned_url = value
-            .presigned_url
+    fn presigned_url(&self) -> Option<String> {
+        self.presigned_url
             .as_ref()
             .filter(|url| !url.is_empty())
-            .cloned();
+            .cloned()
+    }
+
+    fn placement(&self) -> Result<StagePlacement, QueryResponseError> {
+        let location = self
+            .location
+            .as_ref()
+            .context(MissingParameterSnafu {
+                parameter: "stage info -> location",
+            })?
+            .clone();
+
+        let bucket_separator = location.find('/').context(InvalidFormatSnafu {
+            message: format!("Invalid location format: {location}"),
+        })?;
+
+        let bucket = location[..bucket_separator].to_string();
+        let mut key_prefix = location[bucket_separator + 1..].to_string();
+        if !key_prefix.is_empty() && !key_prefix.ends_with('/') {
+            key_prefix.push('/');
+        }
+
+        let region = self
+            .region
+            .as_ref()
+            .context(MissingParameterSnafu {
+                parameter: "stage info -> region",
+            })?
+            .clone();
+
+        Ok(StagePlacement {
+            bucket,
+            key_prefix,
+            region,
+        })
+    }
+
+    fn storage_account(
+        &self,
+        location_type: file_manager::LocationType,
+    ) -> Result<Option<String>, QueryResponseError> {
+        let storage_account = self.storage_account.as_ref().filter(|sa| !sa.is_empty());
+        match location_type {
+            file_manager::LocationType::Azure => Ok(Some(
+                storage_account
+                    .context(MissingParameterSnafu {
+                        parameter: "stage info -> storageAccount",
+                    })?
+                    .clone(),
+            )),
+            _ => Ok(storage_account.cloned()),
+        }
+    }
+
+    fn snapshot(
+        &self,
+    ) -> Result<(file_manager::CloudCredentials, Option<String>), QueryResponseError> {
+        let location_type = self.location_type()?;
+        self.placement()?;
+        let creds = self.cloud_credentials(location_type)?;
+        self.storage_account(location_type)?;
+        Ok((creds, self.presigned_url()))
+    }
+
+    fn to_file_manager(
+        &self,
+        transport: &file_manager::StageTransport,
+    ) -> Result<file_manager::StageInfo, QueryResponseError> {
+        let location_type = self.location_type()?;
+        let StagePlacement {
+            bucket,
+            key_prefix,
+            region,
+        } = self.placement()?;
+        let creds = self.cloud_credentials(location_type)?;
+        let storage_account = self.storage_account(location_type)?;
+
+        let endpoint = self.endpoint.as_ref().filter(|ep| !ep.is_empty()).cloned();
+
+        let presigned_url = self.presigned_url();
 
         // ME-CENTRAL2 always uses regional URLs, regardless of the flag
         let use_regional_url =
-            value.use_regional_url.unwrap_or(false) || region.eq_ignore_ascii_case("me-central2");
-        let use_virtual_url = value.use_virtual_url.unwrap_or(false);
+            self.use_regional_url.unwrap_or(false) || region.eq_ignore_ascii_case("me-central2");
+        let use_virtual_url = self.use_virtual_url.unwrap_or(false);
         // S3 PrivateLink / Snowpipe Streaming: either useS3RegionalUrl or
         // useRegionalUrl forces the regional endpoint. Mirrors the OR
         // semantics in the reference Python (s3_storage_client.py:85-91),
         // JDBC (StorageClientFactory.java:55-58), and libsnowflakeclient
         // (SnowflakeS3Client.cpp:106-113) S3 paths.
         let use_s3_regional_url =
-            value.use_s3_regional_url.unwrap_or(false) || value.use_regional_url.unwrap_or(false);
-
-        let storage_account = match location_type {
-            file_manager::LocationType::Azure => Some(
-                value
-                    .storage_account
-                    .as_ref()
-                    .filter(|sa| !sa.is_empty())
-                    .context(MissingParameterSnafu {
-                        parameter: "stage info -> storageAccount",
-                    })?
-                    .clone(),
-            ),
-            _ => value
-                .storage_account
-                .as_ref()
-                .filter(|sa| !sa.is_empty())
-                .cloned(),
-        };
+            self.use_s3_regional_url.unwrap_or(false) || self.use_regional_url.unwrap_or(false);
 
         Ok(file_manager::StageInfo {
             location_type,
@@ -1306,12 +1343,10 @@ impl TryFrom<&StageInfo> for file_manager::StageInfo {
             use_regional_url,
             use_s3_regional_url,
             storage_account,
-            tls_config: crate::tls::config::TlsConfig::default(),
-            // Overwritten from the driver in `perform_put_get_transfer` before TLS use.
-            crl_manager: crate::crl::CrlManager::new(),
-            // Overwritten from the driver's `ProxyConfig` in
-            // `perform_put_get_transfer` before any storage client is built.
-            proxy_config: crate::tls::config::ProxyConfig::default(),
+            tls_config: transport.tls_config.clone(),
+            crl_manager: transport.crl_manager.clone(),
+            root_store_provider: transport.root_store_provider.clone(),
+            proxy_config: transport.proxy_config.clone(),
         })
     }
 }
@@ -2825,7 +2860,8 @@ mod tests {
 
     fn parse_s3_stage_info(value: serde_json::Value) -> file_manager::StageInfo {
         let raw: super::StageInfo = serde_json::from_value(value).expect("parse stage info json");
-        (&raw).try_into().expect("convert stage info")
+        raw.to_file_manager(&file_manager::StageTransport::for_test())
+            .expect("convert stage info")
     }
 
     #[test]
@@ -2927,7 +2963,9 @@ mod tests {
     fn s3_credentials_missing_aws_key_id_still_errors() {
         let raw: super::StageInfo =
             serde_json::from_value(s3_creds_value(None, Some("s"))).expect("parse stage info json");
-        let err = file_manager::StageInfo::try_from(&raw).expect_err("aws key id is mandatory");
+        let err = raw
+            .to_file_manager(&file_manager::StageTransport::for_test())
+            .expect_err("aws key id is mandatory");
         assert!(matches!(
             err,
             QueryResponseError::MissingParameter { ref parameter, .. }
@@ -2939,7 +2977,9 @@ mod tests {
     fn s3_credentials_missing_aws_secret_key_still_errors() {
         let raw: super::StageInfo =
             serde_json::from_value(s3_creds_value(Some("k"), None)).expect("parse stage info json");
-        let err = file_manager::StageInfo::try_from(&raw).expect_err("aws secret key is mandatory");
+        let err = raw
+            .to_file_manager(&file_manager::StageTransport::for_test())
+            .expect_err("aws secret key is mandatory");
         assert!(matches!(
             err,
             QueryResponseError::MissingParameter { ref parameter, .. }

@@ -15,6 +15,7 @@ use crate::file_manager::upload_in_memory_file;
 use crate::rest::snowflake::query_response::{Data, QueryResponseError, Response};
 use crate::rest::snowflake::{QueryInput, QueryOptions, RestError, snowflake_query_with_client};
 use crate::sensitive::SensitiveString;
+use crate::tls::RootStoreProvider;
 
 pub const BIND_STAGE_NAME: &str = "SYSTEM$BIND";
 
@@ -132,6 +133,7 @@ pub struct StageBindingContext<'a> {
     /// Driver-owned CRL manager for the storage TLS client, threaded through so
     /// the bind-stage upload honours CRL like the file-path PUT/GET does.
     pub crl_manager: crate::crl::CrlManager,
+    pub root_store_provider: RootStoreProvider,
     /// Where the upload registers cancellation cleanup. Matters only for a CSV
     /// payload at or above the multipart threshold, which has an abort to register;
     /// a single PUT is discarded by the cloud when the connection is torn down.
@@ -151,6 +153,7 @@ impl<'a> StageBindingContext<'a> {
         session_parameters: &AsyncRwLock<HashMap<String, Setting>>,
         wrapper_presets: &WrapperPresets,
         crl_manager: crate::crl::CrlManager,
+        root_store_provider: RootStoreProvider,
         cleanup: Option<&'a CleanupScope>,
         xp_backend: Option<std::sync::Arc<dyn crate::xp_backend::SnowflakeBackend>>,
     ) -> Self {
@@ -165,6 +168,7 @@ impl<'a> StageBindingContext<'a> {
             use_s3_regional_url_session_param,
             use_scoped_stage,
             crl_manager,
+            root_store_provider,
             cleanup,
             xp_backend,
         }
@@ -306,6 +310,7 @@ async fn upload_blob(
             .proxy_config
             .clone(),
         crl_manager: stage_binding_ctx.crl_manager.clone(),
+        root_store_provider: stage_binding_ctx.root_store_provider.clone(),
     };
     let single = data
         .to_bind_stage_upload_data(

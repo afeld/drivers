@@ -108,6 +108,7 @@ mod integration_tests {
                 ..Default::default()
             },
             crl_manager.clone(),
+            crate::tls::RootStoreProvider::new(),
         )
         .unwrap();
         assert!(client.get("https://httpbin.org/get").build().is_ok());
@@ -123,6 +124,7 @@ mod integration_tests {
                 ..Default::default()
             },
             crl_manager.clone(),
+            crate::tls::RootStoreProvider::new(),
         )
         .unwrap();
         assert!(client.get("https://httpbin.org/get").build().is_ok());
@@ -138,6 +140,7 @@ mod integration_tests {
                 ..Default::default()
             },
             crl_manager,
+            crate::tls::RootStoreProvider::new(),
         )
         .unwrap();
         assert!(client.get("https://httpbin.org/get").build().is_ok());

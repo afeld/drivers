@@ -304,6 +304,7 @@ impl DatabaseDriverV1 {
                         tls_config: conn.tls_config(),
                         proxy_config: conn.proxy_config(),
                         crl_manager: self.crl_manager.clone(),
+                        root_store_provider: self.root_store_provider.clone(),
                     },
                 )
             };
@@ -400,6 +401,7 @@ impl DatabaseDriverV1 {
                         tls_config: conn.tls_config(),
                         proxy_config: conn.proxy_config(),
                         crl_manager: self.crl_manager.clone(),
+                        root_store_provider: self.root_store_provider.clone(),
                     },
                 )
             };

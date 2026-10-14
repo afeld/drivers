@@ -113,6 +113,7 @@ fn azure_stage(tls_config: TlsConfig, proxy_config: ProxyConfig) -> StageInfo {
         storage_account: Some("testaccount".to_string()),
         tls_config,
         crl_manager: sf_core::crl::CrlManager::new(),
+        root_store_provider: sf_core::tls::RootStoreProvider::new(),
         proxy_config,
     }
 }
@@ -135,6 +136,7 @@ fn gcs_stage(tls_config: TlsConfig, proxy_config: ProxyConfig) -> StageInfo {
         storage_account: None,
         tls_config,
         crl_manager: sf_core::crl::CrlManager::new(),
+        root_store_provider: sf_core::tls::RootStoreProvider::new(),
         proxy_config,
     }
 }
@@ -161,6 +163,7 @@ fn s3_stage(tls_config: TlsConfig, proxy_config: ProxyConfig) -> StageInfo {
         storage_account: None,
         tls_config,
         crl_manager: sf_core::crl::CrlManager::new(),
+        root_store_provider: sf_core::tls::RootStoreProvider::new(),
         proxy_config,
     }
 }

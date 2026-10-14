@@ -24,10 +24,11 @@ create_tls_client_with_proxy()          tls/client.rs
        rustls ClientConfig … .with_no_client_auth()
 ```
 
-Crypto provider: `rustls` with `aws-lc-rs`, installed once at startup. All three
-production client builders finish with `.with_no_client_auth()` — the driver
-never presents a client certificate (see the mTLS note in
-[proxy-tls.md](proxy-tls.md)).
+Crypto provider: `rustls` with `aws-lc-rs`, installed once at startup. The OS
+root store is loaded once per process. OS trust changes after the first
+connection apply on process restart. All three production client builders finish
+with `.with_no_client_auth()` — the driver never presents a client certificate
+(see the mTLS note in [proxy-tls.md](proxy-tls.md)).
 
 ---
 

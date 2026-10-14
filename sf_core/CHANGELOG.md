@@ -54,6 +54,7 @@ New features:
 
 Changes:
 
+- Improved connection setup time by loading system root certificates once per driver instead of on every connection. OS trust changes after the first connection apply on process restart. (snowflakedb/drivers#2586)
 - Standardized the opt-in build feature as `fips` and build/test environment variables as `SF_CORE_FIPS` and `SF_CORE_EXPECT_FIPS`. (SNOW-3927213)
 - Pinned `fips` builds to AWS-LC FIPS 3.6.0 (`aws-lc-fips-sys 0.13.17`) and added runtime module-version diagnostics and a FIPS smoke assertion. (SNOW-3927213)
 - Changed `fips` builds to reject `verify_certificates=false` and `tls_skip_verify=true`; standard builds still allow these insecure settings. Consequently, `NODE_TLS_REJECT_UNAUTHORIZED=0` now fails connection in FIPS Node builds. HTTPS CRL downloads now use the linked crypto module explicitly, preserving default trust and proxy behavior. (SNOW-3927213)

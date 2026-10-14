@@ -404,6 +404,7 @@ impl DatabaseDriverV1 {
             &session_parameters,
             &self.wrapper_presets,
             self.crl_manager.clone(),
+            self.root_store_provider.clone(),
             operation_ctx.map(OperationCtx::cleanup_scope),
             xp_backend,
         )
@@ -645,6 +646,7 @@ impl DatabaseDriverV1 {
                     tls_config,
                     proxy_config,
                     self.crl_manager.clone(),
+                    self.root_store_provider.clone(),
                 )
                 .await
                 .context(QueryResponseProcessSnafu)

@@ -83,6 +83,7 @@ async fn default_verified_client_uses_linked_module_not_process_default() {
         config,
         Some(&ProxyConfig::default()),
         sf_core::crl::CrlManager::new(),
+        sf_core::tls::RootStoreProvider::new(),
     )
     .expect("the module must build a TLS 1.3 client despite the TLS 1.2 global provider");
     let response = client

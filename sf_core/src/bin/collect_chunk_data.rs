@@ -12,7 +12,7 @@ use sf_core::rest::snowflake::query_response::Data;
 use sf_core::rest::snowflake::{QueryInput, QueryOptions, snowflake_login, snowflake_query};
 use sf_core::sensitive::SensitiveString;
 use sf_core::tls::config::TlsConfig;
-use sf_core::tls::create_tls_client_with_config;
+use sf_core::tls::{RootStoreProvider, create_tls_client_with_config};
 
 #[derive(Parser)]
 #[command(name = "collect_chunk_data")]
@@ -356,6 +356,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let params = load_parameters(&cli.parameter_path)?;
 
     let crl_manager = CrlManager::new();
+    let roots = RootStoreProvider::new();
 
     let client_info = default_client_info();
     let server_url = params
@@ -372,7 +373,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     println!("Logging in to Snowflake...");
-    let login_result = snowflake_login(&login_params, None, crl_manager.clone()).await?;
+    let login_result =
+        snowflake_login(&login_params, None, crl_manager.clone(), roots.clone()).await?;
     println!(
         "Login successful (session_id={:?})",
         login_result.tokens.session_id
@@ -400,6 +402,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         QueryInput::new(alter_sql),
         QueryOptions::default(),
         crl_manager.clone(),
+        roots.clone(),
     )
     .await?;
 
@@ -415,6 +418,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         QueryInput::new(cli.sql.clone()),
         QueryOptions::default(),
         crl_manager.clone(),
+        roots.clone(),
     )
     .await?;
 
@@ -428,7 +432,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tokio::fs::create_dir_all(&cli.output_dir).await?;
 
-    let tls_client = create_tls_client_with_config(TlsConfig::default(), crl_manager)?;
+    let tls_client = create_tls_client_with_config(TlsConfig::default(), crl_manager, roots)?;
 
     let format_label = match cli.format {
         ResultFormat::Arrow => "arrow",

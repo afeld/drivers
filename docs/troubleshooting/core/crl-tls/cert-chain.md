@@ -20,7 +20,8 @@ Common causes:
 - A custom trust store (`custom_root_store_path`) that does not contain the
   signing CA.
 - The system root store failed to load (minimal container images without
-  `ca-certificates`).
+  `ca-certificates`). OS trust changes after the first connection apply on
+  process restart.
 
 **Diagnosis:**
 ```sh
@@ -52,7 +53,8 @@ The builder produces **all** anchored candidate chains and the first clean one
 wins. A chain revoked under one root but clean under another still passes
 (authoritative behavior in the `crl_verifier.rs` tests). For intermittent
 failures on cross-signed servers, check whether one signing root was recently
-revoked or dropped from the trust store.
+revoked or dropped from the trust store. OS trust changes after the first
+connection apply on process restart.
 
 ### B4. Hostname mismatch
 

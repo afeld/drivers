@@ -19,6 +19,7 @@ use crate::rest::snowflake::prompt_lock::PromptLockMap;
 use crate::telemetry::platform_detection::{DetectionConfig, PlatformDetector};
 use crate::telemetry::session_telemetry::SessionTelemetry;
 use crate::telemetry::snowflake_exporter::SessionRegistry;
+use crate::tls::RootStoreProvider;
 use crate::token_cache::{KeyringTokenCache, TokenCache, TokenCacheError};
 use crate::xp_backend::{SnowflakeBackend, XpSlot};
 
@@ -193,6 +194,10 @@ pub struct DriverProviders {
     /// instances reuse the same worker and refresher. Production code always uses
     /// `..Default::default()` and gets a fresh manager.
     pub crl_manager: Option<CrlManager>,
+    /// Inject a shared root-store provider so that multiple `DatabaseDriverV1`
+    /// instances reuse one OS certificate load. Production code always uses
+    /// `..Default::default()` and gets a fresh provider.
+    pub root_store_provider: Option<RootStoreProvider>,
     /// Host-owned query/login transport. Production XP hosts register after
     /// construction via [`DatabaseDriverV1::register_xp_backend`].
     pub xp_backend: Option<Arc<dyn SnowflakeBackend>>,
@@ -231,6 +236,7 @@ pub struct DatabaseDriverV1 {
     pub(crate) prompt_locks: Arc<PromptLockMap>,
     /// CRL manager shared across all connections on this driver instance.
     pub(crate) crl_manager: CrlManager,
+    pub(crate) root_store_provider: RootStoreProvider,
     pub(crate) xp_slot: Arc<XpSlot>,
 }
 
@@ -276,6 +282,7 @@ impl DatabaseDriverV1 {
                 .prompt_locks
                 .unwrap_or_else(|| Arc::new(std::sync::Mutex::new(HashMap::new()))),
             crl_manager: providers.crl_manager.unwrap_or_default(),
+            root_store_provider: providers.root_store_provider.unwrap_or_default(),
             xp_slot,
         }
     }

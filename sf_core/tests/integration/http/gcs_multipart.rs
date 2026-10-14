@@ -119,6 +119,7 @@ fn gcs_stage(endpoint: &str) -> StageInfo {
         storage_account: None,
         tls_config: sf_core::tls::config::TlsConfig::default(),
         crl_manager: sf_core::crl::CrlManager::new(),
+        root_store_provider: sf_core::tls::RootStoreProvider::new(),
         proxy_config: sf_core::tls::config::ProxyConfig::default(),
     }
 }

@@ -136,9 +136,7 @@ impl Connection {
                 .await?;
 
             // A connection built from session and master tokens never goes through `connect()`,
-            // so it is initialized here. This is not cheap yet: it runs the full core connection
-            // setup on the JS thread, and on macOS loading the system root certificates alone takes
-            // about 100 ms. SNOW-4249447 and SNOW-4249371 track making it cheap.
+            // so it is initialized here.
             if params.token_info.is_some() {
                 BRIDGE
                     .driver
