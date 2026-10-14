@@ -545,6 +545,81 @@ TEST_CASE("SQLColAttribute returns correct attributes for DECFLOAT.", "[query][c
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
+static void expect_semi_structured_sql_type(const HandleWrapper& stmt, SQLUSMALLINT col, SQLSMALLINT concise_type) {
+  SQLCHAR col_name[128];
+  std::memset(col_name, 0xFF, sizeof(col_name));
+  SQLSMALLINT name_length = 0;
+  SQLSMALLINT data_type = 0;
+  SQLULEN col_size = 0;
+  SQLSMALLINT decimal_digits = 0;
+  SQLSMALLINT nullable = 0;
+  SQLRETURN ret = SQLDescribeCol(stmt.getHandle(), col, col_name, sizeof(col_name), &name_length, &data_type, &col_size,
+                                 &decimal_digits, &nullable);
+  REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsSuccess());
+  CHECK(data_type == concise_type);
+  CHECK(get_numeric_attr(stmt, col, SQL_DESC_CONCISE_TYPE) == concise_type);
+  CHECK(get_numeric_attr(stmt, col, SQL_DESC_TYPE) == concise_type);
+}
+
+static void expect_semi_structured_type_name(const HandleWrapper& stmt, SQLUSMALLINT col, const char* type_name) {
+  CHECK(get_string_attr(stmt, col, SQL_DESC_TYPE_NAME) == type_name);
+  OLD_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, col, SQL_DESC_LOCAL_TYPE_NAME) == "VARCHAR"); }
+  NEW_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, col, SQL_DESC_LOCAL_TYPE_NAME) == type_name); }
+}
+
+TEST_CASE("should report SQL_VARCHAR and ARRAY, STRUCT, and VARIANT type names for semi-structured columns.",
+          "[query][col_attribute]") {
+  // Given A query result with ARRAY, OBJECT, and VARIANT columns
+  Connection conn;
+  Schema::use_temp_session_schema(conn);
+  conn.execute("CREATE TEMPORARY TABLE t (arr ARRAY, obj OBJECT, var VARIANT)");
+  auto stmt = conn.execute("SELECT arr, obj, var FROM t");
+
+  // When SQLColAttribute and SQLDescribeCol are called for each semi-structured column
+  const SQLSMALLINT concise_types[] = {SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR};
+  const char* type_names[] = {"ARRAY", "STRUCT", "VARIANT"};
+
+  // Then Concise type and SQLDescribeCol DataType are SQL_VARCHAR
+  for (SQLUSMALLINT col = 1; col <= 3; ++col) {
+    INFO(type_names[col - 1]);
+    expect_semi_structured_sql_type(stmt, col, concise_types[col - 1]);
+  }
+
+  // And SQL_DESC_TYPE_NAME is ARRAY, STRUCT, and VARIANT
+  for (SQLUSMALLINT col = 1; col <= 3; ++col) {
+    INFO(type_names[col - 1]);
+    expect_semi_structured_type_name(stmt, col, type_names[col - 1]);
+  }
+}
+
+TEST_CASE("should report vendor codes for ARRAY, OBJECT, and VARIANT when ODBC_USE_CUSTOM_SQL_DATA_TYPES is set.",
+          "[query][col_attribute]") {
+  // Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES enabled
+  Connection conn;
+  Schema::use_temp_session_schema(conn);
+  conn.execute("ALTER SESSION SET ODBC_USE_CUSTOM_SQL_DATA_TYPES = TRUE");
+
+  // And A query result with ARRAY, OBJECT, and VARIANT columns
+  conn.execute("CREATE TEMPORARY TABLE t (arr ARRAY, obj OBJECT, var VARIANT)");
+  auto stmt = conn.execute("SELECT arr, obj, var FROM t");
+
+  // When SQLColAttribute and SQLDescribeCol are called for each semi-structured column
+  const SQLSMALLINT concise_types[] = {SQL_SF_ARRAY, SQL_SF_OBJECT, SQL_SF_VARIANT};
+  const char* type_names[] = {"ARRAY", "STRUCT", "VARIANT"};
+
+  // Then Concise type and SQLDescribeCol DataType are 2003, 2004, and 2005
+  for (SQLUSMALLINT col = 1; col <= 3; ++col) {
+    INFO(type_names[col - 1]);
+    expect_semi_structured_sql_type(stmt, col, concise_types[col - 1]);
+  }
+
+  // And SQL_DESC_TYPE_NAME is ARRAY, STRUCT, and VARIANT
+  for (SQLUSMALLINT col = 1; col <= 3; ++col) {
+    INFO(type_names[col - 1]);
+    expect_semi_structured_type_name(stmt, col, type_names[col - 1]);
+  }
+}
+
 // =============================================================================
 // Semi-structured type names (ARRAY/OBJECT/VARIANT)
 // =============================================================================

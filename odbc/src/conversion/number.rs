@@ -44,8 +44,9 @@ pub struct NumericSettings {
     /// Takes precedence over `treat_decimal_as_int` for high-precision columns.
     pub treat_big_number_as_string: bool,
     /// When true, timestamp variants report vendor codes 2000 / 2001 / 2002,
-    /// and text GEOGRAPHY / GEOMETRY report 2004. Binary GEOGRAPHY / GEOMETRY
-    /// stay `SQL_BINARY`. Session parameter `ODBC_USE_CUSTOM_SQL_DATA_TYPES`.
+    /// ARRAY / OBJECT / VARIANT report 2003 / 2004 / 2005, and text
+    /// GEOGRAPHY / GEOMETRY report 2004. Binary GEOGRAPHY / GEOMETRY stay
+    /// `SQL_BINARY`. Session parameter `ODBC_USE_CUSTOM_SQL_DATA_TYPES`.
     /// Default false keeps the spec-compliant concise type.
     pub use_custom_sql_data_types: bool,
     /// Server-reported maximum VARCHAR size (from session parameter

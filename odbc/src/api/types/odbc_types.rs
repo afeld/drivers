@@ -1388,9 +1388,15 @@ pub const SQL_SF_TIMESTAMP_LTZ: sql::SqlDataType = sql::SqlDataType(2000);
 pub const SQL_SF_TIMESTAMP_TZ: sql::SqlDataType = sql::SqlDataType(2001);
 pub const SQL_SF_TIMESTAMP_NTZ: sql::SqlDataType = sql::SqlDataType(2002);
 
+/// Vendor code 2003 (`SQL_SF_ARRAY` in `sf_odbc.h`).
+pub const SQL_SF_ARRAY: sql::SqlDataType = sql::SqlDataType(2003);
+
 /// Vendor code 2004 (`SQL_SF_OBJECT` in `sf_odbc.h`). GEOGRAPHY, GEOMETRY, and
 /// OBJECT share this code; `SQL_DESC_TYPE_NAME` distinguishes them.
 pub const SQL_SF_OBJECT: sql::SqlDataType = sql::SqlDataType(2004);
+
+/// Vendor code 2005 (`SQL_SF_VARIANT` in `sf_odbc.h`).
+pub const SQL_SF_VARIANT: sql::SqlDataType = sql::SqlDataType(2005);
 
 /// Snowflake-specific timestamp subtype carried on the IPD. Set by
 /// `SQLBindParameter` when the application uses one of the vendor codes

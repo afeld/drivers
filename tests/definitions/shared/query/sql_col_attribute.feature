@@ -107,6 +107,21 @@ Feature: ODBC SQLColAttribute function behavior (ODBC 3.x)
     When SQLColAttribute is called for each descriptor field
     Then All metadata attributes should match expected values for DECFLOAT
 
+  @odbc_e2e
+  Scenario: should report SQL_VARCHAR and ARRAY, STRUCT, and VARIANT type names for semi-structured columns.
+    Given A query result with ARRAY, OBJECT, and VARIANT columns
+    When SQLColAttribute and SQLDescribeCol are called for each semi-structured column
+    Then Concise type and SQLDescribeCol DataType are SQL_VARCHAR
+    And SQL_DESC_TYPE_NAME is ARRAY, STRUCT, and VARIANT
+
+  @odbc_e2e
+  Scenario: should report vendor codes for ARRAY, OBJECT, and VARIANT when ODBC_USE_CUSTOM_SQL_DATA_TYPES is set.
+    Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES enabled
+    And A query result with ARRAY, OBJECT, and VARIANT columns
+    When SQLColAttribute and SQLDescribeCol are called for each semi-structured column
+    Then Concise type and SQLDescribeCol DataType are 2003, 2004, and 2005
+    And SQL_DESC_TYPE_NAME is ARRAY, STRUCT, and VARIANT
+
   # =========================================================================
   # Semi-Structured Type Names (ARRAY/OBJECT/VARIANT)
   # =========================================================================

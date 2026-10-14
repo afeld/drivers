@@ -1075,6 +1075,15 @@ fn is_binary_column(field: &Field) -> bool {
             .is_some_and(|code| code == odbc_sys::SqlDataType::EXT_BINARY)
 }
 
+fn semi_structured_vendor_sql_type(type_name: &str) -> Option<odbc_sys::SqlDataType> {
+    match type_name {
+        "ARRAY" => Some(crate::api::types::SQL_SF_ARRAY),
+        "STRUCT" => Some(crate::api::types::SQL_SF_OBJECT),
+        "VARIANT" => Some(crate::api::types::SQL_SF_VARIANT),
+        _ => None,
+    }
+}
+
 /// Map a Snowflake Arrow field to the corresponding SQL data type.
 pub fn sql_type_from_field(
     field: &Field,
@@ -1098,6 +1107,13 @@ pub fn sql_type_from_field(
         && let Some(vendor) = field_type.vendor_sql_data_type()
     {
         return Ok(vendor);
+    }
+    if numeric_settings.use_custom_sql_data_types
+        && let SnowflakeFieldType::Varchar(varchar) = &field_type
+        && let Some(type_name) = varchar.semi_structured_type_name
+        && let Some(code) = semi_structured_vendor_sql_type(type_name)
+    {
+        return Ok(code);
     }
     Ok(field_type.sql_type())
 }
@@ -1499,6 +1515,7 @@ mod unknown_logical_type_tests {
     use super::{
         NumericSettings, sql_type_from_field, type_name_from_field, verbose_sql_type_from_field,
     };
+    use crate::api::types::{SQL_SF_ARRAY, SQL_SF_OBJECT, SQL_SF_VARIANT};
     use crate::conversion::error::ConversionError;
     use arrow::datatypes::{DataType, Field};
     use odbc_sys as sql;
@@ -1663,7 +1680,7 @@ mod unknown_logical_type_tests {
     }
 
     #[test]
-    fn custom_sql_data_types_leaves_plain_binary_and_semi_structured_unchanged() {
+    fn custom_sql_data_types_leaves_plain_binary_and_text_unchanged() {
         let settings = custom_sql_data_types();
         let binary = Field::new("col", DataType::Binary, true).with_metadata(HashMap::from([(
             "logicalType".to_string(),
@@ -1673,11 +1690,20 @@ mod unknown_logical_type_tests {
             sql_type_from_field(&binary, &settings).unwrap(),
             sql::SqlDataType::EXT_BINARY
         );
-        for logical_type in ["TEXT", "OBJECT", "ARRAY", "VARIANT"] {
+        let text = field_with_logical_type("TEXT", &[]);
+        assert_eq!(
+            sql_type_from_field(&text, &settings).unwrap(),
+            sql::SqlDataType::VARCHAR
+        );
+        for (logical_type, vendor_code) in [
+            ("ARRAY", SQL_SF_ARRAY),
+            ("OBJECT", SQL_SF_OBJECT),
+            ("VARIANT", SQL_SF_VARIANT),
+        ] {
             let field = field_with_logical_type(logical_type, &[]);
             assert_eq!(
                 sql_type_from_field(&field, &settings).unwrap(),
-                sql::SqlDataType::VARCHAR,
+                vendor_code,
                 "{logical_type}"
             );
         }

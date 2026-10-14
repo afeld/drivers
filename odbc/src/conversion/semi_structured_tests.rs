@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod tests {
+    use crate::api::types::{SQL_SF_ARRAY, SQL_SF_OBJECT, SQL_SF_VARIANT};
     use crate::conversion::error::ConversionError;
     use crate::conversion::{
         NumericSettings, SF_DEFAULT_VARCHAR_MAX_LEN, column_size_from_field,
-        decimal_digits_from_field, make_converter, sql_type_from_field,
+        decimal_digits_from_field, make_converter, sql_type_from_field, type_name_from_field,
+        verbose_sql_type_from_field,
     };
     use arrow::datatypes::Field;
     use odbc_sys as sql;
@@ -125,6 +127,87 @@ mod tests {
                 "make_converter failed for {lt}: {:?}",
                 result.err()
             );
+        }
+    }
+
+    fn text_field() -> Field {
+        let md: HashMap<String, String> = [("logicalType".to_string(), "TEXT".to_string())].into();
+        Field::new("col", arrow::datatypes::DataType::Utf8, true).with_metadata(md)
+    }
+
+    #[test]
+    fn flag_off_reports_varchar_and_semi_structured_type_names() {
+        let cases = [
+            ("ARRAY", "ARRAY"),
+            ("OBJECT", "STRUCT"),
+            ("VARIANT", "VARIANT"),
+        ];
+        let ns = NumericSettings::default();
+        for (logical_type, type_name) in cases {
+            let field = semi_structured_field(logical_type, vec![]);
+            assert_eq!(
+                sql_type_from_field(&field, &ns).unwrap(),
+                sql::SqlDataType::VARCHAR,
+                "{logical_type} concise type"
+            );
+            assert_eq!(
+                verbose_sql_type_from_field(&field, &ns).unwrap(),
+                sql::SqlDataType::VARCHAR,
+                "{logical_type} SQL_DESC_TYPE"
+            );
+            assert_eq!(
+                type_name_from_field(&field, &ns).unwrap(),
+                type_name,
+                "{logical_type} type name"
+            );
+        }
+    }
+
+    #[test]
+    fn flag_on_reports_vendor_codes_and_same_type_names() {
+        let cases = [
+            ("ARRAY", SQL_SF_ARRAY, "ARRAY"),
+            ("OBJECT", SQL_SF_OBJECT, "STRUCT"),
+            ("VARIANT", SQL_SF_VARIANT, "VARIANT"),
+        ];
+        let ns = NumericSettings {
+            use_custom_sql_data_types: true,
+            map_to_long_varchar: Some(0),
+            ..NumericSettings::default()
+        };
+        for (logical_type, vendor_code, type_name) in cases {
+            let field = semi_structured_field(logical_type, vec![("charLength", "16777216")]);
+            assert_eq!(
+                sql_type_from_field(&field, &ns).unwrap(),
+                vendor_code,
+                "{logical_type} concise type"
+            );
+            assert_eq!(
+                verbose_sql_type_from_field(&field, &ns).unwrap(),
+                vendor_code,
+                "{logical_type} SQL_DESC_TYPE"
+            );
+            assert_eq!(
+                type_name_from_field(&field, &ns).unwrap(),
+                type_name,
+                "{logical_type} type name"
+            );
+        }
+    }
+
+    #[test]
+    fn ordinary_text_stays_varchar_regardless_of_flag() {
+        let field = text_field();
+        for use_custom_sql_data_types in [false, true] {
+            let ns = NumericSettings {
+                use_custom_sql_data_types,
+                ..NumericSettings::default()
+            };
+            assert_eq!(
+                sql_type_from_field(&field, &ns).unwrap(),
+                sql::SqlDataType::VARCHAR
+            );
+            assert_eq!(type_name_from_field(&field, &ns).unwrap(), "VARCHAR");
         }
     }
 }

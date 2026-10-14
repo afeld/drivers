@@ -10,8 +10,8 @@ use crate::traits::{ReadArrowType, SnowflakeType};
 /// checked borrow of the already-validated UTF-8 bytes — no column metadata,
 /// no calendar or clock math. The result is a `&str` borrowed from the array;
 /// how it is surfaced (ODBC's `SnowflakeVarchar` also handles the string →
-/// numeric / date / interval bind coercions and owns the `is_semi_structured`
-/// flag; the Node.js bridge wraps it in a `Cow` for its `JsCell`) is the front
+/// numeric / date / interval bind coercions and owns the `semi_structured_type_name`
+/// for ARRAY, OBJECT, and VARIANT; the Node.js bridge wraps it in a `Cow` for its `JsCell`) is the front
 /// end's job and stays in the driver crates.
 pub struct SnowflakeText;
 
