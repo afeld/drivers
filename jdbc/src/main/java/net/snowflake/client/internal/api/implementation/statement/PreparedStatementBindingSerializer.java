@@ -16,10 +16,9 @@ import net.snowflake.client.api.resultset.SnowflakeType;
 import net.snowflake.client.internal.api.implementation.exception.SFSQLException;
 import net.snowflake.client.internal.log.SFLogger;
 import net.snowflake.client.internal.log.SFLoggerFactory;
+import net.snowflake.client.internal.unicore.NativeBuffer;
 import net.snowflake.client.internal.unicore.protobuf_gen.DatabaseDriverV1.BinaryDataPtr;
 import net.snowflake.client.internal.unicore.protobuf_gen.DatabaseDriverV1.QueryBindings;
-import org.apache.arrow.memory.ArrowBuf;
-import org.apache.arrow.memory.RootAllocator;
 
 final class PreparedStatementBindingSerializer {
   private static final SFLogger logger =
@@ -27,14 +26,6 @@ final class PreparedStatementBindingSerializer {
 
   /** Thread-safe once configured; reused to avoid re-parsing the (empty) generator config. */
   private static final JsonFactory JSON_FACTORY = new JsonFactory();
-
-  /**
-   * Process-wide; a fresh allocator per execute is measurably expensive in batch scenarios. Cap the
-   * budget so a leak or runaway batch cannot grow without bound.
-   */
-  static final long MAX_BIND_ALLOCATION_BYTES = 4L * 1024 * 1024 * 1024;
-
-  static final RootAllocator SHARED_ALLOCATOR = new RootAllocator(MAX_BIND_ALLOCATION_BYTES);
 
   static final class ParameterValue {
     private final SnowflakeType bindType;
@@ -55,8 +46,8 @@ final class PreparedStatementBindingSerializer {
   }
 
   /**
-   * The {@link BinaryDataPtr} address is a raw {@code long}, not a Java reference to the underlying
-   * {@link ArrowBuf}. Callers must keep this object reachable until the synchronous RPC returns.
+   * The {@link BinaryDataPtr} address is a raw {@code long}. Callers must keep this object
+   * reachable until the synchronous RPC returns.
    */
   static final class NativeBindings implements AutoCloseable {
     private final QueryBindings bindings;
@@ -175,10 +166,15 @@ final class PreparedStatementBindingSerializer {
 
   static NativeBindings allocateNativeBindings(
       byte[] payloadBytes, Function<BinaryDataPtr, QueryBindings> bindingsBuilder) {
-    NativeBuffer nativeBuffer = NativeBuffer.fromBytes(payloadBytes);
+    NativeBuffer nativeBuffer = NativeBuffer.copyOf(payloadBytes);
     boolean success = false;
     try {
-      byte[] ptrBytes = nativeBuffer.pointerAsLittleEndianBytes();
+      byte[] ptrBytes =
+          ByteBuffer.allocate(Long.BYTES)
+              // TODO(SNOW-4248904): AIX is big-endian. These pointer bytes are little-endian.
+              .order(ByteOrder.LITTLE_ENDIAN)
+              .putLong(nativeBuffer.address())
+              .array();
       BinaryDataPtr payloadPtr =
           BinaryDataPtr.newBuilder()
               .setValue(ByteString.copyFrom(ptrBytes))
@@ -196,55 +192,6 @@ final class PreparedStatementBindingSerializer {
       if (!success) {
         nativeBuffer.close();
       }
-    }
-  }
-
-  private static final class NativeBuffer implements AutoCloseable {
-    private final ArrowBuf arrowBuf;
-    private final long address;
-    private boolean closed;
-
-    private NativeBuffer(ArrowBuf arrowBuf, long address) {
-      this.arrowBuf = arrowBuf;
-      this.address = address;
-    }
-
-    private static NativeBuffer fromBytes(byte[] source) {
-      ArrowBuf arrowBuf = null;
-      boolean success = false;
-      try {
-        arrowBuf = SHARED_ALLOCATOR.buffer(source.length);
-        arrowBuf.setBytes(0, source);
-        long address = arrowBuf.memoryAddress();
-        if (address == 0L) {
-          logger.warn(
-              "Failed to allocate native memory for binding data: payloadBytes={}", source.length);
-          throw new SFSQLException("Failed to allocate native memory for binding data");
-        }
-        logger.debug("Allocated native binding buffer: payloadBytes={}", source.length);
-        success = true;
-        return new NativeBuffer(arrowBuf, address);
-      } finally {
-        if (!success && arrowBuf != null) {
-          arrowBuf.close();
-        }
-      }
-    }
-
-    byte[] pointerAsLittleEndianBytes() {
-      return ByteBuffer.allocate(Long.BYTES)
-          .order(ByteOrder.LITTLE_ENDIAN)
-          .putLong(address)
-          .array();
-    }
-
-    @Override
-    public void close() {
-      if (closed) {
-        return;
-      }
-      closed = true;
-      arrowBuf.close();
     }
   }
 }

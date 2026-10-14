@@ -13,25 +13,32 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import net.snowflake.client.api.resultset.SnowflakeType;
+import net.snowflake.client.internal.unicore.NativeBuffer;
 import net.snowflake.client.internal.unicore.protobuf_gen.DatabaseDriverV1.BinaryDataPtr;
 import net.snowflake.client.internal.unicore.protobuf_gen.DatabaseDriverV1.QueryBindings;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class PreparedStatementBindingSerializerTest {
 
-  /**
-   * Detect ArrowBuf leaks. Any code path inside {@code serialize()} that allocates a buffer but
-   * fails to close it (e.g. a future refactor that throws between {@code allocator.buffer(…)} and
-   * {@code NativeBindings} construction) leaves bytes accounted on the shared allocator; this
-   * assertion fires immediately after the test class completes.
-   */
+  private static long nativeBufferBaseline;
+
+  @BeforeAll
+  public static void snapshotNativeBufferBaseline() {
+    nativeBufferBaseline = NativeBuffer.allocatedBytes();
+  }
+
+  // Each test closes its NativeBindings through try-with-resources; a serializer path that opened a
+  // NativeBuffer and forgot to release it would raise the process-wide counter above the baseline
+  // captured here. Reads a delta rather than zero because other test classes in the same JVM may
+  // have left their own baseline before this class started.
   @AfterAll
-  public static void assertSharedAllocatorEmpty() {
+  public static void assertNoNativeBufferLeak() {
     assertEquals(
-        0L,
-        PreparedStatementBindingSerializer.SHARED_ALLOCATOR.getAllocatedMemory(),
-        "ArrowBuf leak: shared allocator still has bytes after binding serializer tests");
+        nativeBufferBaseline,
+        NativeBuffer.allocatedBytes(),
+        "Native binding buffers leaked after prepared-statement binding serializer tests");
   }
 
   @Test

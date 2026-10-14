@@ -18,21 +18,32 @@ import java.util.Map;
 import net.snowflake.client.api.resultset.SnowflakeType;
 import net.snowflake.client.internal.api.implementation.statement.PreparedStatementBindingSerializer.NativeBindings;
 import net.snowflake.client.internal.api.implementation.statement.PreparedStatementBindingSerializer.ParameterValue;
+import net.snowflake.client.internal.unicore.NativeBuffer;
 import net.snowflake.client.internal.unicore.protobuf_gen.DatabaseDriverV1.BinaryDataPtr;
 import net.snowflake.client.internal.unicore.protobuf_gen.DatabaseDriverV1.QueryBindings;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class PreparedStatementCsvBindingsTest {
 
-  // The CSV path allocates on the same shared allocator as the JSON serializer; a leak here means a
-  // buffer was opened but not closed inside serialize().
+  private static long nativeBufferBaseline;
+
+  @BeforeAll
+  public static void snapshotNativeBufferBaseline() {
+    nativeBufferBaseline = NativeBuffer.allocatedBytes();
+  }
+
+  // The CSV path shares NativeBuffer with the JSON serializer; a serialize() call that allocates
+  // but does not release raises the process-wide counter above the baseline captured here. Reads a
+  // delta rather than zero because other test classes in the same JVM may have left their own
+  // baseline before this class started.
   @AfterAll
-  public static void assertSharedAllocatorEmpty() {
+  public static void assertNoNativeBufferLeak() {
     assertEquals(
-        0L,
-        PreparedStatementBindingSerializer.SHARED_ALLOCATOR.getAllocatedMemory(),
-        "ArrowBuf leak: shared allocator still has bytes after CSV binding tests");
+        nativeBufferBaseline,
+        NativeBuffer.allocatedBytes(),
+        "Native binding buffers leaked after CSV binding tests");
   }
 
   private static ParameterValue column(String... rows) {

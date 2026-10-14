@@ -21,8 +21,8 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex, OnceLock};
 
 use jni::JNIEnv;
-use jni::objects::{JByteArray, JClass, JObject, JString, JValue};
-use jni::sys::{jint, jlong, jobject};
+use jni::objects::{JByteArray, JClass, JLongArray, JObject, JString, JValue};
+use jni::sys::{jint, jlong, jobject, jstring};
 use proto_utils::{CancellableTransport, ProtoError, Transport};
 use sf_core::logging::LogManager;
 use sf_core::protobuf::apis::RustTransport;
@@ -31,6 +31,8 @@ use sf_core::telemetry::snowflake_exporter::SessionRegistry;
 use sf_core::utils::sync::MutexRecoverExt;
 use sf_core::wrapper_event;
 use tracing::instrument::WithSubscriber;
+
+mod native_buffer;
 
 static JDBC_LOG_MANAGER: Mutex<Option<LogManager>> = Mutex::new(None);
 
@@ -55,6 +57,7 @@ struct JdbcBridge {
     /// operation handle. Holds only the result plumbing — the cancellation token
     /// lives on the transport's registry (`RustTransport::register`).
     results: Mutex<ResultMap>,
+    native_buffers: native_buffer::NativeBufferRegistry,
 }
 
 impl JdbcBridge {
@@ -80,6 +83,7 @@ impl JdbcBridge {
             transport: RustTransport::new_with(providers),
             dispatch,
             results: Mutex::new(HashMap::new()),
+            native_buffers: native_buffer::NativeBufferRegistry::new(),
         }
     }
 
@@ -338,6 +342,57 @@ pub extern "system" fn Java_net_snowflake_client_internal_unicore_JNICoreTranspo
     ffi_guard((), || {
         JDBC_BRIDGE.transport.cancel(handle as u64);
     });
+}
+
+#[unsafe(no_mangle)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_net_snowflake_client_internal_unicore_NativeBuffer_nativeAllocate(
+    mut env: JNIEnv,
+    _class: JClass,
+    bytes: JByteArray,
+    out: JLongArray,
+) -> jstring {
+    ffi_guard(std::ptr::null_mut(), || {
+        let bytes = match env.convert_byte_array(&bytes) {
+            Ok(bytes) => bytes,
+            Err(error) => return java_string(&mut env, &error.to_string()),
+        };
+        let (handle, address) = match JDBC_BRIDGE.native_buffers.allocate(bytes) {
+            Ok(allocation) => allocation,
+            Err(error) => return java_string(&mut env, &error),
+        };
+        if let Err(error) = env.set_long_array_region(&out, 0, &[handle as jlong, address as jlong])
+        {
+            JDBC_BRIDGE.native_buffers.release(handle);
+            return java_string(&mut env, &error.to_string());
+        }
+        std::ptr::null_mut()
+    })
+}
+
+fn java_string(env: &mut JNIEnv, message: &str) -> jstring {
+    env.new_string(message)
+        .map(|value| value.into_raw())
+        .unwrap_or(std::ptr::null_mut())
+}
+
+#[unsafe(no_mangle)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_net_snowflake_client_internal_unicore_NativeBuffer_nativeRelease(
+    _env: JNIEnv,
+    _class: JClass,
+    handle: jlong,
+) {
+    ffi_guard((), || JDBC_BRIDGE.native_buffers.release(handle as u64));
+}
+
+#[unsafe(no_mangle)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_net_snowflake_client_internal_unicore_NativeBuffer_nativeAllocatedBytes(
+    _env: JNIEnv,
+    _class: JClass,
+) -> jlong {
+    ffi_guard(0, || JDBC_BRIDGE.native_buffers.allocated_bytes() as jlong)
 }
 
 #[unsafe(no_mangle)]
