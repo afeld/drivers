@@ -1379,14 +1379,18 @@ impl From<SqlType> for sql::SqlDataType {
     }
 }
 
-/// Snowflake vendor SQL type codes as `odbc_sys::SqlDataType` constants. Match
-/// the legacy 3.16.0 driver's macros from `Source/sf_odbc.h` and the
-/// corresponding `SqlType::SqlSfTimestamp{Ltz,Tz,Ntz}` enum variants. Use
-/// these forms in `match` patterns against `sql::SqlDataType` (e.g. when
-/// dispatching by the `ParameterType` argument of `SQLBindParameter`).
+/// Snowflake vendor SQL type codes for timestamp subtypes. Match the legacy
+/// 3.16.0 driver's macros from `Source/sf_odbc.h` and the corresponding
+/// `SqlType::SqlSfTimestamp{Ltz,Tz,Ntz}` enum variants. Use these forms in
+/// `match` patterns against `sql::SqlDataType` (e.g. when dispatching by the
+/// `ParameterType` argument of `SQLBindParameter`).
 pub const SQL_SF_TIMESTAMP_LTZ: sql::SqlDataType = sql::SqlDataType(2000);
 pub const SQL_SF_TIMESTAMP_TZ: sql::SqlDataType = sql::SqlDataType(2001);
 pub const SQL_SF_TIMESTAMP_NTZ: sql::SqlDataType = sql::SqlDataType(2002);
+
+/// Vendor code 2004 (`SQL_SF_OBJECT` in `sf_odbc.h`). GEOGRAPHY, GEOMETRY, and
+/// OBJECT share this code; `SQL_DESC_TYPE_NAME` distinguishes them.
+pub const SQL_SF_OBJECT: sql::SqlDataType = sql::SqlDataType(2004);
 
 /// Snowflake-specific timestamp subtype carried on the IPD. Set by
 /// `SQLBindParameter` when the application uses one of the vendor codes

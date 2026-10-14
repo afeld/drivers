@@ -70,7 +70,7 @@ pub use number::{NumericSettings, SF_DEFAULT_VARCHAR_MAX_LEN, TzOffsetFormatCach
 
 #[cfg(not(windows))]
 use crate::api::encoding::is_ascii_locale;
-use crate::api::{SQL_SF_TIMESTAMP_LTZ, SQL_SF_TIMESTAMP_NTZ, SQL_SF_TIMESTAMP_TZ};
+use crate::api::{SQL_SF_OBJECT, SQL_SF_TIMESTAMP_LTZ, SQL_SF_TIMESTAMP_NTZ, SQL_SF_TIMESTAMP_TZ};
 use crate::conversion::error::{
     IncompatibleFieldMetadataSnafu, ReadArrowValueSnafu, UnsupportedArrowDataTypeSnafu,
     WriteOdbcValueSnafu,
@@ -1045,11 +1045,47 @@ fn concise_sql_type_override(field: &Field) -> Option<odbc_sys::SqlDataType> {
         .map(odbc_sys::SqlDataType)
 }
 
+fn is_geo_type_name(name: &str) -> bool {
+    name.eq_ignore_ascii_case("GEOGRAPHY") || name.eq_ignore_ascii_case("GEOMETRY")
+}
+
+fn is_geography_or_geometry(field: &Field) -> bool {
+    field
+        .metadata()
+        .get("extTypeName")
+        .is_some_and(|name| is_geo_type_name(name))
+        || field
+            .metadata()
+            .get("logicalType")
+            .is_some_and(|name| is_geo_type_name(name))
+}
+
+fn is_binary_column(field: &Field) -> bool {
+    matches!(
+        field.data_type(),
+        DataType::Binary
+            | DataType::LargeBinary
+            | DataType::BinaryView
+            | DataType::FixedSizeBinary(_)
+    ) || field
+        .metadata()
+        .get("logicalType")
+        .is_some_and(|name| name.eq_ignore_ascii_case("BINARY"))
+        || concise_sql_type_override(field)
+            .is_some_and(|code| code == odbc_sys::SqlDataType::EXT_BINARY)
+}
+
 /// Map a Snowflake Arrow field to the corresponding SQL data type.
 pub fn sql_type_from_field(
     field: &Field,
     numeric_settings: &NumericSettings,
 ) -> Result<odbc_sys::SqlDataType, ConversionError> {
+    if numeric_settings.use_custom_sql_data_types
+        && is_geography_or_geometry(field)
+        && !is_binary_column(field)
+    {
+        return Ok(SQL_SF_OBJECT);
+    }
     // Catalog result schemas may override the concise type (e.g. WVARCHAR for
     // string catalog cols, SMALLINT/INTEGER for numeric catalog cols) while
     // keeping a physical Arrow type that is convenient to build. Query-result
@@ -1460,7 +1496,9 @@ mod default_column_size_tests {
 
 #[cfg(test)]
 mod unknown_logical_type_tests {
-    use super::{NumericSettings, sql_type_from_field, type_name_from_field};
+    use super::{
+        NumericSettings, sql_type_from_field, type_name_from_field, verbose_sql_type_from_field,
+    };
     use crate::conversion::error::ConversionError;
     use arrow::datatypes::{DataType, Field};
     use odbc_sys as sql;
@@ -1512,6 +1550,137 @@ mod unknown_logical_type_tests {
             sql::SqlDataType::EXT_BINARY
         );
         assert_eq!(type_name_from_field(&field, &settings).unwrap(), "GEOMETRY");
+    }
+
+    fn custom_sql_data_types() -> NumericSettings {
+        NumericSettings {
+            use_custom_sql_data_types: true,
+            ..NumericSettings::default()
+        }
+    }
+
+    #[test]
+    fn custom_sql_data_types_text_geography_reports_2004_and_keeps_type_name() {
+        let settings = custom_sql_data_types();
+        for ext_name in ["GEOGRAPHY", "geography"] {
+            let field = field_with_logical_type("TEXT", &[("extTypeName", ext_name)]);
+            assert_eq!(
+                sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType(2004),
+                "{ext_name}"
+            );
+            assert_eq!(
+                verbose_sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType(2004),
+                "{ext_name}"
+            );
+            assert_eq!(
+                type_name_from_field(&field, &settings).unwrap(),
+                "GEOGRAPHY",
+                "{ext_name}"
+            );
+        }
+    }
+
+    #[test]
+    fn custom_sql_data_types_binary_geometry_stays_sql_binary_and_keeps_type_name() {
+        let settings = custom_sql_data_types();
+        for ext_name in ["GEOMETRY", "geometry"] {
+            let md = HashMap::from([
+                ("logicalType".to_string(), "BINARY".to_string()),
+                ("extTypeName".to_string(), ext_name.to_string()),
+            ]);
+            let field = Field::new("col", DataType::Binary, true).with_metadata(md);
+            assert_eq!(
+                sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType::EXT_BINARY,
+                "{ext_name}"
+            );
+            assert_eq!(
+                verbose_sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType::EXT_BINARY,
+                "{ext_name}"
+            );
+            assert_eq!(
+                type_name_from_field(&field, &settings).unwrap(),
+                "GEOMETRY",
+                "{ext_name}"
+            );
+        }
+    }
+
+    #[test]
+    fn custom_sql_data_types_logical_type_geography_and_geometry_report_2004() {
+        let settings = custom_sql_data_types();
+        for logical_type in ["GEOGRAPHY", "geometry"] {
+            let field = field_with_logical_type(logical_type, &[]);
+            assert_eq!(
+                sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType(2004),
+                "{logical_type}"
+            );
+            assert_eq!(
+                verbose_sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType(2004),
+                "{logical_type}"
+            );
+        }
+    }
+
+    #[test]
+    fn custom_sql_data_types_keeps_text_geography_at_2004_and_binary_at_sql_binary() {
+        let settings = custom_sql_data_types();
+        let text_md = HashMap::from([
+            ("logicalType".to_string(), "TEXT".to_string()),
+            ("extTypeName".to_string(), "GEOGRAPHY".to_string()),
+            (
+                "conciseSqlType".to_string(),
+                sql::SqlDataType::VARCHAR.0.to_string(),
+            ),
+        ]);
+        let text_field = Field::new("col", DataType::Utf8, true).with_metadata(text_md);
+        assert_eq!(
+            sql_type_from_field(&text_field, &settings).unwrap(),
+            sql::SqlDataType(2004)
+        );
+        let binary_md = HashMap::from([
+            ("logicalType".to_string(), "BINARY".to_string()),
+            ("extTypeName".to_string(), "GEOGRAPHY".to_string()),
+            (
+                "conciseSqlType".to_string(),
+                sql::SqlDataType::EXT_BINARY.0.to_string(),
+            ),
+        ]);
+        let binary_field = Field::new("col", DataType::Binary, true).with_metadata(binary_md);
+        assert_eq!(
+            sql_type_from_field(&binary_field, &settings).unwrap(),
+            sql::SqlDataType::EXT_BINARY
+        );
+        assert_eq!(
+            type_name_from_field(&binary_field, &settings).unwrap(),
+            "GEOGRAPHY"
+        );
+    }
+
+    #[test]
+    fn custom_sql_data_types_leaves_plain_binary_and_semi_structured_unchanged() {
+        let settings = custom_sql_data_types();
+        let binary = Field::new("col", DataType::Binary, true).with_metadata(HashMap::from([(
+            "logicalType".to_string(),
+            "BINARY".to_string(),
+        )]));
+        assert_eq!(
+            sql_type_from_field(&binary, &settings).unwrap(),
+            sql::SqlDataType::EXT_BINARY
+        );
+        for logical_type in ["TEXT", "OBJECT", "ARRAY", "VARIANT"] {
+            let field = field_with_logical_type(logical_type, &[]);
+            assert_eq!(
+                sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType::VARCHAR,
+                "{logical_type}"
+            );
+        }
     }
 
     #[test]

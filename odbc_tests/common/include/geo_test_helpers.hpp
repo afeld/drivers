@@ -23,6 +23,16 @@ inline void require_sql_type(const StatementHandleWrapper& stmt, SQLUSMALLINT co
   SQLRETURN ret = SQLDescribeCol(stmt.getHandle(), col, nullptr, 0, nullptr, &data_type, nullptr, nullptr, nullptr);
   REQUIRE_ODBC(ret, stmt);
   REQUIRE(data_type == expected);
+
+  SQLLEN concise_type = 0;
+  ret = SQLColAttribute(stmt.getHandle(), col, SQL_DESC_CONCISE_TYPE, nullptr, 0, nullptr, &concise_type);
+  REQUIRE_ODBC(ret, stmt);
+  REQUIRE(concise_type == static_cast<SQLLEN>(expected));
+
+  SQLLEN desc_type = 0;
+  ret = SQLColAttribute(stmt.getHandle(), col, SQL_DESC_TYPE, nullptr, 0, nullptr, &desc_type);
+  REQUIRE_ODBC(ret, stmt);
+  REQUIRE(desc_type == static_cast<SQLLEN>(expected));
 }
 
 inline void require_sql_type_name(const StatementHandleWrapper& stmt, SQLUSMALLINT col, const char* expected) {
