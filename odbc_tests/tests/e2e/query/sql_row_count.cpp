@@ -5,6 +5,7 @@
 #include "Connection.hpp"
 #include "SchemaFixtures.hpp"
 #include "compatibility.hpp"
+#include "get_data.hpp"
 #include "get_diag_rec.hpp"
 
 TEST_CASE("SQLRowCount returns HY010 when called without executing statement.", "[query]") {
@@ -656,4 +657,68 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount updates after re-execution with
   ret = SQLRowCount(stmt.getHandle(), &rows_affected);
   REQUIRE_ODBC(ret, stmt);
   REQUIRE(rows_affected == 1);
+}
+
+TEST_CASE_METHOD(ConnSchemaFixture,
+                 "SQLRowCount returns the file count, not the source row count, after COPY INTO unload.", "[query]") {
+  // Given Snowflake client is logged in
+
+  // And a temporary stage and a table with 3 rows in partition a and 4 rows in partition b exist
+  conn.execute("CREATE OR REPLACE TEMPORARY STAGE unload_rowcount_stage");
+  conn.execute("CREATE TEMPORARY TABLE unload_rowcount_src (grp VARCHAR, id INT)");
+  conn.execute(
+      "INSERT INTO unload_rowcount_src VALUES ('a', 1), ('a', 2), ('a', 3), ('b', 4), ('b', 5), ('b', 6), ('b', 7)");
+
+  // When the table is unloaded into one file per partition with DETAILED_OUTPUT = TRUE
+  auto stmt = conn.execute(
+      "COPY INTO @unload_rowcount_stage FROM unload_rowcount_src "
+      "PARTITION BY ('p=' || grp) "
+      "FILE_FORMAT = (TYPE = CSV) DETAILED_OUTPUT = TRUE HEADER = FALSE");
+
+  // And SQLRowCount is called
+  SQLLEN rows_affected = -1;
+  SQLRETURN ret = SQLRowCount(stmt.getHandle(), &rows_affected);
+  REQUIRE_ODBC(ret, stmt);
+
+  // And every result row is fetched, summing ROW_COUNT
+  SQLLEN fetched = 0;
+  SQLBIGINT unloaded_rows = 0;
+  for (;;) {
+    ret = SQLFetch(stmt.getHandle());
+    if (ret == SQL_NO_DATA) {
+      break;
+    }
+    REQUIRE_ODBC(ret, stmt);
+    ++fetched;
+    unloaded_rows += get_data<SQL_C_SBIGINT>(stmt, 4);
+  }
+
+  // Then two files holding all 7 source rows were written
+  CHECK(fetched == 2);
+  CHECK(unloaded_rows == 7);
+
+  // And SQLRowCount returns the file count
+  CHECK(rows_affected == 2);
+}
+
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns 0 after COPY INTO unload of an empty table.", "[query]") {
+  // Given Snowflake client is logged in
+
+  // And a temporary stage and an empty table exist
+  conn.execute("CREATE OR REPLACE TEMPORARY STAGE unload_empty_rowcount_stage");
+  conn.execute("CREATE TEMPORARY TABLE unload_empty_rowcount_src (id INT)");
+
+  // When the empty table is unloaded into one file with DETAILED_OUTPUT = TRUE
+  auto stmt = conn.execute(
+      "COPY INTO @unload_empty_rowcount_stage FROM unload_empty_rowcount_src "
+      "FILE_FORMAT = (TYPE = CSV) DETAILED_OUTPUT = TRUE HEADER = FALSE "
+      "OVERWRITE = TRUE SINGLE = TRUE");
+
+  // And SQLRowCount is called
+  SQLLEN rows_affected = -1;
+  SQLRETURN ret = SQLRowCount(stmt.getHandle(), &rows_affected);
+  REQUIRE_ODBC(ret, stmt);
+
+  // Then SQLRowCount returns 0 because no file was written
+  CHECK(rows_affected == 0);
 }

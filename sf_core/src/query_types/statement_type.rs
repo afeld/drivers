@@ -35,6 +35,7 @@ impl QueryType {
     pub const MERGE: Self = Self(0x3400);
     pub const MULTI_TABLE_INSERT: Self = Self(0x3500);
     pub const COPY: Self = Self(0x3600);
+    pub const UNLOAD: Self = Self(0x3700);
     pub const SYSCMD: Self = Self(0x4000);
     /// SYSCMD subtype observed for `ALTER SESSION SET` / `ALTER SESSION UNSET`.
     /// No result set; classified as NoResult via the SYSCMD default.
@@ -87,6 +88,7 @@ impl QueryType {
             || self == Self::EXPLAIN
             || self == Self::CALL
             || self == Self::COPY
+            || self.belongs_to(Self::UNLOAD)
             || self == Self::MANAGE_PATS
             || self == Self::SHOW
             || self == Self::DESCRIBE
@@ -102,6 +104,8 @@ impl QueryType {
     /// (DDL, transaction control, SYSCMD/MISC subtypes we haven't whitelisted,
     /// MULTI_STMT parents, and unknown / future ids) as "no cursor, unknown
     /// row count".
+    ///
+    /// Callers: ODBC statement state and core `rows_affected`; other wrappers classify cursors themselves.
     pub fn result_kind(self) -> ResultKind {
         if self.has_result_set() {
             ResultKind::Cursor
@@ -114,8 +118,9 @@ impl QueryType {
 
     /// Whether this DML statement reports its affected-row count as columns in
     /// the result rowset (the "number of rows inserted/updated/deleted" cells)
-    /// rather than via a server-side total. Excludes `COPY`, which is DML by
-    /// family but returns a browsable result set instead of an update count.
+    /// rather than via a server-side total. Excludes `COPY` and `UNLOAD`, which
+    /// are DML by family but return a browsable result set instead of an update
+    /// count.
     pub fn reports_affected_rows_in_rowset(self) -> bool {
         self.is_dml() && self.result_kind() == ResultKind::UpdateCount
     }
@@ -189,6 +194,20 @@ mod tests {
     }
 
     #[test]
+    fn result_kind_cursor_for_unload_even_though_its_dml() {
+        assert!(QueryType::UNLOAD.is_dml());
+        assert_eq!(QueryType::UNLOAD.result_kind(), ResultKind::Cursor);
+    }
+
+    #[test]
+    fn result_kind_cursor_for_partitioned_unload_via_level2_mask() {
+        let partitioned_unload = QueryType::from_raw(Some(0x3701));
+        assert!(partitioned_unload.belongs_to(QueryType::UNLOAD));
+        assert!(partitioned_unload.is_dml());
+        assert_eq!(partitioned_unload.result_kind(), ResultKind::Cursor);
+    }
+
+    #[test]
     fn result_kind_cursor_for_select_and_friends() {
         assert_eq!(QueryType::SELECT.result_kind(), ResultKind::Cursor);
         assert_eq!(QueryType::EXPLAIN.result_kind(), ResultKind::Cursor);
@@ -248,8 +267,10 @@ mod tests {
     fn reports_affected_rows_in_rowset_for_plain_dml_only() {
         assert!(QueryType::INSERT.reports_affected_rows_in_rowset());
         assert!(QueryType::DML.reports_affected_rows_in_rowset());
-        // COPY is DML-family but produces a cursor, not an update count.
+        // COPY and UNLOAD are DML-family but produce a cursor, not an update count.
         assert!(!QueryType::COPY.reports_affected_rows_in_rowset());
+        assert!(!QueryType::UNLOAD.reports_affected_rows_in_rowset());
+        assert!(!QueryType::from_raw(Some(0x3701)).reports_affected_rows_in_rowset());
         // DDL / SELECT never report affected rows this way.
         assert!(!QueryType::DDL.reports_affected_rows_in_rowset());
         assert!(!QueryType::SELECT.reports_affected_rows_in_rowset());

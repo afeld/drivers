@@ -1,11 +1,16 @@
+#include <algorithm>
 #include <cstring>
+#include <string>
+#include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 
 #include "Connection.hpp"
 #include "SchemaFixtures.hpp"
 #include "compatibility.hpp"
+#include "get_data.hpp"
 #include "get_diag_rec.hpp"
+#include "odbc_matchers.hpp"
 
 // =============================================================================
 // Tests for SQLNumResultCols based on ODBC specification:
@@ -260,4 +265,143 @@ TEST_CASE("SQLNumResultCols returns same value as SQL_DESC_COUNT of the IRD.", "
   // Then both values should be equal
   CHECK(num_cols == ird_count);
   CHECK(num_cols == 4);
+}
+
+// =============================================================================
+// UNLOAD (COPY INTO location)
+// =============================================================================
+
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns 3 for COPY INTO stage with DETAILED_OUTPUT.", "[query]") {
+  // Given Snowflake client is logged in
+
+  // And a temporary stage and a table with 3 rows exist
+  conn.execute("CREATE OR REPLACE TEMPORARY STAGE unload_numcols_stage");
+  conn.execute("CREATE TEMPORARY TABLE unload_numcols_src (id INT)");
+  conn.execute("INSERT INTO unload_numcols_src VALUES (1), (2), (3)");
+
+  // When the table is unloaded into one file with DETAILED_OUTPUT = TRUE
+  auto stmt = conn.execute(
+      "COPY INTO @unload_numcols_stage FROM unload_numcols_src "
+      "FILE_FORMAT = (TYPE = CSV) DETAILED_OUTPUT = TRUE HEADER = FALSE "
+      "OVERWRITE = TRUE SINGLE = TRUE");
+
+  // Then SQLNumResultCols returns the DETAILED_OUTPUT column count
+  SQLSMALLINT num_cols = 0;
+  SQLRETURN ret = SQLNumResultCols(stmt.getHandle(), &num_cols);
+  REQUIRE_ODBC(ret, stmt);
+  CHECK(num_cols == 3);
+
+  // And SQLFetch succeeds, FILE_NAME is non-empty, and ROW_COUNT equals the source row count
+  ret = SQLFetch(stmt.getHandle());
+  REQUIRE_ODBC(ret, stmt);
+  CHECK(!get_data<SQL_C_CHAR>(stmt, 1).empty());
+  CHECK(get_data<SQL_C_SBIGINT>(stmt, 3) == 3);
+
+  ret = SQLFetch(stmt.getHandle());
+  REQUIRE(ret == SQL_NO_DATA);
+}
+
+TEST_CASE_METHOD(
+    ConnSchemaFixture,
+    "SQLNumResultCols returns DETAILED_OUTPUT columns and one row per file for partitioned COPY INTO unload.",
+    "[query]") {
+  // Given Snowflake client is logged in
+
+  // And a temporary stage and a table with 3 rows in partition a and 4 rows in partition b exist
+  conn.execute("CREATE OR REPLACE TEMPORARY STAGE unload_part_stage");
+  conn.execute("CREATE TEMPORARY TABLE unload_part_src (grp VARCHAR, id INT)");
+  conn.execute(
+      "INSERT INTO unload_part_src VALUES ('a', 1), ('a', 2), ('a', 3), ('b', 4), ('b', 5), ('b', 6), ('b', 7)");
+
+  // When the table is unloaded with PARTITION BY and DETAILED_OUTPUT = TRUE
+  auto stmt = conn.execute(
+      "COPY INTO @unload_part_stage FROM unload_part_src "
+      "PARTITION BY ('p=' || grp) "
+      "FILE_FORMAT = (TYPE = CSV) DETAILED_OUTPUT = TRUE HEADER = FALSE");
+
+  // Then SQLNumResultCols returns the partitioned DETAILED_OUTPUT column count
+  SQLSMALLINT num_cols = 0;
+  SQLRETURN ret = SQLNumResultCols(stmt.getHandle(), &num_cols);
+  REQUIRE_ODBC(ret, stmt);
+  CHECK(num_cols == 4);
+
+  // And the columns are named PARTITION_NAME, FILE_NAME, FILE_SIZE, ROW_COUNT
+  std::vector<std::string> column_names;
+  for (SQLUSMALLINT col = 1; col <= static_cast<SQLUSMALLINT>(num_cols); ++col) {
+    SQLCHAR name[64] = {};
+    SQLSMALLINT name_len = 0;
+    ret = SQLDescribeCol(stmt.getHandle(), col, name, sizeof(name), &name_len, nullptr, nullptr, nullptr, nullptr);
+    REQUIRE_ODBC(ret, stmt);
+    column_names.emplace_back(reinterpret_cast<char*>(name), name_len);
+  }
+  CHECK(column_names == std::vector<std::string>{"PARTITION_NAME", "FILE_NAME", "FILE_SIZE", "ROW_COUNT"});
+
+  // And one row per partition file is fetched, with ROW_COUNT values 3 and 4
+  std::vector<SQLBIGINT> row_counts;
+  for (;;) {
+    ret = SQLFetch(stmt.getHandle());
+    if (ret == SQL_NO_DATA) {
+      break;
+    }
+    REQUIRE_ODBC(ret, stmt);
+    CHECK(!get_data<SQL_C_CHAR>(stmt, 2).empty());
+    row_counts.push_back(get_data<SQL_C_SBIGINT>(stmt, 4));
+  }
+  std::sort(row_counts.begin(), row_counts.end());
+  CHECK(row_counts == std::vector<SQLBIGINT>{3, 4});
+}
+
+TEST_CASE_METHOD(ConnSchemaFixture,
+                 "SQLNumResultCols returns 3 and SQLFetch returns no rows for an empty COPY INTO unload.", "[query]") {
+  // Given Snowflake client is logged in
+
+  // And a temporary stage and an empty table exist
+  conn.execute("CREATE OR REPLACE TEMPORARY STAGE unload_empty_stage");
+  conn.execute("CREATE TEMPORARY TABLE unload_empty_src (id INT)");
+
+  // When the empty table is unloaded into one file with DETAILED_OUTPUT = TRUE
+  auto stmt = conn.execute(
+      "COPY INTO @unload_empty_stage FROM unload_empty_src "
+      "FILE_FORMAT = (TYPE = CSV) DETAILED_OUTPUT = TRUE HEADER = FALSE "
+      "OVERWRITE = TRUE SINGLE = TRUE");
+
+  // Then SQLNumResultCols returns the DETAILED_OUTPUT column count
+  SQLSMALLINT num_cols = 0;
+  SQLRETURN ret = SQLNumResultCols(stmt.getHandle(), &num_cols);
+  REQUIRE_ODBC(ret, stmt);
+  CHECK(num_cols == 3);
+
+  // And SQLFetch returns SQL_NO_DATA because no file was written
+  ret = SQLFetch(stmt.getHandle());
+  REQUIRE(ret == SQL_NO_DATA);
+}
+
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLExecDirect fails with native error 2003 for COPY INTO a missing stage.",
+                 "[query]") {
+  // Given Snowflake client is logged in
+
+  // And a table with one row exists and the stage does not
+  conn.execute("CREATE TEMPORARY TABLE unload_missing_stage_src (id INT)");
+  conn.execute("INSERT INTO unload_missing_stage_src VALUES (1)");
+  auto stmt = conn.createStatement();
+
+  // When the table is unloaded into the missing stage
+  SQLRETURN ret = SQLExecDirect(stmt.getHandle(),
+                                sqlchar("COPY INTO @unload_missing_stage FROM unload_missing_stage_src "
+                                        "FILE_FORMAT = (TYPE = CSV)"),
+                                SQL_NTS);
+  const OdbcResult result(ret, stmt);
+
+  // Then SQL_ERROR is returned with native error 2003 and a message naming the stage
+  REQUIRE_THAT(result, OdbcMatchers::IsError() && OdbcMatchers::HasNativeError(2003) &&
+                           OdbcMatchers::HasDiagMessage("UNLOAD_MISSING_STAGE"));
+
+  OLD_DRIVER_ONLY("BD#172") {
+    // And the SQLSTATE is the server's 02000
+    CHECK_THAT(result, OdbcMatchers::HasSqlState("02000"));
+  }
+  NEW_DRIVER_ONLY("BD#172") {
+    // And the SQLSTATE is HY000 because class 02 is reserved for SQL_NO_DATA
+    CHECK_THAT(result, OdbcMatchers::HasSqlState("HY000"));
+  }
 }

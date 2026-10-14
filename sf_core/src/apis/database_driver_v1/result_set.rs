@@ -226,22 +226,26 @@ fn effective_statement_type_id(data: &Data) -> Option<i64> {
 ///   generic success marker for these; surfacing it as `rows_affected = 1` is
 ///   misleading, so we report "not applicable" instead.
 ///
-/// COPY is wrapper-specific: JDBC and Node.js sum `rows_loaded` (matching
-/// snowflake-jdbc `getUpdateCount` / Node `getNumUpdatedRows`); ODBC/Python
-/// report the status-row count in `data.total`.
+/// COPY and UNLOAD are wrapper-specific. JDBC and Node.js sum COPY `rows_loaded`
+/// (matching snowflake-jdbc `getUpdateCount` / Node `getNumUpdatedRows`) and
+/// report 0 for UNLOAD, the update count snowflake-jdbc returns for a plain
+/// unload. ODBC/Python report the status-row count in `data.total`.
 pub(super) fn calculate_rows_affected(
     data: &Data,
     statement_type_id: Option<i64>,
     flavor: &PutGetResultsetFlavor,
 ) -> Option<i64> {
     let query_type = QueryType::from_raw(statement_type_id);
-    if query_type == QueryType::COPY
-        && matches!(
-            flavor,
-            PutGetResultsetFlavor::Jdbc | PutGetResultsetFlavor::NodeJs
-        )
-    {
-        return Some(sum_copy_rows_loaded(data));
+    if matches!(
+        flavor,
+        PutGetResultsetFlavor::Jdbc | PutGetResultsetFlavor::NodeJs
+    ) {
+        if query_type == QueryType::COPY {
+            return Some(sum_copy_rows_loaded(data));
+        }
+        if query_type.belongs_to(QueryType::UNLOAD) {
+            return Some(0);
+        }
     }
     match query_type.result_kind() {
         ResultKind::UpdateCount => Some(sum_dml_affected_rows(data)),
@@ -1343,6 +1347,66 @@ mod tests {
     fn response_to_descriptor_copy_jdbc_without_inline_rowset_is_zero() {
         let data: Data = serde_json::from_str(r#"{ "statementTypeId": 13824, "total": 2 }"#)
             .expect("fixture must deserialize");
+        let descriptor = response_to_descriptor(&data, &WrapperPresets::jdbc());
+        assert_eq!(descriptor.rows_affected, Some(0));
+    }
+
+    /// UNLOAD `DETAILED_OUTPUT = TRUE` rowset: two files holding 3 and 4 rows;
+    /// `total` is the file count (2). statementTypeId 14080 == 0x3700
+    /// (`QueryType::UNLOAD`).
+    const UNLOAD_DETAILED_ROWSET: &str = r#"{
+        "statementTypeId": 14080,
+        "total": 2,
+        "rowset": [
+            ["data_0_0_0.csv.gz", "64", "3"],
+            ["data_0_1_0.csv.gz", "80", "4"]
+        ],
+        "rowtype": [
+            {"name": "FILE_NAME", "type": "TEXT", "nullable": false},
+            {"name": "FILE_SIZE", "type": "FIXED", "nullable": false, "scale": 0, "precision": 19},
+            {"name": "ROW_COUNT", "type": "FIXED", "nullable": false, "scale": 0, "precision": 19}
+        ]
+    }"#;
+
+    #[test]
+    fn response_to_descriptor_unload_odbc_uses_file_count() {
+        let data: Data =
+            serde_json::from_str(UNLOAD_DETAILED_ROWSET).expect("fixture must deserialize");
+        let descriptor = response_to_descriptor(&data, &WrapperPresets::odbc());
+        assert_eq!(descriptor.rows_affected, Some(2));
+    }
+
+    #[test]
+    fn response_to_descriptor_unload_python_uses_file_count() {
+        let data: Data =
+            serde_json::from_str(UNLOAD_DETAILED_ROWSET).expect("fixture must deserialize");
+        let descriptor = response_to_descriptor(&data, &WrapperPresets::python());
+        assert_eq!(descriptor.rows_affected, Some(2));
+    }
+
+    #[test]
+    fn response_to_descriptor_unload_jdbc_keeps_zero() {
+        let data: Data =
+            serde_json::from_str(UNLOAD_DETAILED_ROWSET).expect("fixture must deserialize");
+        let descriptor = response_to_descriptor(&data, &WrapperPresets::jdbc());
+        assert_eq!(descriptor.rows_affected, Some(0));
+    }
+
+    #[test]
+    fn response_to_descriptor_unload_nodejs_keeps_zero() {
+        let data: Data =
+            serde_json::from_str(UNLOAD_DETAILED_ROWSET).expect("fixture must deserialize");
+        let descriptor = response_to_descriptor(&data, &WrapperPresets::nodejs());
+        assert_eq!(descriptor.rows_affected, Some(0));
+    }
+
+    #[test]
+    fn response_to_descriptor_partitioned_unload_jdbc_keeps_zero() {
+        let data: Data = serde_json::from_str(
+            &UNLOAD_DETAILED_ROWSET
+                .replace(r#""statementTypeId": 14080"#, r#""statementTypeId": 14081"#),
+        )
+        .expect("fixture must deserialize");
         let descriptor = response_to_descriptor(&data, &WrapperPresets::jdbc());
         assert_eq!(descriptor.rows_affected, Some(0));
     }

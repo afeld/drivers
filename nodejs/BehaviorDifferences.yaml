@@ -1060,10 +1060,13 @@ behavior_differences:
       whitelist, so getNumUpdatedRows() returns -1.
     new_driver_behavior: |
       COPY INTO <table> returns the sum of the rows_loaded status-column, matching JDBC
-      getUpdateCount for COPY. UNLOAD (COPY INTO <location>) stays -1 on both drivers.
+      getUpdateCount for COPY. UNLOAD (COPY INTO <location>) stays -1 on both the old and
+      new Node drivers. JDBC getUpdateCount for a plain UNLOAD is 0 on both JDBC drivers
+      and is not this API.
     status_rationale: |
       Completes the old driver's COPY TODO. The number is rows loaded into the table, not
-      file count. UNLOAD is left at -1 because exporting to files is not a table-row update.
+      file count. UNLOAD stays -1 because exporting to files is not a table-row update.
+      JDBC's 0 is getUpdateCount on a statement that does not produce a result set.
 
   54:
     name: 'client rejects a non-UUID requestId before talking to GS'
