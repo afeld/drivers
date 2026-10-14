@@ -79,10 +79,10 @@ runs:
         if (Test-Path "C:\Strawberry\perl\bin") {
           $paths = @("C:\Strawberry\perl\bin") + $paths
         }
-        # nasm.exe on the runner image is often only under Strawberry\c\bin.
-        # That directory is omitted above because its gcc shadows MSVC, so a
-        # Get-Command against the process PATH would skip the install and then
-        # lose nasm with the rewrite.
+        # The filtered PATH drops Strawberry\c\bin because its gcc shadows
+        # MSVC. When nasm.exe is still absent, this downloads a pinned zip.
+        # The Chocolatey community feed is not used; it has returned 406,
+        # 503, and 504 for the nasm package.
         $nasmDir = "C:\Program Files\NASM"
         $nasmOnPath = $false
         foreach ($dir in $paths) {
@@ -93,7 +93,25 @@ runs:
         }
         if (-not $nasmOnPath) {
           if (-not (Test-Path (Join-Path $nasmDir "nasm.exe"))) {
-            choco install nasm --yes --no-progress
+            $nasmVersion = "2.16.03"
+            $nasmZipName = "nasm-$nasmVersion-win64.zip"
+            $nasmZip = Join-Path $env:RUNNER_TEMP $nasmZipName
+            $nasmUrl = "https://www.nasm.us/pub/nasm/releasebuilds/$nasmVersion/win64/$nasmZipName"
+            $nasmSha256 = "3EE4782247BCB874378D02F7EAB4E294A84D3D15F3F6EE2DE2F47A46AA7226E6"
+            $ProgressPreference = "SilentlyContinue"
+            Invoke-WebRequest -Uri $nasmUrl -OutFile $nasmZip
+            $actualSha256 = (Get-FileHash -Algorithm SHA256 -Path $nasmZip).Hash
+            if ($actualSha256 -ne $nasmSha256) {
+              throw "NASM zip SHA256 $actualSha256 did not match $nasmSha256"
+            }
+            $nasmExtract = Join-Path $env:RUNNER_TEMP "nasm-$nasmVersion"
+            Expand-Archive -Path $nasmZip -DestinationPath $nasmExtract -Force
+            $nasmExe = Get-ChildItem -Path $nasmExtract -Recurse -Filter nasm.exe |
+              Select-Object -First 1
+            if (-not $nasmExe) {
+              throw "nasm.exe is required for the Windows FIPS build"
+            }
+            $nasmDir = $nasmExe.DirectoryName
           }
           if (-not (Test-Path (Join-Path $nasmDir "nasm.exe"))) {
             throw "nasm.exe is required for the Windows FIPS build"
