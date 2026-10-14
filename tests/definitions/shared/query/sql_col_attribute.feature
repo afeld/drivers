@@ -67,12 +67,21 @@ Feature: ODBC SQLColAttribute function behavior (ODBC 3.x)
     And The 4.x driver reports TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ
 
   @odbc_e2e
-  Scenario: should change timestamp result metadata only on the 3.x driver when ODBC_USE_CUSTOM_SQL_DATA_TYPES is set.
+  Scenario: should report vendor timestamp type codes when ODBC_USE_CUSTOM_SQL_DATA_TYPES is set.
     Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES enabled
     And A query result with TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ columns
     When SQLColAttribute and SQLDescribeCol are called for each timestamp column
-    Then The 3.x driver reports the vendor timestamp code and variant type name
-    And The 4.x driver reports SQL_TYPE_TIMESTAMP and the variant type name
+    Then SQLDescribeCol DataType, SQL_DESC_CONCISE_TYPE, and SQL_DESC_TYPE are the vendor timestamp codes
+    And SQL_DESC_TYPE_NAME is TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ
+
+  @odbc_e2e
+  Scenario: should keep SQL_TYPE_TIMESTAMP for timestamp columns when ODBC_USE_CUSTOM_SQL_DATA_TYPES is false.
+    Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES disabled
+    And A query result with TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ columns
+    When SQLColAttribute and SQLDescribeCol are called for each timestamp column
+    Then SQLDescribeCol DataType and SQL_DESC_CONCISE_TYPE are SQL_TYPE_TIMESTAMP and SQL_DESC_TYPE is SQL_DATETIME
+    And The 3.x driver reports TYPE_TIMESTAMP for each timestamp column
+    And The 4.x driver reports TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ
 
   @odbc_e2e
   Scenario: SQLColAttribute returns correct attributes for BINARY.

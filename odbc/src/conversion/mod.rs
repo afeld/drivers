@@ -70,6 +70,7 @@ pub use number::{NumericSettings, SF_DEFAULT_VARCHAR_MAX_LEN, TzOffsetFormatCach
 
 #[cfg(not(windows))]
 use crate::api::encoding::is_ascii_locale;
+use crate::api::{SQL_SF_TIMESTAMP_LTZ, SQL_SF_TIMESTAMP_NTZ, SQL_SF_TIMESTAMP_TZ};
 use crate::conversion::error::{
     IncompatibleFieldMetadataSnafu, ReadArrowValueSnafu, UnsupportedArrowDataTypeSnafu,
     WriteOdbcValueSnafu,
@@ -661,6 +662,15 @@ impl SnowflakeFieldType {
         }
     }
 
+    fn vendor_sql_data_type(&self) -> Option<odbc_sys::SqlDataType> {
+        match self {
+            Self::TimestampLtz(_) => Some(SQL_SF_TIMESTAMP_LTZ),
+            Self::TimestampTz(_) => Some(SQL_SF_TIMESTAMP_TZ),
+            Self::TimestampNtz(_) => Some(SQL_SF_TIMESTAMP_NTZ),
+            _ => None,
+        }
+    }
+
     fn column_size(&self) -> odbc_sys::ULen {
         match self {
             Self::Varchar(t) => t.column_size(),
@@ -1047,7 +1057,13 @@ pub fn sql_type_from_field(
     if let Some(code) = concise_sql_type_override(field) {
         return Ok(code);
     }
-    Ok(SnowflakeFieldType::from_field(field, numeric_settings)?.sql_type())
+    let field_type = SnowflakeFieldType::from_field(field, numeric_settings)?;
+    if numeric_settings.use_custom_sql_data_types
+        && let Some(vendor) = field_type.vendor_sql_data_type()
+    {
+        return Ok(vendor);
+    }
+    Ok(field_type.sql_type())
 }
 
 /// Returns the verbose SQL data type (SQL_DESC_TYPE) for a field.

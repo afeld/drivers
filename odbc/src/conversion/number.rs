@@ -43,6 +43,10 @@ pub struct NumericSettings {
     /// When true, FIXED columns with precision > 18 are reported as SQL_VARCHAR.
     /// Takes precedence over `treat_decimal_as_int` for high-precision columns.
     pub treat_big_number_as_string: bool,
+    /// When true, `TIMESTAMP_LTZ` / `TIMESTAMP_TZ` / `TIMESTAMP_NTZ` report
+    /// Snowflake vendor SQL type codes 2000 / 2001 / 2002. Session parameter
+    /// `ODBC_USE_CUSTOM_SQL_DATA_TYPES`. Default false keeps `SQL_TYPE_TIMESTAMP`.
+    pub use_custom_sql_data_types: bool,
     /// Server-reported maximum VARCHAR size (from session parameter
     /// `VARCHAR_AND_BINARY_MAX_SIZE_IN_RESULT`). Used as the default
     /// `column_size` in auto-populated IPD records for untyped `?` markers.
@@ -153,6 +157,7 @@ impl Default for NumericSettings {
         Self {
             treat_decimal_as_int: false,
             treat_big_number_as_string: false,
+            use_custom_sql_data_types: false,
             max_varchar_size: SF_DEFAULT_VARCHAR_MAX_LEN,
             tz_offset_format_cache: TzOffsetFormatCache::Unloaded,
             map_to_long_varchar: None,

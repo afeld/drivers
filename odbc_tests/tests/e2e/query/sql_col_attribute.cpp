@@ -350,7 +350,24 @@ TEST_CASE("should report the Snowflake timestamp variant in SQL_DESC_TYPE_NAME."
   }
 }
 
-TEST_CASE("should change timestamp result metadata only on the 3.x driver when ODBC_USE_CUSTOM_SQL_DATA_TYPES is set.",
+static void expect_timestamp_sql_types(const HandleWrapper& stmt, SQLUSMALLINT col, SQLSMALLINT concise,
+                                       SQLSMALLINT verbose) {
+  SQLCHAR col_name[128];
+  std::memset(col_name, 0xFF, sizeof(col_name));
+  SQLSMALLINT name_length = 0;
+  SQLSMALLINT data_type = 0;
+  SQLULEN col_size = 0;
+  SQLSMALLINT decimal_digits = 0;
+  SQLSMALLINT nullable = 0;
+  SQLRETURN ret = SQLDescribeCol(stmt.getHandle(), col, col_name, sizeof(col_name), &name_length, &data_type, &col_size,
+                                 &decimal_digits, &nullable);
+  REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsSuccess());
+  CHECK(data_type == concise);
+  CHECK(get_numeric_attr(stmt, col, SQL_DESC_CONCISE_TYPE) == concise);
+  CHECK(get_numeric_attr(stmt, col, SQL_DESC_TYPE) == verbose);
+}
+
+TEST_CASE("should report vendor timestamp type codes when ODBC_USE_CUSTOM_SQL_DATA_TYPES is set.",
           "[query][col_attribute]") {
   // Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES enabled
   Connection conn;
@@ -367,31 +384,57 @@ TEST_CASE("should change timestamp result metadata only on the 3.x driver when O
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsSuccess());
   CHECK(column_count == 3);
 
-  // Then The 3.x driver reports the vendor timestamp code and variant type name
-  OLD_DRIVER_ONLY("BD#170") {
-    const SQLSMALLINT vendor_codes[] = {SQL_SF_TIMESTAMP_NTZ, SQL_SF_TIMESTAMP_LTZ, SQL_SF_TIMESTAMP_TZ};
-    const char* type_names[] = {"TIMESTAMP_NTZ", "TIMESTAMP_LTZ", "TIMESTAMP_TZ"};
+  const SQLSMALLINT vendor_codes[] = {SQL_SF_TIMESTAMP_NTZ, SQL_SF_TIMESTAMP_LTZ, SQL_SF_TIMESTAMP_TZ};
+  const char* type_names[] = {"TIMESTAMP_NTZ", "TIMESTAMP_LTZ", "TIMESTAMP_TZ"};
+
+  // Then SQLDescribeCol DataType, SQL_DESC_CONCISE_TYPE, and SQL_DESC_TYPE are the vendor timestamp codes
+  for (SQLUSMALLINT col = 1; col <= 3; ++col) {
+    INFO(type_names[col - 1]);
+    expect_timestamp_sql_types(stmt, col, vendor_codes[col - 1], vendor_codes[col - 1]);
+  }
+
+  // And SQL_DESC_TYPE_NAME is TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ
+  for (SQLUSMALLINT col = 1; col <= 3; ++col) {
+    INFO(type_names[col - 1]);
+    CHECK(get_string_attr(stmt, col, SQL_DESC_TYPE_NAME) == type_names[col - 1]);
+  }
+}
+
+TEST_CASE("should keep SQL_TYPE_TIMESTAMP for timestamp columns when ODBC_USE_CUSTOM_SQL_DATA_TYPES is false.",
+          "[query][col_attribute]") {
+  // Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES disabled
+  Connection conn;
+  Schema::use_temp_session_schema(conn);
+  conn.execute("ALTER SESSION SET ODBC_USE_CUSTOM_SQL_DATA_TYPES = FALSE");
+
+  // And A query result with TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ columns
+  conn.execute("CREATE TEMPORARY TABLE t (ntz TIMESTAMP_NTZ(9), ltz TIMESTAMP_LTZ(9), tz TIMESTAMP_TZ(9))");
+  auto stmt = conn.execute("SELECT ntz, ltz, tz FROM t");
+
+  // When SQLColAttribute and SQLDescribeCol are called for each timestamp column
+  SQLSMALLINT column_count = 0;
+  SQLRETURN ret = SQLNumResultCols(stmt.getHandle(), &column_count);
+  REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsSuccess());
+  CHECK(column_count == 3);
+
+  const char* variant_names[] = {"TIMESTAMP_NTZ", "TIMESTAMP_LTZ", "TIMESTAMP_TZ"};
+
+  // Then SQLDescribeCol DataType and SQL_DESC_CONCISE_TYPE are SQL_TYPE_TIMESTAMP and SQL_DESC_TYPE is SQL_DATETIME
+  for (SQLUSMALLINT col = 1; col <= 3; ++col) {
+    INFO(variant_names[col - 1]);
+    expect_timestamp_sql_types(stmt, col, SQL_TYPE_TIMESTAMP, SQL_DATETIME);
+  }
+
+  // And The 3.x driver reports TYPE_TIMESTAMP for each timestamp column
+  OLD_DRIVER_ONLY("BD#169") {
     for (SQLUSMALLINT col = 1; col <= 3; ++col) {
-      INFO(type_names[col - 1]);
-      SQLCHAR col_name[128];
-      std::memset(col_name, 0xFF, sizeof(col_name));
-      SQLSMALLINT name_length = 0;
-      SQLSMALLINT data_type = 0;
-      SQLULEN col_size = 0;
-      SQLSMALLINT decimal_digits = 0;
-      SQLSMALLINT nullable = 0;
-      SQLRETURN ret = SQLDescribeCol(stmt.getHandle(), col, col_name, sizeof(col_name), &name_length, &data_type,
-                                     &col_size, &decimal_digits, &nullable);
-      REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsSuccess());
-      CHECK(data_type == vendor_codes[col - 1]);
-      CHECK(get_numeric_attr(stmt, col, SQL_DESC_CONCISE_TYPE) == vendor_codes[col - 1]);
-      CHECK(get_string_attr(stmt, col, SQL_DESC_TYPE_NAME) == type_names[col - 1]);
+      INFO(variant_names[col - 1]);
+      expect_standard_timestamp_metadata(stmt, col, "TYPE_TIMESTAMP");
     }
   }
 
-  // And The 4.x driver reports SQL_TYPE_TIMESTAMP and the variant type name
-  NEW_DRIVER_ONLY("BD#170") {
-    const char* variant_names[] = {"TIMESTAMP_NTZ", "TIMESTAMP_LTZ", "TIMESTAMP_TZ"};
+  // And The 4.x driver reports TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ
+  NEW_DRIVER_ONLY("BD#169") {
     for (SQLUSMALLINT col = 1; col <= 3; ++col) {
       INFO(variant_names[col - 1]);
       expect_standard_timestamp_metadata(stmt, col, variant_names[col - 1]);

@@ -16,6 +16,7 @@ mod tests {
     const SETTINGS_DEFAULT: NumericSettings = NumericSettings {
         treat_decimal_as_int: false,
         treat_big_number_as_string: false,
+        use_custom_sql_data_types: false,
         max_varchar_size: 16_777_216,
         tz_offset_format_cache: TzOffsetFormatCache::Unloaded,
         map_to_long_varchar: None,
@@ -26,6 +27,7 @@ mod tests {
     const SETTINGS_DECIMAL_AS_INT: NumericSettings = NumericSettings {
         treat_decimal_as_int: true,
         treat_big_number_as_string: false,
+        use_custom_sql_data_types: false,
         max_varchar_size: 16_777_216,
         tz_offset_format_cache: TzOffsetFormatCache::Unloaded,
         map_to_long_varchar: None,
@@ -36,6 +38,7 @@ mod tests {
     const SETTINGS_BOTH: NumericSettings = NumericSettings {
         treat_decimal_as_int: true,
         treat_big_number_as_string: true,
+        use_custom_sql_data_types: false,
         max_varchar_size: 16_777_216,
         tz_offset_format_cache: TzOffsetFormatCache::Unloaded,
         map_to_long_varchar: None,
@@ -46,6 +49,7 @@ mod tests {
     const SETTINGS_BIG_NUMBER_AS_STRING: NumericSettings = NumericSettings {
         treat_decimal_as_int: false,
         treat_big_number_as_string: true,
+        use_custom_sql_data_types: false,
         max_varchar_size: 16_777_216,
         tz_offset_format_cache: TzOffsetFormatCache::Unloaded,
         map_to_long_varchar: None,

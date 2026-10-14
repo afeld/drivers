@@ -5,6 +5,7 @@
 New features:
 
 - Added recognition of the ODBC 3.x CRL connection-string keys `CRL_ALLOW_NO_CRL`, `CRL_DISK_CACHING`, `CRL_MEMORY_CACHING`, and `CRL_DOWNLOAD_TIMEOUT` as aliases for the matching 4.x CRL settings. `CRL_DOWNLOAD_TIMEOUT=0` applies the 4.x `crl_http_timeout` default of 10 seconds rather than 3.x's 120. (snowflakedb/drivers#2206)
+- Added support for the ODBC_USE_CUSTOM_SQL_DATA_TYPES session parameter so TIMESTAMP_LTZ, TIMESTAMP_TZ, and TIMESTAMP_NTZ report vendor type codes 2000/2001/2002 when the parameter is true. SQL_DESC_TYPE_NAME still distinguishes the variants when the parameter is false.
 - Added `SFGetFipsStatus` so an application can check, before connecting, whether this process loaded the FIPS driver. (snowflakedb/drivers#2562)
 - Added the host application's executable path to login requests as `APPLICATION_PATH`, matching the 3.x driver. (snowflakedb/drivers#2535)
 - Added the Snowflake vendor SQL data type macros (`SQL_SF_TIMESTAMP_LTZ`, `SQL_SF_TIMESTAMP_TZ`, `SQL_SF_TIMESTAMP_NTZ`, `SQL_SF_ARRAY`, `SQL_SF_OBJECT`, `SQL_SF_VARIANT`) to the public `sf_odbc.h`, so applications written against the 3.x header compile without redefining them. (snowflakedb/drivers#2366)

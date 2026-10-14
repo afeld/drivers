@@ -392,6 +392,19 @@ fn update_numeric_settings(
         if let Ok(resp) = c
             .connection_get_parameter(ConnectionGetParameterRequest {
                 conn_handle: Some(*conn_handle),
+                key: "ODBC_USE_CUSTOM_SQL_DATA_TYPES".to_string(),
+            })
+            .await
+            && let Some(value) = resp.typed_value
+        {
+            let bool_value = config_setting_bool(&value);
+            settings.use_custom_sql_data_types = bool_value;
+            tracing::info!("Server parameter ODBC_USE_CUSTOM_SQL_DATA_TYPES = {bool_value}");
+        }
+
+        if let Ok(resp) = c
+            .connection_get_parameter(ConnectionGetParameterRequest {
+                conn_handle: Some(*conn_handle),
                 key: "VARCHAR_AND_BINARY_MAX_SIZE_IN_RESULT".to_string(),
             })
             .await

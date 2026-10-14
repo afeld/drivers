@@ -9,6 +9,7 @@ mod tests {
     use odbc_sys as sql;
 
     use crate::api::CDataType;
+    use crate::api::{SQL_SF_TIMESTAMP_LTZ, SQL_SF_TIMESTAMP_NTZ, SQL_SF_TIMESTAMP_TZ};
     use crate::conversion::error::{ConversionError, ReadArrowError};
     use crate::conversion::test_utils::helpers::{binding_for_char_buffer, binding_for_value};
     use crate::conversion::timestamp::{
@@ -17,7 +18,7 @@ mod tests {
     use crate::conversion::warning::Warning;
     use crate::conversion::{
         NumericSettings, ReadArrowType, SnowflakeType, WriteODBCType, decimal_digits_from_field,
-        make_converter, sql_type_from_field,
+        make_converter, sql_type_from_field, type_name_from_field, verbose_sql_type_from_field,
     };
 
     fn ntz(scale: u32) -> SnowflakeTimestampNtz {
@@ -80,6 +81,20 @@ mod tests {
 
     fn settings() -> NumericSettings {
         NumericSettings::default()
+    }
+
+    fn settings_custom(use_custom_sql_data_types: bool) -> NumericSettings {
+        NumericSettings {
+            use_custom_sql_data_types,
+            ..settings()
+        }
+    }
+
+    fn timestamp_logical_field(logical_type: &str) -> ArrowField {
+        let mut meta = HashMap::new();
+        meta.insert("logicalType".to_string(), logical_type.to_string());
+        meta.insert("scale".to_string(), "9".to_string());
+        timestamp_field_with_metadata(meta)
     }
 
     #[test]
@@ -388,6 +403,67 @@ mod tests {
             result,
             Err(ConversionError::FieldMetadataParsing { .. })
         ));
+    }
+
+    #[test]
+    fn custom_sql_types_off_reports_timestamp_for_all_variants() {
+        let settings = settings_custom(false);
+        for logical in ["TIMESTAMP_LTZ", "TIMESTAMP_TZ", "TIMESTAMP_NTZ"] {
+            let field = timestamp_logical_field(logical);
+            assert_eq!(
+                sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType::TIMESTAMP,
+                "{logical}"
+            );
+            assert_eq!(
+                verbose_sql_type_from_field(&field, &settings).unwrap(),
+                sql::SqlDataType::DATETIME,
+                "{logical}"
+            );
+        }
+    }
+
+    #[test]
+    fn custom_sql_types_on_reports_vendor_codes() {
+        let settings = settings_custom(true);
+        let cases = [
+            ("TIMESTAMP_LTZ", SQL_SF_TIMESTAMP_LTZ),
+            ("TIMESTAMP_TZ", SQL_SF_TIMESTAMP_TZ),
+            ("TIMESTAMP_NTZ", SQL_SF_TIMESTAMP_NTZ),
+        ];
+        for (logical, vendor) in cases {
+            let field = timestamp_logical_field(logical);
+            assert_eq!(
+                sql_type_from_field(&field, &settings).unwrap(),
+                vendor,
+                "{logical}"
+            );
+            assert_eq!(
+                verbose_sql_type_from_field(&field, &settings).unwrap(),
+                vendor,
+                "{logical}"
+            );
+        }
+    }
+
+    #[test]
+    fn timestamp_type_name_unchanged_when_custom_sql_types_toggles() {
+        let cases = [
+            ("TIMESTAMP_LTZ", "TIMESTAMP_LTZ"),
+            ("TIMESTAMP_TZ", "TIMESTAMP_TZ"),
+            ("TIMESTAMP_NTZ", "TIMESTAMP_NTZ"),
+        ];
+        for enabled in [false, true] {
+            let settings = settings_custom(enabled);
+            for (logical, name) in cases {
+                let field = timestamp_logical_field(logical);
+                assert_eq!(
+                    type_name_from_field(&field, &settings).unwrap(),
+                    name,
+                    "{logical} enabled={enabled}"
+                );
+            }
+        }
     }
 
     #[test]
