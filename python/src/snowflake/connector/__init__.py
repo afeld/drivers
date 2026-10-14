@@ -7,11 +7,11 @@ as defined in PEP 249.
 
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any
 
 from . import util_text  # noqa: F401 - backward compatibility re-exports
-from ._internal.api_client.client_api import core_driver
 from ._internal.decorators import pep249
+from ._internal.fips import FipsStatus, get_fips_status
 from .connection import Connection, SnowflakeConnection
 from .connection_config import ConnectionConfig
 from .constants import QueryStatus, StatementParameterName
@@ -51,16 +51,6 @@ threadsafety = 2  # Threads may share the module and connections, but not cursor
 paramstyle = "pyformat"  # Default: %(name)s and %s placeholders (client-side interpolation)
 
 
-class FipsStatus(NamedTuple):
-    """Whether this process is the FIPS driver.
-
-    ``is_fips`` is true when this binary was built with ``fips`` and its linked
-    TLS provider is in FIPS mode. A standard build returns false.
-    """
-
-    is_fips: bool
-
-
 # Sentinel to distinguish "not provided" from explicit values. Forwarding ``None``
 # defaults would make ``@api_telemetry`` treat connection_name/config as passed.
 _UNSET = object()
@@ -96,13 +86,6 @@ def connect(
     if config is not _UNSET:
         conn_kwargs["config"] = config
     return Connection(**conn_kwargs)
-
-
-@pep249
-def get_fips_status() -> FipsStatus:
-    """Report whether this process is the FIPS driver without opening a connection."""
-    response = core_driver.driver_get_fips_status()
-    return FipsStatus(is_fips=response.is_fips)
 
 
 # Export all public symbols

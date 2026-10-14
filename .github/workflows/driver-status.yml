@@ -94,6 +94,7 @@ jobs:
     outputs:
       python: ${{ steps.resolve.outputs.python }}
       python_packaging: ${{ steps.resolve.outputs.python_packaging }}
+      python_fips: ${{ steps.resolve.outputs.python_fips }}
       python_reference: ${{ steps.resolve.outputs.python_reference }}
       jdbc: ${{ steps.resolve.outputs.jdbc }}
       jdbc_reference: ${{ steps.resolve.outputs.jdbc_reference }}
@@ -125,6 +126,7 @@ jobs:
           NO_BUILD_IMPACT: ${{ needs.detect-changes.outputs.no_build_impact }}
           RUN_PYTHON: ${{ needs.detect-changes.outputs.run_python }}
           RUN_PYTHON_PACKAGING: ${{ needs.detect-changes.outputs.run_python_packaging }}
+          RUN_PYTHON_FIPS: ${{ needs.detect-changes.outputs.run_python_fips }}
           RUN_PYTHON_REFERENCE: ${{ needs.detect-changes.outputs.run_python_reference }}
           RUN_JDBC: ${{ needs.detect-changes.outputs.run_jdbc }}
           RUN_JDBC_REFERENCE: ${{ needs.detect-changes.outputs.run_jdbc_reference }}
@@ -144,7 +146,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          py=false; py_pkg=false; py_ref=false
+          py=false; py_pkg=false; py_fips=false; py_ref=false
           jdbc=false; jdbc_ref=false
           odbc=false; odbc_ref=false
           core=false
@@ -178,6 +180,7 @@ jobs:
             {
               echo "python=$py"
               echo "python_packaging=$py_pkg"
+              echo "python_fips=$py_fips"
               echo "python_reference=$py_ref"
               echo "jdbc=$jdbc"
               echo "jdbc_reference=$jdbc_ref"
@@ -216,6 +219,7 @@ jobs:
               fi
               py=$(norm "$RUN_PYTHON")
               py_pkg=$(norm "$RUN_PYTHON_PACKAGING")
+              py_fips=$(norm "$RUN_PYTHON_FIPS")
               py_ref=$(norm "$RUN_PYTHON_REFERENCE")
               jdbc=$(norm "$RUN_JDBC")
               jdbc_ref=$(norm "$RUN_JDBC_REFERENCE")
@@ -301,6 +305,7 @@ jobs:
     with:
       run_python: ${{ needs.plan.outputs.python == 'true' }}
       run_python_packaging: ${{ needs.plan.outputs.python_packaging == 'true' }}
+      run_python_fips: ${{ needs.plan.outputs.python_fips == 'true' }}
       run_python_reference: ${{ needs.plan.outputs.python_reference == 'true' }}
 
   jdbc:

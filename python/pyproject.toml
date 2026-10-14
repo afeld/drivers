@@ -117,6 +117,7 @@ exclude = [
 "Cargo.toml.sdist" = "Cargo.toml"
 "Cargo.lock.sdist" = "Cargo.lock"
 "../build_common.rs" = "build_common.rs"
+"../rust-toolchain.toml" = "rust-toolchain.toml"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/snowflake"]
@@ -365,7 +366,7 @@ cov = "pytest tests/e2e/pandas tests/e2e/numpy --cov=src/snowflake --cov-report=
 [tool.hatch.envs.packaging]
 features = ["test"]
 installer = "uv"
-extra-dependencies = ["build"]
+extra-dependencies = ["build", "hatchling"]
 
 [[tool.hatch.envs.packaging.matrix]]
 python = ["3.13"]

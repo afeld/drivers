@@ -25,6 +25,9 @@ on:
       python_packaging:
         description: "True if Python packaging files changed"
         value: ${{ jobs.detect.outputs.python_packaging }}
+      python_fips:
+        description: "True if Python FIPS build files changed"
+        value: ${{ jobs.detect.outputs.python_fips }}
       shared:
         description: "True if shared config/build files changed"
         value: ${{ jobs.detect.outputs.shared }}
@@ -52,6 +55,9 @@ on:
       run_python_packaging:
         description: "True if Python packaging tests should run"
         value: ${{ jobs.detect.outputs.run_python_packaging }}
+      run_python_fips:
+        description: "True if the Python FIPS sdist install should run"
+        value: ${{ jobs.detect.outputs.run_python_fips }}
       run_rust_core:
         description: "True if Rust Core tests should run"
         value: ${{ jobs.detect.outputs.run_rust_core }}
@@ -106,6 +112,7 @@ jobs:
       odbc: ${{ steps.filter.outputs.odbc }}
       python: ${{ steps.filter.outputs.python }}
       python_packaging: ${{ steps.filter.outputs.python_packaging }}
+      python_fips: ${{ steps.filter.outputs.python_fips }}
       shared: ${{ steps.filter.outputs.shared }}
       no_build_impact: ${{ steps.computed.outputs.no_build_impact }}
       # Pre-computed "should run" outputs
@@ -115,6 +122,7 @@ jobs:
       run_odbc: ${{ steps.computed.outputs.run_odbc }}
       run_python: ${{ steps.computed.outputs.run_python }}
       run_python_packaging: ${{ steps.computed.outputs.run_python_packaging }}
+      run_python_fips: ${{ steps.computed.outputs.run_python_fips }}
       run_rust_core: ${{ steps.computed.outputs.run_rust_core }}
       run_dotnet_reference: ${{ steps.computed.outputs.run_dotnet_reference }}
       run_jdbc_reference: ${{ steps.computed.outputs.run_jdbc_reference }}
@@ -278,6 +286,25 @@ jobs:
               # here only breaks at sdist-build time, so it has to run the
               # packaging job.
               - 'python/Cargo.toml.sdist'
+            # Sdist install with SNOWFLAKE_FIPS=1. Narrower than python/**: a
+            # connector change does not rebuild AWS-LC. The workflow file is
+            # included so an edit to this job runs the lane.
+            python_fips:
+              - 'python/hatch_build.py'
+              - 'python/pyproject.toml'
+              - 'python/Cargo.toml.sdist'
+              - 'python/Cargo.lock.sdist'
+              - 'python/tests/packaging/test_fips_build.py'
+              # Status API. An edit to this module selects this lane. An edit to
+              # __init__.py does not.
+              - 'python/src/snowflake/connector/_internal/fips.py'
+              - 'python/src/snowflake/connector/_core/__init__.py'
+              - 'python_bridge/build.rs'
+              - 'python_bridge/Cargo.toml'
+              - 'rust-toolchain.toml'
+              - '.github/workflows/test-python.yml'
+              - '.github/actions/setup-fips-build-env/**'
+              - '.github/actions/ensure-rust-toolchain/**'
             shared:
               - 'Cargo.toml'
               - 'Cargo.lock'
@@ -416,6 +443,14 @@ jobs:
             echo "run_python_packaging=false" >> $GITHUB_OUTPUT
           fi
 
+          # Python FIPS sdist install should run if those build files changed.
+          if [[ "$IS_SNOWFLAKE_ENG" == "true" ]] && \
+             [[ "${{ steps.filter.outputs.python_fips }}" == "true" ]]; then
+            echo "run_python_fips=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_python_fips=false" >> $GITHUB_OUTPUT
+          fi
+
           # Rust Core should run if: core OR shared changed
           if [[ "$IS_SNOWFLAKE_ENG" == "true" ]] && \
              { [[ "${{ steps.filter.outputs.core }}" == "true" ]] || \
@@ -474,7 +509,7 @@ jobs:
           fi
 
           if [[ "$NO_BUILD_IMPACT" == "true" ]]; then
-            for v in run_jdbc run_odbc run_python run_python_packaging \
+            for v in run_jdbc run_odbc run_python run_python_packaging run_python_fips \
                      run_rust_core run_nodejs run_dotnet run_jdbc_reference \
                      run_odbc_reference run_python_reference \
                      run_nodejs_reference run_dotnet_reference run_odbc_packaging; do
@@ -492,7 +527,7 @@ jobs:
             echo false
           }
           {
-            echo "python_wanted=$(any_lane run_python run_python_packaging run_python_reference)"
+            echo "python_wanted=$(any_lane run_python run_python_packaging run_python_fips run_python_reference)"
             echo "jdbc_wanted=$(any_lane run_jdbc run_jdbc_reference)"
             echo "odbc_wanted=$(any_lane run_odbc run_odbc_reference)"
             echo "rust_core_wanted=$(any_lane run_rust_core)"
@@ -513,6 +548,7 @@ jobs:
           echo "| ODBC Packaging | ${{ steps.filter.outputs.odbc_packaging }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Python | ${{ steps.filter.outputs.python }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Python Packaging | ${{ steps.filter.outputs.python_packaging }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python FIPS | ${{ steps.filter.outputs.python_fips }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Node.js | ${{ steps.filter.outputs.nodejs }} |" >> $GITHUB_STEP_SUMMARY
           echo "| dotnet | ${{ steps.filter.outputs.dotnet }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Shared | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
@@ -530,6 +566,7 @@ jobs:
           echo "| Python Reference | ${{ steps.computed.outputs.run_python_reference }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Python | ${{ steps.computed.outputs.run_python }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Python Packaging | ${{ steps.computed.outputs.run_python_packaging }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python FIPS | ${{ steps.computed.outputs.run_python_fips }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Node.js | ${{ steps.computed.outputs.run_nodejs }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Node.js Reference | ${{ steps.computed.outputs.run_nodejs_reference }} |" >> $GITHUB_STEP_SUMMARY
           echo "| dotnet | ${{ steps.computed.outputs.run_dotnet }} |" >> $GITHUB_STEP_SUMMARY
@@ -560,6 +597,7 @@ jobs:
             "odbc": ${{ steps.filter.outputs.odbc }},
             "python": ${{ steps.filter.outputs.python }},
             "python_packaging": ${{ steps.filter.outputs.python_packaging }},
+            "python_fips": ${{ steps.filter.outputs.python_fips }},
             "shared": ${{ steps.filter.outputs.shared }},
             "no_build_impact": ${{ steps.computed.outputs.no_build_impact }},
             "run_dotnet": ${{ steps.computed.outputs.run_dotnet }},
@@ -568,6 +606,7 @@ jobs:
             "run_nodejs": ${{ steps.computed.outputs.run_nodejs }},
             "run_python": ${{ steps.computed.outputs.run_python }},
             "run_python_packaging": ${{ steps.computed.outputs.run_python_packaging }},
+            "run_python_fips": ${{ steps.computed.outputs.run_python_fips }},
             "run_rust_core": ${{ steps.computed.outputs.run_rust_core }},
             "run_dotnet_reference": ${{ steps.computed.outputs.run_dotnet_reference }},
             "run_jdbc_reference": ${{ steps.computed.outputs.run_jdbc_reference }},

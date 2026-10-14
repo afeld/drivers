@@ -1,0 +1,31 @@
+name: Ensure Rust toolchain is cleanly installed
+description: >
+  Install the toolchain pinned in rust-toolchain.toml before any later step
+  runs rustc. ubuntu-24.04-arm images ship a rustup toolchain that already
+  contains cargo-clippy, so an implicit install reports a binary conflict and
+  leaves the toolchain half-installed. macOS ARM images can fail that same
+  implicit install while downloading clippy, after which rustc and cargo are
+  missing. A failed install removes the toolchain and tries once more.
+
+runs:
+  using: composite
+  steps:
+    - name: Install pinned toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+        if [ -z "$channel" ]; then
+          echo "::error::could not read [toolchain].channel from rust-toolchain.toml"
+          exit 1
+        fi
+        toolchain_ready() {
+          rustup toolchain install "$channel" --profile minimal --component clippy,rustfmt
+          rustc --version
+          cargo --version
+        }
+        if ! toolchain_ready; then
+          echo "rustup left a partial '$channel' toolchain — removing and retrying"
+          rustup toolchain uninstall "$channel" || true
+          toolchain_ready
+        fi

@@ -695,8 +695,22 @@ jobs:
         env:
           GRADLE_TEST_RETRY_COUNT: '2'
 
+      # CreateArtifact occasionally times out. One more attempt follows a failed
+      # upload; a second failure fails the job.
       - name: Upload parity test artifacts
+        id: upload-parity-artifacts
         if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: jdbc-parity-artifacts
+          path: |
+            jdbc/build/test-results/parityTest/**/*.xml
+            jdbc/build/reports/tests/parityTest/**
+          if-no-files-found: warn
+
+      - name: Retry parity test artifact upload
+        if: always() && steps.upload-parity-artifacts.outcome == 'failure'
         uses: actions/upload-artifact@v7
         with:
           name: jdbc-parity-artifacts

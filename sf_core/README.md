@@ -13,6 +13,11 @@ cryptography that uses AWS-LC:
 cargo build --package sf_core --features fips
 ```
 
+A Python source-distribution install passes that same feature when
+`SNOWFLAKE_FIPS=1`. A checkout, an editable install, or a wheel build fails
+when the variable is set. The loaded process reports the result through
+`get_fips_status().is_fips`, below.
+
 ## FIPS status
 
 `sf_core::tls::fips_status()` and the handle-free `DriverGetFipsStatus`

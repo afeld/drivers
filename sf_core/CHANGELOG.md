@@ -14,6 +14,7 @@ New features:
 - Added a Python `platform_detection_timeout_seconds` connection parameter that limits each cloud-metadata platform check. Setting it to `0` skips those HTTP and STS queries and keeps only environment-based detection, matching the legacy Python connector. (snowflakedb/drivers#2186)
 - Added Azure blob Content-MD5 on PUT (single Put Blob and Put Block List), hashed in the same streaming pass as SHA-256 and over ciphertext when client-side encryption is on. (snowflakedb/drivers#2232)
 - Added an opt-in `fips` build that routes TLS through AWS-LC-FIPS and fails closed if a non-FIPS crypto provider is active. (snowflakedb/drivers#2055)
+- Added a Python source-distribution install with `SNOWFLAKE_FIPS=1` that links the FIPS module, so `snowflake.connector.get_fips_status()` reports `is_fips` as true. (snowflakedb/drivers#2489)
 - Added `IS_FIPS` to the login `CLIENT_ENVIRONMENT` payload so Snowflake can tell whether the driver's linked TLS provider is FIPS-approved. (snowflakedb/drivers#2384)
 - Added a `put_compress_level` connection setting that selects the gzip level (0–9) used when PUT AUTO_COMPRESS rewrites a file. (snowflakedb/drivers#2083)
 - Added a `put_tempdir` connection setting that selects the directory for gzip tempfiles created by PUT AUTO_COMPRESS. Unset and empty values keep the process temp directory. Nested directories are created. (snowflakedb/drivers#2084)
@@ -55,6 +56,7 @@ New features:
 Changes:
 
 - Improved connection setup time by loading system root certificates once per driver instead of on every connection. OS trust changes after the first connection apply on process restart. (snowflakedb/drivers#2586)
+- Changed a Python build with `SNOWFLAKE_FIPS` set outside an unpacked source distribution to fail instead of linking the standard module. (snowflakedb/drivers#2489)
 - Standardized the opt-in build feature as `fips` and build/test environment variables as `SF_CORE_FIPS` and `SF_CORE_EXPECT_FIPS`. (SNOW-3927213)
 - Pinned `fips` builds to AWS-LC FIPS 3.6.0 (`aws-lc-fips-sys 0.13.17`) and added runtime module-version diagnostics and a FIPS smoke assertion. (SNOW-3927213)
 - Changed `fips` builds to reject `verify_certificates=false` and `tls_skip_verify=true`; standard builds still allow these insecure settings. Consequently, `NODE_TLS_REJECT_UNAUTHORIZED=0` now fails connection in FIPS Node builds. HTTPS CRL downloads now use the linked crypto module explicitly, preserving default trust and proxy behavior. (SNOW-3927213)

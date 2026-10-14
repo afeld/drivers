@@ -79,12 +79,26 @@ runs:
         if (Test-Path "C:\Strawberry\perl\bin") {
           $paths = @("C:\Strawberry\perl\bin") + $paths
         }
-        if (-not (Get-Command nasm.exe -ErrorAction SilentlyContinue)) {
-          choco install nasm --yes --no-progress
-          $nasmDir = "C:\Program Files\NASM"
-          if (Test-Path (Join-Path $nasmDir "nasm.exe")) {
-            $paths = @($nasmDir) + $paths
+        # nasm.exe on the runner image is often only under Strawberry\c\bin.
+        # That directory is omitted above because its gcc shadows MSVC, so a
+        # Get-Command against the process PATH would skip the install and then
+        # lose nasm with the rewrite.
+        $nasmDir = "C:\Program Files\NASM"
+        $nasmOnPath = $false
+        foreach ($dir in $paths) {
+          if (Test-Path (Join-Path $dir.TrimEnd('\') "nasm.exe")) {
+            $nasmOnPath = $true
+            break
           }
+        }
+        if (-not $nasmOnPath) {
+          if (-not (Test-Path (Join-Path $nasmDir "nasm.exe"))) {
+            choco install nasm --yes --no-progress
+          }
+          if (-not (Test-Path (Join-Path $nasmDir "nasm.exe"))) {
+            throw "nasm.exe is required for the Windows FIPS build"
+          }
+          $paths = @($nasmDir) + $paths
         }
         $env:PATH = $paths -join ';'
 

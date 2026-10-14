@@ -125,15 +125,38 @@ class BuildHook(BuildHookInterface):
         build_data["pure_python"] = False
         build_data["infer_tag"] = True
 
+    def _fips_requested(self) -> bool:
+        """Return whether this build should link the FIPS module.
+
+        ``SNOWFLAKE_FIPS`` applies only when the project root is an unpacked
+        sdist (it carries ``PKG-INFO``). A checkout, an editable install, or a
+        wheel build fails when the variable is set.
+        """
+        if os.environ.get("SNOWFLAKE_FIPS", "").lower() not in ("1", "true"):
+            return False
+        if (Path(self.root) / "PKG-INFO").is_file():
+            return True
+        raise RuntimeError(
+            "SNOWFLAKE_FIPS is set, but this build is not an unpacked sdist "
+            "(PKG-INFO is absent). The variable applies only to an sdist install."
+        )
+
     def _select_core_extension(self, build_data: dict[str, Any]) -> None:
         """Force-include only the sf_core_python binary matching this interpreter."""
         ext_name = f"sf_core_python{sysconfig.get_config_var('EXT_SUFFIX')}"
-        core_ext = Path(self.root) / "src" / "snowflake" / "connector" / "_core" / ext_name
+        core_dir = Path(self.root) / "src" / "snowflake" / "connector" / "_core"
+        core_ext = core_dir / ext_name
         if not core_ext.is_file():
             return
-        build_data.setdefault("force_include", {})[str(core_ext)] = (
-            f"snowflake/connector/_core/{ext_name}"
-        )
+        force_include = build_data.setdefault("force_include", {})
+        force_include[str(core_ext)] = f"snowflake/connector/_core/{ext_name}"
+        # macOS and Windows sdist installs link shared aws-lc libraries that
+        # must ship beside the extension. Linux links that module statically.
+        if not self._fips_requested():
+            return
+        for lib in core_dir.iterdir():
+            if lib.is_file() and "aws_lc_fips" in lib.name and lib.suffix in (".dylib", ".so", ".dll"):
+                force_include[str(lib)] = f"snowflake/connector/_core/{lib.name}"
 
     def _generate_protobuf(self) -> None:
         """Generate Python protobuf code using the Rust proto_generator binary."""
@@ -146,8 +169,7 @@ class BuildHook(BuildHookInterface):
 
         if not proto_input.exists():
             raise RuntimeError(
-                f"Proto file not found at {proto_input}. "
-                "Cannot build package without protobuf definitions."
+                f"Proto file not found at {proto_input}. Cannot build package without protobuf definitions."
             )
 
         cargo_manifest = python_dir / "Cargo.toml"
@@ -156,8 +178,7 @@ class BuildHook(BuildHookInterface):
             # Rust toolchain), fall back to previously generated files if they exist.
             if any(protobuf_gen_dir.glob("*_pb2.py")):
                 warnings.warn(
-                    "Cargo.toml not found; skipping protobuf regeneration. "
-                    "Using previously generated protobuf files.",
+                    "Cargo.toml not found; skipping protobuf regeneration. Using previously generated protobuf files.",
                     stacklevel=1,
                 )
                 return
@@ -315,11 +336,13 @@ class BuildHook(BuildHookInterface):
                     # Suppress warnings for vendored/generated C files (Unix only, GCC/Clang flags)
                     if is_unix and src.endswith(vendored_c_files):
                         extra_postargs = list(extra_postargs)
-                        extra_postargs.extend([
-                            "-Wno-unused-variable",
-                            "-Wno-unused-const-variable",
-                            "-Wno-unreachable-code",
-                        ])
+                        extra_postargs.extend(
+                            [
+                                "-Wno-unused-variable",
+                                "-Wno-unused-const-variable",
+                                "-Wno-unreachable-code",
+                            ]
+                        )
                     return original_compile(obj, src, ext_arg, cc_args, extra_postargs, pp_opts)
 
                 self.compiler._compile = new_compile
@@ -344,7 +367,6 @@ class BuildHook(BuildHookInterface):
         Produces a version-tagged ``sf_core_python.<EXT_SUFFIX>`` native
         extension (e.g. ``.cpython-313-darwin.so`` / ``.cp313-win_amd64.pyd``).
         """
-
         if os.environ.get("SKIP_CORE_BUILD", "").lower() in self.POSITIVE_VALUES:
             return
 
@@ -379,6 +401,9 @@ class BuildHook(BuildHookInterface):
         # Enable compile-time perf instrumentation for local builds.
         if os.environ.get("SF_PERF_METRICS", "").lower() in ("1", "true"):
             extra_cargo_args.extend(["--features", "sf_core/perf_timing"])
+
+        if self._fips_requested():
+            extra_cargo_args.extend(["--features", "fips"])
 
         # Use a stable target dir when CORE_CARGO_TARGET_DIR is set (enables
         # incremental Rust compilation and CI caching). Otherwise fall back to a
@@ -461,9 +486,24 @@ class BuildHook(BuildHookInterface):
                 found_core = True
                 break
             if not found_core:
-                raise Exception(
-                    f"No sf_core_python shared library (.dll/.so/.dylib) found in {release_dir}"
-                )
+                raise Exception(f"No sf_core_python shared library (.dll/.so/.dylib) found in {release_dir}")
+
+            # aws-lc-fips-sys emits its shared libraries under release/build/, not
+            # release/. Copy those by name; do not bundle the rest of the tree.
+            copied_fips: set[str] = set()
+            if self._fips_requested():
+                for lib in release_dir.rglob("*"):
+                    if not lib.is_file() or "aws_lc_fips" not in lib.name:
+                        continue
+                    if lib.suffix not in (".dylib", ".so", ".dll") or lib.name in copied_fips:
+                        continue
+                    copied_fips.add(lib.name)
+                    lib_tmp = target_dir / (lib.name + ".tmp")
+                    shutil.copy2(lib, lib_tmp)
+                    os.replace(lib_tmp, target_dir / lib.name)
+            for old in target_dir.iterdir():
+                if old.is_file() and "aws_lc_fips" in old.name and old.name not in copied_fips:
+                    old.unlink()
 
             # No OpenSSL DLLs are bundled next to sf_core_python. The driver
             # stopped linking OpenSSL entirely; `openssl` survives only as an

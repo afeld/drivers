@@ -15,6 +15,11 @@ on:
         type: boolean
         required: false
         default: false
+      run_python_fips:
+        description: "Run the Python FIPS sdist install on Linux, macOS, and Windows."
+        type: boolean
+        required: false
+        default: false
       run_python_reference:
         description: "Run Python reference tests."
         type: boolean
@@ -331,6 +336,137 @@ jobs:
         with:
           path: proto-target
           key: ${{ runner.os }}-rust-packaging-proto-target-v2-${{ hashFiles('proto_generator/Cargo.lock', 'proto_generator/src/**') }}
+
+  # Sdist install with SNOWFLAKE_FIPS=1. Linux x64 and Linux ARM64 link
+  # AWS-LC statically, macOS needs @loader_path, Windows needs the DLL
+  # directory next to the extension. Windows ARM is not a cell;
+  # aws-lc-fips-sys does not build there. detect-changes gates this job.
+  packaging_tests_fips:
+    if: inputs.run_python_fips
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    name: packaging_tests_fips (${{ matrix.os }})
+    timeout-minutes: 180
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Free runner disk space
+        if: runner.os == 'Linux'
+        uses: ./.github/actions/free-disk-space-linux
+
+      - name: Setup FIPS build environment
+        uses: ./.github/actions/setup-fips-build-env
+
+      # ubuntu-24.04-arm and macOS ARM leave the pinned toolchain half-installed
+      # when the first rustc auto-installs it. The cache step below runs
+      # `rustc -vV`.
+      - name: Ensure Rust toolchain is cleanly installed
+        if: matrix.os == 'ubuntu-24.04-arm' || matrix.os == 'macos-latest'
+        uses: ./.github/actions/ensure-rust-toolchain
+
+      - name: Restore Rust cache
+        id: rust-cache
+        continue-on-error: true
+        uses: ./.github/actions/cargo-cache
+        with:
+          mode: restore
+          shared-key: packaging-fips
+
+      - name: Restore core-target cache
+        id: core-target-cache
+        continue-on-error: true
+        uses: actions/cache/restore@v6
+        with:
+          path: core-target
+          key: ${{ runner.os }}-${{ runner.arch }}-rust-packaging-fips-core-target-v1-${{ hashFiles('**/Cargo.lock', 'sf_core/src/**', 'sf_params_spec/src/**', 'python_bridge/src/**', 'python_bridge/build.rs', 'python/hatch_build.py', 'proto_utils/src/**', 'error_trace/src/**', 'error_trace_derive/src/**', 'protobuf/**', 'proto_generator/src/**') }}
+
+      - name: Restore proto-target cache
+        id: proto-target-cache
+        continue-on-error: true
+        uses: actions/cache/restore@v6
+        with:
+          path: proto-target
+          key: ${{ runner.os }}-${{ runner.arch }}-rust-packaging-fips-proto-target-v2-${{ hashFiles('proto_generator/Cargo.lock', 'proto_generator/src/**') }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-rust-packaging-fips-proto-target-v2-
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "0.9.28"
+
+      - name: Set up Python 3.13
+        shell: bash
+        run: uv python install 3.13
+
+      - name: Install Hatch
+        shell: bash
+        run: uv tool install hatch --with "virtualenv<21.0.0"
+
+      - name: Run FIPS packaging test
+        working-directory: ./python
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Git Bash prepends its usr/bin, whose link.exe is GNU coreutils.
+          # cargo looks up link.exe for the MSVC target, so the directory
+          # vcvarsall added has to come first or the extension does not link.
+          if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
+            if [[ -z "${VCToolsInstallDir:-}" || -z "${VSCMD_ARG_HOST_ARCH:-}" || -z "${VSCMD_ARG_TGT_ARCH:-}" ]]; then
+              echo "MSVC environment is not configured" >&2
+              exit 1
+            fi
+            tools_dir="${VCToolsInstallDir%\\}"
+            tools_dir="${tools_dir%/}"
+            msvc_bin="$(cygpath -u "${tools_dir}/bin/Host${VSCMD_ARG_HOST_ARCH}/${VSCMD_ARG_TGT_ARCH}")"
+            if [[ ! -x "${msvc_bin}/link.exe" ]]; then
+              echo "MSVC link.exe is not at ${msvc_bin}" >&2
+              exit 1
+            fi
+            export PATH="${msvc_bin}:${PATH}"
+          fi
+          hatch run packaging.py3.13:test -v --timeout=6600 tests/packaging/test_fips_build.py
+        env:
+          CORE_CARGO_TARGET_DIR: ${{ github.workspace }}/core-target
+          PROTO_CARGO_TARGET_DIR: ${{ github.workspace }}/proto-target
+          FIPS_INSTALL_TIMEOUT: "5400"
+
+      - name: Save Rust cache
+        if: always()
+        timeout-minutes: 20
+        continue-on-error: true
+        uses: ./.github/actions/cargo-cache
+        with:
+          mode: save
+          slim-mode: aggressive
+          shared-key: packaging-fips
+          registry-cache-hit: ${{ steps.rust-cache.outputs.registry-cache-hit }}
+          target-cache-hit: ${{ steps.rust-cache.outputs.target-cache-hit }}
+
+      - name: Save core-target cache
+        if: success() && steps.core-target-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          ZSTD_NBTHREADS: '2'
+        uses: actions/cache/save@v6
+        with:
+          path: core-target
+          key: ${{ runner.os }}-${{ runner.arch }}-rust-packaging-fips-core-target-v1-${{ hashFiles('**/Cargo.lock', 'sf_core/src/**', 'sf_params_spec/src/**', 'python_bridge/src/**', 'python_bridge/build.rs', 'python/hatch_build.py', 'proto_utils/src/**', 'error_trace/src/**', 'error_trace_derive/src/**', 'protobuf/**', 'proto_generator/src/**') }}
+
+      - name: Save proto-target cache
+        if: always() && steps.proto-target-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          ZSTD_NBTHREADS: '2'
+        uses: actions/cache/save@v6
+        with:
+          path: proto-target
+          key: ${{ runner.os }}-${{ runner.arch }}-rust-packaging-fips-proto-target-v2-${{ hashFiles('proto_generator/Cargo.lock', 'proto_generator/src/**') }}
 
   python_tests:
     needs: [build_wheels, load-python-matrix]
@@ -984,7 +1120,7 @@ jobs:
             --fail-on-regressions 0 | tee -a $GITHUB_STEP_SUMMARY
 
   python-status:
-    needs: [build_wheels, packaging_tests_wheel, packaging_tests_sdist, load-python-matrix, python_tests, cleanup_python, python_tests_reference, python_compare_results]
+    needs: [build_wheels, packaging_tests_wheel, packaging_tests_sdist, packaging_tests_fips, load-python-matrix, python_tests, cleanup_python, python_tests_reference, python_compare_results]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -1000,15 +1136,22 @@ jobs:
           if [[ "${{ needs.build_wheels.result }}" =~ ^(failure|cancelled)$ ]] || \
              [[ "${{ needs.packaging_tests_wheel.result }}" =~ ^(failure|cancelled)$ ]] || \
              [[ "${{ needs.packaging_tests_sdist.result }}" =~ ^(failure|cancelled)$ ]] || \
+             [[ "${{ needs.packaging_tests_fips.result }}" =~ ^(failure|cancelled)$ ]] || \
              [[ "${{ needs.python_tests.result }}" =~ ^(failure|cancelled)$ ]] || \
              [[ "${{ needs.python_compare_results.result }}" =~ ^(failure|cancelled)$ ]]; then
             echo "✗ Python CI FAILED or CANCELLED"
             echo "  - build_wheels: ${{ needs.build_wheels.result }}"
             echo "  - packaging_tests_wheel: ${{ needs.packaging_tests_wheel.result }}"
             echo "  - packaging_tests_sdist: ${{ needs.packaging_tests_sdist.result }}"
+            echo "  - packaging_tests_fips: ${{ needs.packaging_tests_fips.result }}"
             echo "  - python_tests: ${{ needs.python_tests.result }}"
             echo "  - python_tests_reference: ${{ needs.python_tests_reference.result }} (continue-on-error)"
             echo "  - python_compare_results: ${{ needs.python_compare_results.result }}"
+            exit 1
+          fi
+
+          if [[ "${{ inputs.run_python_fips }}" == "true" && "${{ needs.packaging_tests_fips.result }}" == "skipped" ]]; then
+            echo "✗ Driver CI requested the Python FIPS install but packaging_tests_fips was SKIPPED"
             exit 1
           fi
 
@@ -1030,6 +1173,7 @@ jobs:
           echo "  - build_wheels: ${{ needs.build_wheels.result }}"
           echo "  - packaging_tests_wheel: ${{ needs.packaging_tests_wheel.result }}"
           echo "  - packaging_tests_sdist: ${{ needs.packaging_tests_sdist.result }}"
+          echo "  - packaging_tests_fips: ${{ needs.packaging_tests_fips.result }}"
           echo "  - python_tests: ${{ needs.python_tests.result }}"
           echo "  - python_tests_reference: ${{ needs.python_tests_reference.result }} (continue-on-error)"
           echo "  - python_compare_results: ${{ needs.python_compare_results.result }}"
