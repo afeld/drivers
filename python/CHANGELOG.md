@@ -2,6 +2,8 @@
 
 ## Upcoming Release
 
+## 5.0.0 (October 14, 2026)
+
 Breaking changes:
 
 - Changed an empty `connections.toml` so connections defined in `config.toml` are kept.
