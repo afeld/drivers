@@ -33,7 +33,7 @@ TEST_CASE("should create troubleshooting log file when enabled via environment v
   EnvOverride ts_path("SNOWFLAKE_TROUBLESHOOTING_REPORT_PATH", log_dir.string());
 
   // When a connection is established and a query is executed
-  Connection conn;
+  Connection conn(get_connection_string() + "LOGIN_TIMEOUT=60;");  // hung JWT connect must fail, not block the suite
   auto stmt = conn.execute_fetch("SELECT 1");
   auto value = get_data<SQL_C_CHAR>(stmt, 1);
   CHECK(value == "1");
