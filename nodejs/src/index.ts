@@ -43,6 +43,7 @@ import {
 import { collectRows } from './query-result/rows.js';
 import { RowStatement } from './query-result/RowStatement.js';
 import { SnowflakeDate } from './query-result/SnowflakeDate.js';
+import { getWrapperIdentity } from './wrapper-identity.js';
 
 registerClassConstructors({ SnowflakeDate });
 
@@ -371,6 +372,7 @@ export class Connection {
       openExternalBrowserCallback,
       tokenInfo,
       noConnectionDetails,
+      wrapperIdentity: getWrapperIdentity(),
     });
   }
 

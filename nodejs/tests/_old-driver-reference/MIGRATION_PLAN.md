@@ -161,8 +161,9 @@ sanity-check test that validates CRL works (and ideally one that validates CRL t
 ### Login / proxy / request plumbing
 
 - `integration/testLoginRequestBody.ts` — migrated to `nodejs/tests/e2e/login-request-body.test.ts`;
-  the runnable cases are replaced by a comment in the source file. `APPLICATION` and OS_DETAILS on Linux run on both drivers, and ISA runs
-  on both with BD#81. Skipped for the new driver as not implemented: `APPLICATION_PATH`,
+  the runnable cases are replaced by a comment in the source file. `APPLICATION`, `APPLICATION_PATH`,
+  and OS_DETAILS on Linux run on both drivers, and ISA runs
+  on both with BD#81. Skipped for the new driver as not implemented:
   `LIBC_FAMILY` / `LIBC_VERSION`, and `OS_DETAILS: null` on non-Linux platforms. `PLATFORM` (BD#70) is not ported;
   `sf_core` covers it in `src/telemetry/platform_detection/tests.rs` and
   `tests/integration/telemetry/platform_detection.rs`.
@@ -370,8 +371,9 @@ called out explicitly.
 
 ### Telemetry
 
-- [`unit/telemetry/application_path_test.ts`](./unit/telemetry/application_path_test.ts) —
-  migrate the application-name fetching coverage once the new driver is implemented.
+- `unit/telemetry/application_path_test.ts` — removed. `src/wrapper-identity.ts` matches the old
+  `require.main.filename`, then `process.argv[1]` order, and `e2e/login-request-body.test.ts`
+  checks the login body. The empty case is the `sf_core` executable-path fallback.
 - [`unit/telemetry/platform_detection_test.ts`](./unit/telemetry/platform_detection_test.ts) —
   must be implemented in `sf_core` and validated that the implementation matches what this
   test asserts.

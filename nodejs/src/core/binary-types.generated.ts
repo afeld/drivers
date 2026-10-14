@@ -94,6 +94,7 @@ export declare class Statement {
 export interface ConnectionParams {
   options: Record<string, string>
   sessionParameters: Record<string, string>
+  wrapperIdentity: WrapperIdentity
   openExternalBrowserCallback?: (arg: string) => void
   tokenInfo?: ConnectionTokenInfo
   noConnectionDetails?: boolean
@@ -190,3 +191,13 @@ export type QueryStatus = 'RUNNING' | 'ABORTING' | 'SUCCESS' | 'FAILED_WITH_ERRO
 export declare function registerClassConstructors(constructors: { SnowflakeDate: new (epochMillis: number, nanos: number, scale: number, timezone: string | number, format: string) => unknown }): void
 
 export type StatementStatus = 'fetching' | 'complete'
+
+export interface WrapperIdentity {
+  driverName: string
+  driverVersion: string
+  languageRuntime: string
+  languageVersion: string
+  languageCompiler?: string
+  releaseType?: string
+  applicationPath?: string
+}

@@ -51,10 +51,12 @@ describe('Login Request Body', () => {
       expect(CLIENT_ENVIRONMENT.APPLICATION).toBe('test-application');
     });
 
-    it.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)('should contain APPLICATION_PATH', async () => {
+    it('should contain the entry script as APPLICATION_PATH', async () => {
       const { CLIENT_ENVIRONMENT } = await connectAndGetLoginRequestData();
-      expect(CLIENT_ENVIRONMENT.APPLICATION_PATH).toEqual(expect.any(String));
-      expect(CLIENT_ENVIRONMENT.APPLICATION_PATH).not.toBe('');
+      expect(CLIENT_ENVIRONMENT.APPLICATION_PATH).toEqual(expect.stringMatching(/\S/));
+      expect(CLIENT_ENVIRONMENT.APPLICATION_PATH).toBe(
+        createRequire(import.meta.url).main?.filename || process.argv[1],
+      );
     });
 
     it('should contain instruction set architecture (ISA)', async () => {

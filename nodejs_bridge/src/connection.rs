@@ -9,7 +9,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode;
 use napi_derive::napi;
 use sf_core::apis::database_driver_v1::ApiError;
-use sf_core::apis::database_driver_v1::connection::WrapperIdentity;
+use sf_core::apis::database_driver_v1::connection::WrapperIdentity as CoreWrapperIdentity;
 use sf_core::config::param_names;
 use sf_core::config::rest_parameters::BrowserOpenFn;
 use sf_core::config::settings::Setting;
@@ -19,6 +19,17 @@ use std::time::Duration;
 
 const NODE_TLS_REJECT_UNAUTHORIZED: &str = "NODE_TLS_REJECT_UNAUTHORIZED";
 const NODE_EXTRA_CA_CERTS: &str = "NODE_EXTRA_CA_CERTS";
+
+#[napi(object)]
+pub struct WrapperIdentity {
+    pub driver_name: String,
+    pub driver_version: String,
+    pub language_runtime: String,
+    pub language_version: String,
+    pub language_compiler: Option<String>,
+    pub release_type: Option<String>,
+    pub application_path: Option<String>,
+}
 
 #[napi(object)]
 pub struct ConnectionTokenInfo {
@@ -32,6 +43,7 @@ pub struct ConnectionTokenInfo {
 pub struct ConnectionParams<'a> {
     pub options: HashMap<String, String>,
     pub session_parameters: HashMap<String, String>,
+    pub wrapper_identity: WrapperIdentity,
     pub open_external_browser_callback: Option<Function<'a, String, ()>>,
     pub token_info: Option<ConnectionTokenInfo>,
     pub no_connection_details: Option<bool>,
@@ -118,19 +130,19 @@ impl Connection {
                     .connection_set_browser_opener(conn_handle, opener)
                     .await?;
             }
+            let identity = &params.wrapper_identity;
             BRIDGE
                 .driver
                 .set_wrapper_identity(
                     conn_handle,
-                    WrapperIdentity {
-                        // TODO: pass this from nodejs (function arguments)
-                        driver_name: "JavaScript".to_string(),
-                        driver_version: "4.0.0-beta.0".to_string(),
-                        language_runtime: "nodejs".to_string(),
-                        language_version: "24.0.0".to_string(),
-                        language_compiler: None,
-                        release_type: None,
-                        application_path: None,
+                    CoreWrapperIdentity {
+                        driver_name: identity.driver_name.clone(),
+                        driver_version: identity.driver_version.clone(),
+                        language_runtime: identity.language_runtime.clone(),
+                        language_version: identity.language_version.clone(),
+                        language_compiler: identity.language_compiler.clone(),
+                        release_type: identity.release_type.clone(),
+                        application_path: identity.application_path.clone(),
                     },
                 )
                 .await?;
