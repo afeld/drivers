@@ -313,9 +313,29 @@ public sealed class SnowflakeDbDataReader : DbDataReader
         };
     }
 
-    // TODO this is just a PoC and will be changed significantly
-    private static object ExtractValue(IArrowArray column, int index)
+    // TODO: this implementation is just PoC to set foot in the door. It will undergo heavy refactoring.
+    private object ExtractValue(IArrowArray column, int index)
     {
+        if (_descriptor.Columns[0].Type == "timestamp_ltz")
+        {
+            var d = (Int64Array)((StructArray)column).Fields[0];
+            var seconds = d.GetValue(index) ?? 0L;
+
+            var sinceUnix = TimeSpan.FromSeconds(seconds);
+            var dt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) + sinceUnix;
+            return new DateTimeOffset(dt, TimeSpan.Zero);
+        }
+
+        if (column is StructArray strArr)
+        {
+            var d = (Int64Array)strArr.Fields[0];
+            var nanoseconds = d.GetValue(index) ?? 0L;
+
+            var sinceUnix = TimeSpan.FromMilliseconds(nanoseconds / 1_000_000);
+            var dt = new DateTime(1970, 1, 1) + sinceUnix;
+            return new DateTimeOffset(dt, TimeSpan.Zero);
+        }
+
         return column switch
         {
             Int64Array arr => arr.GetValue(index) ?? (object)DBNull.Value,

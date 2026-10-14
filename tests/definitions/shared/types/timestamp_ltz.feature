@@ -1,4 +1,4 @@
-@python @jdbc @nodejs @core_not_needed @odbc
+@python @jdbc @nodejs @core_not_needed @odbc @dotnet
 Feature: TIMESTAMP_LTZ type support
   # ODBC does not assert "Values should have timezone info" on the fetched
   # value: SQL_TIMESTAMP_STRUCT cannot carry timezone.
@@ -7,7 +7,7 @@ Feature: TIMESTAMP_LTZ type support
   #                               Type casting                                  #
   # =========================================================================== #
 
-  @python_e2e @jdbc_e2e @nodejs_e2e @odbc_e2e
+  @python_e2e @jdbc_e2e @nodejs_e2e @odbc_e2e @dotnet_e2e
   Scenario: should cast timestamp_ltz values to appropriate type
     # Python: Values should be cast to 'datetime' type with tzinfo set
     Given Snowflake client is logged in
