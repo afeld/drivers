@@ -21,6 +21,7 @@ Breaking changes:
 - Changed session-token login so `master_token` is required and invalid tokens fail in `connect()` instead of on a later request.
 - Changed OAuth token and authorization endpoint URL validation to require HTTPS; `http://` is allowed only for loopback addresses.
 - Changed external-browser login so a mid-session master-token expiry raises `ReauthenticationRequest` instead of opening the browser again and retrying the query.
+- Changed EXTERNALBROWSER login so `disable_console_login` warns and has no effect: the parameter defaults to false, and the driver always requests the SSO URL from Snowflake instead of opening `/console/login`. (snowflakedb/drivers#2723)
 - Removed the `password_callback` connection parameter; passing it raises `ProgrammingError`, and an expired password must be changed outside the driver.
 - Changed cursor session parameters so a change on one cursor is visible to other cursors on the same connection without those cursors running a query.
 - Changed methods on a closed cursor to raise `InterfaceError`; `fetchone`, `fetchmany`, `fetchall`, and `reset` still read rows already buffered on an open cursor after `connection.close()`.
