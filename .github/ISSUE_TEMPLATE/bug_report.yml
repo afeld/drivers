@@ -1,0 +1,109 @@
+name: Bug report
+description: Report a problem in any driver in this repository.
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for every driver in this repository: Python, JDBC, ODBC, Node.js, .NET, and Go. They share one Rust core (`sf_core`), so pick the driver you called even if you suspect the bug is in the core.
+
+        For an urgent production issue, [open a Snowflake Support case](https://community.snowflake.com/s/article/How-To-Submit-a-Support-Case-in-Snowflake-Lodge). For a security vulnerability, use the [HackerOne program](https://hackerone.com/snowflake?type=team) instead of this form.
+
+        Remove passwords, keys, tokens, and full SQL before you paste logs or sample code.
+  - type: dropdown
+    id: driver
+    attributes:
+      label: Driver
+      description: Which driver did you use? Choose "Not sure / more than one" if the same failure shows up through several drivers.
+      options:
+        - Python (python/)
+        - JDBC (jdbc/)
+        - ODBC (odbc/)
+        - Node.js (nodejs/)
+        - .NET (dotnet/)
+        - Go (gosnowflake/)
+        - Not sure / more than one
+    validations:
+      required: true
+  - type: input
+    id: driver-version
+    attributes:
+      label: Driver version
+      description: "Package or library version. Examples: Python package version, JDBC jar filename, ODBC driver version from the driver manager, npm package version, NuGet package version, or Go module version."
+      placeholder: 4.1.0
+    validations:
+      required: true
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Language runtime version
+      description: |
+        Command for the driver you selected:
+
+        - Python: `python --version`
+        - JDBC: `java -version`
+        - ODBC: driver manager version (`odbcinst -j`, or the Windows ODBC Data Source Administrator)
+        - Node.js: `node --version`
+        - .NET: `dotnet --version` (or the target framework, such as `net8.0`)
+        - Go: `go version`
+      placeholder: Python 3.13.1
+    validations:
+      required: true
+  - type: input
+    id: os-architecture
+    attributes:
+      label: Operating system and processor architecture
+      description: |
+        Examples: `python -c 'import platform; print(platform.platform())'`, `uname -sm`, or Windows version plus architecture.
+      placeholder: Linux-6.8.0-x86_64
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: Snowflake version
+      description: Output of `SELECT CURRENT_VERSION();`, if you can connect.
+      placeholder: 9.12.3
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What did you do?
+      description: A complete program, connection string with secrets removed, or the smallest steps that reproduce the error. Include the error message and stack trace.
+      placeholder: |
+        1. Connect with ...
+        2. Run ...
+        3. Error: ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: What should have happened, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug logs
+      description: |
+        Scrub the log before pasting. Account name, username, login URL, and file paths can still appear.
+
+        - Python: `logging.basicConfig(level=logging.DEBUG)` and `logging.getLogger("snowflake.connector").setLevel(logging.DEBUG)`.
+        - JDBC: connection property `TRACING=ALL`, or your SLF4J config for logger `net.snowflake.client`.
+        - ODBC: `LogLevel=DEBUG` and `LogPath` in `sf.odbc.ini`.
+        - Node.js, .NET, and Go: follow the troubleshooting runbook linked below.
+
+        Shared capture steps are in the [troubleshooting runbook](../../docs/troubleshooting-runbook.md).
+    validations:
+      required: false
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Related issues, whether this worked on an older driver, or which other drivers show the same behavior.
+    validations:
+      required: false

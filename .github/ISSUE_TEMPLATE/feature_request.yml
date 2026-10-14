@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest a change for any driver in this repository.
+title: "[Feature]: "
+labels: ["feature", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for every driver in this repository: Python, JDBC, ODBC, Node.js, .NET, and Go. If the change belongs in the shared Rust core, name the driver you would call it from, or choose "Not sure / more than one".
+  - type: dropdown
+    id: driver
+    attributes:
+      label: Driver
+      description: Which driver should gain this behavior?
+      options:
+        - Python (python/)
+        - JDBC (jdbc/)
+        - ODBC (odbc/)
+        - Node.js (nodejs/)
+        - .NET (dotnet/)
+        - Go (gosnowflake/)
+        - Not sure / more than one
+    validations:
+      required: true
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: What is the current behavior?
+      description: What happens today, or what is missing?
+    validations:
+      required: true
+  - type: textarea
+    id: desired-behavior
+    attributes:
+      label: What is the desired behavior?
+      description: What should the driver do instead? Include a sketch of the API or connection parameter if you have one.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: How would this help?
+      description: Who is blocked, and what do they have to do today because the driver does not do this?
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References and other background
+      description: Links to docs, related issues, or the same feature in another driver.
+    validations:
+      required: false

@@ -1,0 +1,86 @@
+# Labels a new or edited issue with the driver selected in the issue form.
+# The option text must match .github/ISSUE_TEMPLATE/bug_report.yml and
+# feature_request.yml. The label names match .github/labeler.yml so issues
+# and pull requests filter the same way.
+name: Issue driver labeler
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  label-driver:
+    name: Apply driver label
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Apply driver label from the issue form
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const body = context.payload.issue.body ?? "";
+            const section = body.match(/^### Driver\r?\n+([^\r\n]+)/m);
+            if (!section) {
+              core.info("No Driver section; leaving labels unchanged.");
+              return;
+            }
+
+            const selected = section[1].trim();
+            const unsure = "Not sure / more than one";
+            const driverLabels = {
+              "Python (python/)": "python",
+              "JDBC (jdbc/)": "jdbc",
+              "ODBC (odbc/)": "odbc",
+              "Node.js (nodejs/)": "nodejs",
+              ".NET (dotnet/)": "dotnet",
+              "Go (gosnowflake/)": "gosnowflake",
+            };
+
+            if (!(selected in driverLabels) && selected !== unsure) {
+              core.info(`Unrecognized driver value ${JSON.stringify(selected)}; leaving labels unchanged.`);
+              return;
+            }
+
+            const known = new Set(Object.values(driverLabels));
+            const desired = driverLabels[selected] ?? null;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const { data: current } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const present = new Set(current.map((label) => label.name));
+
+            for (const label of known) {
+              if (label !== desired && present.has(label)) {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number,
+                  name: label,
+                });
+                core.info(`Removed ${label}`);
+              }
+            }
+
+            if (desired && !present.has(desired)) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number,
+                labels: [desired],
+              });
+              core.info(`Added ${desired}`);
+            } else {
+              core.info(desired ? `Already labeled ${desired}` : "No single driver selected.");
+            }

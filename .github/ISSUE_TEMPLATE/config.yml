@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Snowflake Support
+    url: https://community.snowflake.com/s/article/How-To-Submit-a-Support-Case-in-Snowflake-Lodge
+    about: Urgent production issues should go to Snowflake Support.
+  - name: Security vulnerability
+    url: https://hackerone.com/snowflake?type=team
+    about: Report security vulnerabilities through the Snowflake HackerOne program. Do not file them here.
