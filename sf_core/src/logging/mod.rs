@@ -26,7 +26,7 @@ use std::path::PathBuf;
 pub use crate::logging::callback_layer::CLogCallback;
 pub use crate::logging::callback_layer::CallbackLayer;
 pub use crate::logging::error::LogError;
-pub use crate::logging::log_manager::LogManager;
+pub use crate::logging::log_manager::{LogManager, LogReloadHandle, ReloadOutcome};
 use tracing::Subscriber;
 use tracing::level_filters::LevelFilter;
 use tracing_core::Field;

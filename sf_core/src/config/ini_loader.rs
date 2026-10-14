@@ -61,16 +61,14 @@ impl IniConfig {
 
 static INI_CONFIG: OnceLock<IniConfig> = OnceLock::new();
 
-/// Load `sf.odbc.ini` from the first regular file in `paths` and cache the
+/// Load `sf.odbc.ini` from the first existing path in `paths` and cache the
 /// resulting snapshot in the process-wide [`OnceLock`].
 ///
 /// `paths` is walked in order. The first candidate that is a regular file is
 /// permission-checked, parsed, and used to seed the snapshot; remaining
-/// paths are ignored. A candidate that is not a regular file (missing, or a
-/// directory) is skipped, so a `SF_ODBC_INI` pointing at a directory does not
-/// hide the per-user `sf.odbc.ini` later in the list. If no candidate is a
-/// regular file, an empty [`IniConfig`] is still cached so subsequent
-/// [`get_ini_config`] calls return `Some(&default)`.
+/// paths are ignored. If no candidate is a regular file, an empty
+/// [`IniConfig`] is still cached so subsequent [`get_ini_config`] calls return
+/// `Some(&default)`.
 ///
 /// The first successful call wins. Subsequent calls return
 /// [`ConfigError::IniAlreadyLoaded`] without modifying the global; callers
@@ -80,13 +78,25 @@ static INI_CONFIG: OnceLock<IniConfig> = OnceLock::new();
 /// Permission or parse failures surface as `Err` and leave the global
 /// uninitialised so the caller may try a different path list.
 pub fn load_ini_files(paths: &[PathBuf]) -> Result<(), ConfigError> {
-    let snapshot = read_first_existing(paths)?;
+    let snapshot = read_ini_snapshot(paths)?;
     INI_CONFIG
         .set(snapshot)
         .map_err(|_| IniAlreadyLoadedSnafu.build())
 }
 
-fn read_first_existing(paths: &[PathBuf]) -> Result<IniConfig, ConfigError> {
+/// Parse the first readable `sf.odbc.ini` from `paths` into a fresh
+/// [`IniConfig`] without touching the process-wide [`OnceLock`].
+///
+/// A candidate that is not a regular file (missing, or a directory) is
+/// skipped and the next candidate is tried, so a `SF_ODBC_INI` pointing at a
+/// directory does not hide the per-user `sf.odbc.ini` later in the list. The
+/// first regular file is permission-checked, parsed, and returned; when no
+/// candidate is a regular file a default (empty) snapshot is returned.
+///
+/// Permission or parse failures on a selected file surface as `Err`. Used by
+/// [`load_ini_files`] for the one-time cached load and by callers that need a
+/// fresh snapshot (e.g. the ODBC per-connect logging refresh).
+pub fn read_ini_snapshot(paths: &[PathBuf]) -> Result<IniConfig, ConfigError> {
     for path in paths {
         if !path.is_file() {
             continue;
@@ -153,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn read_first_existing_skips_missing_paths_and_reads_first_present() {
+    fn read_ini_snapshot_skips_missing_paths_and_reads_first_present() {
         let dir = tempfile::tempdir().unwrap();
         let missing = dir.path().join("missing.ini");
         let present = dir.path().join("present.ini");
@@ -171,29 +181,28 @@ mod tests {
             std::fs::set_permissions(&other, std::fs::Permissions::from_mode(0o600)).unwrap();
         }
 
-        let ini = read_first_existing(&[missing.clone(), present.clone(), other.clone()]).unwrap();
+        let ini = read_ini_snapshot(&[missing.clone(), present.clone(), other.clone()]).unwrap();
         assert_eq!(ini.get("loglevel"), Some("DEBUG"));
         assert_eq!(ini.source(), Some(present.as_path()));
     }
 
     #[test]
-    fn read_first_existing_empty_paths_returns_default_snapshot() {
-        let ini = read_first_existing(&[]).unwrap();
+    fn read_ini_snapshot_empty_paths_returns_default_snapshot() {
+        let ini = read_ini_snapshot(&[]).unwrap();
         assert!(ini.iter().next().is_none());
         assert!(ini.source().is_none());
     }
 
     #[test]
-    fn read_first_existing_no_existing_file_returns_default_snapshot() {
+    fn read_ini_snapshot_no_existing_file_returns_default_snapshot() {
         let dir = tempfile::tempdir().unwrap();
-        let ini =
-            read_first_existing(&[dir.path().join("a.ini"), dir.path().join("b.ini")]).unwrap();
+        let ini = read_ini_snapshot(&[dir.path().join("a.ini"), dir.path().join("b.ini")]).unwrap();
         assert!(ini.iter().next().is_none());
         assert!(ini.source().is_none());
     }
 
     #[test]
-    fn read_first_existing_skips_directory_candidate_and_reads_next_file() {
+    fn read_ini_snapshot_skips_directory_candidate_and_reads_next_file() {
         let dir = tempfile::tempdir().unwrap();
         let as_dir = dir.path().join("sf.odbc.ini");
         std::fs::create_dir(&as_dir).unwrap();
@@ -205,25 +214,25 @@ mod tests {
             std::fs::set_permissions(&real, std::fs::Permissions::from_mode(0o600)).unwrap();
         }
 
-        let ini = read_first_existing(&[as_dir, real.clone()]).unwrap();
+        let ini = read_ini_snapshot(&[as_dir, real.clone()]).unwrap();
         assert_eq!(ini.get("loglevel"), Some("DEBUG"));
         assert_eq!(ini.source(), Some(real.as_path()));
     }
 
     #[test]
-    fn read_first_existing_directory_only_candidate_returns_default_snapshot() {
+    fn read_ini_snapshot_directory_only_candidate_returns_default_snapshot() {
         let dir = tempfile::tempdir().unwrap();
         let as_dir = dir.path().join("sf.odbc.ini");
         std::fs::create_dir(&as_dir).unwrap();
 
-        let ini = read_first_existing(&[as_dir]).unwrap();
+        let ini = read_ini_snapshot(&[as_dir]).unwrap();
         assert!(ini.iter().next().is_none());
         assert!(ini.source().is_none());
     }
 
     #[cfg(unix)]
     #[test]
-    fn read_first_existing_rejects_world_writable() {
+    fn read_ini_snapshot_rejects_world_writable() {
         use std::os::unix::fs::PermissionsExt;
 
         let dir = tempfile::tempdir().unwrap();
@@ -231,7 +240,7 @@ mod tests {
         std::fs::write(&path, "LogLevel=INFO\n").unwrap();
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o666)).unwrap();
 
-        let err = read_first_existing(&[path]).unwrap_err();
+        let err = read_ini_snapshot(&[path]).unwrap_err();
         assert!(
             matches!(err, ConfigError::InsecurePermissions { .. }),
             "got: {err:?}"

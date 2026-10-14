@@ -10,7 +10,7 @@ pub mod param_registry;
 pub mod param_store;
 mod private_key;
 mod token;
-pub use ini_loader::{IniConfig, get_ini_config, load_ini_files};
+pub use ini_loader::{IniConfig, get_ini_config, load_ini_files, read_ini_snapshot};
 pub use logging_config_loader::{logging_config_from_ini, logging_config_from_toml_section};
 pub use param_registry::ParamKey;
 pub use param_registry::ParamScope;

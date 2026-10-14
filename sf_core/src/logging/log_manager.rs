@@ -1,25 +1,82 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::io::Write;
+use std::sync::{Arc, RwLock};
 
 use opentelemetry::trace::TracerProvider;
 use tracing::Level;
 use tracing::level_filters::LevelFilter;
+use tracing_appender::rolling::RollingFileAppender;
 use tracing_opentelemetry::OpenTelemetryLayer;
+use tracing_subscriber::fmt::writer::MakeWriter;
 use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::{Layer, Registry};
+use tracing_subscriber::{Layer, Registry, reload};
 
 use crate::env_vars;
 use crate::fs_adapter::{FsAdapter, RealFs};
 use crate::telemetry::os_details::detect_os_details;
 use crate::telemetry::session_telemetry::SessionTelemetry;
 use crate::telemetry::snowflake_exporter::SessionRegistry;
+use crate::utils::sync::RwLockRecoverExt;
 
-use super::error::{InitSnafu, LogError};
+use snafu::ResultExt;
+
+use super::error::{InitSnafu, LogError, ReloadSnafu};
 use super::{EmptyLayer, LoggingConfig};
 
 type BoxedLayer = Box<dyn Layer<Registry> + Send + Sync + 'static>;
 
 const TROUBLESHOOTING_LOG_FILE: &str = "sf_driver_troubleshooting.log";
+
+/// A [`MakeWriter`] whose destination can be swapped in place. Backing a file
+/// sink with this lets [`LogReloadHandle::reload`] redirect the sink to a new
+/// `RollingFileAppender` (or disable it) without rebuilding the layer, so the
+/// layer's `FilterId` stays assigned for the life of the subscriber.
+#[derive(Clone)]
+struct ReloadableWriter {
+    inner: Arc<RwLock<Option<Arc<RollingFileAppender>>>>,
+}
+
+impl ReloadableWriter {
+    fn new(appender: Option<Arc<RollingFileAppender>>) -> Self {
+        Self {
+            inner: Arc::new(RwLock::new(appender)),
+        }
+    }
+
+    fn set(&self, appender: Option<Arc<RollingFileAppender>>) {
+        *self.inner.write_recover() = appender;
+    }
+}
+
+struct ReloadableWriterGuard {
+    appender: Option<Arc<RollingFileAppender>>,
+}
+
+impl<'a> MakeWriter<'a> for ReloadableWriter {
+    type Writer = ReloadableWriterGuard;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        ReloadableWriterGuard {
+            appender: self.inner.read_recover().clone(),
+        }
+    }
+}
+
+impl Write for ReloadableWriterGuard {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        match &self.appender {
+            Some(a) => a.make_writer().write(buf),
+            None => Ok(buf.len()),
+        }
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        match &self.appender {
+            Some(a) => a.make_writer().flush(),
+            None => Ok(()),
+        }
+    }
+}
 
 /// Wraps the composed tracing subscriber and owns the `SdkTracerProvider`,
 /// tying the OTEL exporter lifetime to the subscriber. Lives inside a
@@ -131,6 +188,85 @@ pub struct LogManager {
     /// Resolved once at construction so all consumers (file layer, diagnostic
     /// runner) agree on the directory even if the env var changes mid-process.
     troubleshooting_log_dir: std::path::PathBuf,
+    /// Handle to the hot-swappable file layers (core + troubleshooting), used
+    /// to re-apply logging config without rebuilding the `Dispatch`. `None`
+    /// when the subscriber is externally managed
+    /// ([`Self::with_none_subscriber`]).
+    reload_handle: Option<LogReloadHandle>,
+}
+
+/// Handle to the hot-swappable core and troubleshooting file sinks.
+///
+/// Each sink is built once into the subscriber as a `fmt` layer filtered by a
+/// [`reload::Layer<LevelFilter, Registry>`]; its `FilterId` is assigned once and
+/// never changes. A reload mutates only the inner values: the level filter in
+/// place (which rebuilds the callsite interest cache) and the sink's
+/// destination through a [`ReloadableWriter`]. The owning
+/// [`tracing::dispatcher::Dispatch`] identity stays fixed, so all other layers,
+/// the session registry, and the negotiated encoding are untouched. Cloning is
+/// cheap (shared `Arc`s) and every clone drives the same subscriber.
+#[derive(Clone)]
+pub struct LogReloadHandle {
+    core_writer: ReloadableWriter,
+    core_level: reload::Handle<LevelFilter, Registry>,
+    troubleshooting_writer: ReloadableWriter,
+    troubleshooting_level: reload::Handle<LevelFilter, Registry>,
+}
+
+/// What [`LogReloadHandle::reload`] resolved from the environment and applied.
+pub struct ReloadOutcome {
+    pub troubleshooting: bool,
+    pub troubleshooting_log_dir: std::path::PathBuf,
+}
+
+impl LogReloadHandle {
+    /// Re-resolve troubleshooting from the environment, rebuild the core and
+    /// troubleshooting appenders from `config`, and swap them in place.
+    ///
+    /// Both appenders are built before anything is swapped, so a build failure
+    /// (e.g. an unwritable `log_path`) returns `Err` with the previously
+    /// installed sinks left running. Reloading the level filter rebuilds the
+    /// callsite interest cache, so a changed level takes effect immediately.
+    pub fn reload(&self, config: &LoggingConfig) -> Result<ReloadOutcome, LogError> {
+        let troubleshooting = LogManager::resolve_troubleshooting();
+        let troubleshooting_log_dir = LogManager::resolve_troubleshooting_log_path();
+
+        let core_appender = LogManager::build_core_appender(config)?;
+        let troubleshooting_appender = if troubleshooting {
+            LogManager::build_troubleshooting_appender(&troubleshooting_log_dir)?
+        } else {
+            None
+        };
+
+        if troubleshooting && troubleshooting_appender.is_none() {
+            return Err(InitSnafu {
+                message: format!(
+                    "troubleshooting was requested but its report directory could not be created: {}",
+                    troubleshooting_log_dir.display()
+                ),
+            }
+            .build());
+        }
+
+        let core_level = LogManager::core_level_filter(config);
+        let troubleshooting_level = if troubleshooting_appender.is_some() {
+            LevelFilter::TRACE
+        } else {
+            LevelFilter::OFF
+        };
+
+        self.core_writer.set(core_appender);
+        self.troubleshooting_writer.set(troubleshooting_appender);
+        self.core_level.reload(core_level).context(ReloadSnafu)?;
+        self.troubleshooting_level
+            .reload(troubleshooting_level)
+            .context(ReloadSnafu)?;
+
+        Ok(ReloadOutcome {
+            troubleshooting,
+            troubleshooting_log_dir,
+        })
+    }
 }
 
 impl LogManager {
@@ -195,12 +331,27 @@ impl LogManager {
             .then(|| self.troubleshooting_log_dir.clone())
     }
 
+    /// The resolved troubleshooting log directory, whether or not
+    /// troubleshooting is active. Mirrors the directory a
+    /// [`LogReloadHandle::reload`] reports in its [`ReloadOutcome`], so a
+    /// consumer can log the same destination at startup as on a later reload.
+    pub fn troubleshooting_report_dir(&self) -> &std::path::Path {
+        &self.troubleshooting_log_dir
+    }
+
     /// The [`tracing::dispatcher::Dispatch`] wrapping the configured
     /// subscriber. Consumers install this per-thread via
     /// [`tracing::dispatcher::set_default`] or propagate it to spawned
     /// futures with `.with_current_subscriber()`.
     pub fn dispatch(&self) -> &tracing::dispatcher::Dispatch {
         &self.dispatch
+    }
+
+    /// Handle to the reloadable file layers, or `None` when the subscriber is
+    /// externally managed. A consumer clones this to re-apply logging config
+    /// (e.g. the ODBC per-connect refresh) without rebuilding the dispatch.
+    pub fn reload_handle(&self) -> Option<LogReloadHandle> {
+        self.reload_handle.clone()
     }
 
     /// Create a `LogManager` with a no-op tracing subscriber.
@@ -224,6 +375,7 @@ impl LogManager {
             error_trace_enabled: LoggingConfig::default().error_trace_enabled,
             troubleshooting: false,
             troubleshooting_log_dir: Self::resolve_troubleshooting_log_path(),
+            reload_handle: None,
         }
     }
 
@@ -252,7 +404,7 @@ impl LogManager {
         let error_trace_enabled = config.error_trace_enabled;
         let troubleshooting_log_dir = Self::resolve_troubleshooting_log_path();
         let troubleshooting = Self::resolve_troubleshooting();
-        let dispatch = Self::try_init(
+        let (dispatch, reload_handle) = Self::try_init(
             config,
             None::<EmptyLayer>,
             Some(telemetry.clone()),
@@ -269,6 +421,7 @@ impl LogManager {
             error_trace_enabled,
             troubleshooting,
             troubleshooting_log_dir,
+            reload_handle: Some(reload_handle),
         };
         Ok(lm)
     }
@@ -292,7 +445,7 @@ impl LogManager {
         let telemetry = SessionTelemetry::new(registry);
         let troubleshooting_log_dir = Self::resolve_troubleshooting_log_path();
         let troubleshooting = Self::resolve_troubleshooting();
-        let dispatch = Self::try_init(
+        let (dispatch, reload_handle) = Self::try_init(
             config,
             Some(app_sink),
             Some(telemetry.clone()),
@@ -309,6 +462,7 @@ impl LogManager {
             error_trace_enabled,
             troubleshooting,
             troubleshooting_log_dir,
+            reload_handle: Some(reload_handle),
         };
         Ok(lm)
     }
@@ -391,17 +545,14 @@ impl LogManager {
         telemetry: Option<SessionTelemetry>,
         troubleshooting: bool,
         troubleshooting_log_dir: &std::path::Path,
-    ) -> Result<tracing::dispatcher::Dispatch, LogError>
+    ) -> Result<(tracing::dispatcher::Dispatch, LogReloadHandle), LogError>
     where
         L: Layer<Registry> + Send + Sync + 'static,
     {
-        let mut layers: Vec<BoxedLayer> = Vec::new();
+        let (reloadable_layers, reload_handle) =
+            Self::build_reloadable(&config, troubleshooting, troubleshooting_log_dir)?;
 
-        layers.push(Self::build_core_layer(&config)?);
-
-        if troubleshooting {
-            layers.push(Self::build_troubleshooting_layer(troubleshooting_log_dir)?);
-        }
+        let mut layers: Vec<BoxedLayer> = reloadable_layers;
 
         if let Some(sink) = app_sink {
             layers.push(sink.boxed());
@@ -454,7 +605,82 @@ impl LogManager {
             inner: Box::new(subscriber),
         };
 
-        Ok(tracing::dispatcher::Dispatch::new(driver_subscriber))
+        Ok((
+            tracing::dispatcher::Dispatch::new(driver_subscriber),
+            reload_handle,
+        ))
+    }
+
+    /// Builds the two hot-swappable file layers (core, then troubleshooting) and
+    /// the [`LogReloadHandle`] that drives them. Both layers are always built so
+    /// their `FilterId`s are assigned once at subscriber-build time; a disabled
+    /// sink is expressed as a `None` writer and an `OFF` level filter rather than
+    /// an absent layer, so [`LogReloadHandle::reload`] can enable it later
+    /// without a new `FilterId`.
+    fn build_reloadable(
+        config: &LoggingConfig,
+        troubleshooting: bool,
+        troubleshooting_log_dir: &std::path::Path,
+    ) -> Result<(Vec<BoxedLayer>, LogReloadHandle), LogError> {
+        let core_appender = Self::build_core_appender(config)?;
+        if config.max_file_size.is_some() {
+            eprintln!(
+                "WARNING: max_file_size is configured but size-based log rotation is not \
+                 yet supported; the setting will be ignored"
+            );
+        }
+        let core_writer = ReloadableWriter::new(core_appender);
+        let (core_filter, core_level): (
+            reload::Layer<LevelFilter, Registry>,
+            reload::Handle<LevelFilter, Registry>,
+        ) = reload::Layer::new(Self::core_level_filter(config));
+        let core_layer = tracing_subscriber::fmt::layer()
+            .with_ansi(false)
+            .with_writer(core_writer.clone())
+            .with_filter(core_filter)
+            .boxed();
+
+        let troubleshooting_appender = if troubleshooting {
+            Self::build_troubleshooting_appender(troubleshooting_log_dir)?
+        } else {
+            None
+        };
+        let troubleshooting_level_init = if troubleshooting_appender.is_some() {
+            LevelFilter::TRACE
+        } else {
+            LevelFilter::OFF
+        };
+        let troubleshooting_writer = ReloadableWriter::new(troubleshooting_appender);
+        let (troubleshooting_filter, troubleshooting_level): (
+            reload::Layer<LevelFilter, Registry>,
+            reload::Handle<LevelFilter, Registry>,
+        ) = reload::Layer::new(troubleshooting_level_init);
+        let troubleshooting_layer = tracing_subscriber::fmt::layer()
+            .with_ansi(false)
+            .with_writer(troubleshooting_writer.clone())
+            .with_filter(troubleshooting_filter)
+            .boxed();
+
+        Ok((
+            vec![core_layer, troubleshooting_layer],
+            LogReloadHandle {
+                core_writer,
+                core_level,
+                troubleshooting_writer,
+                troubleshooting_level,
+            },
+        ))
+    }
+
+    /// The level filter for the core sink: `config.level` when logging is
+    /// enabled and a path is set, `OFF` otherwise (the sink is still present so
+    /// a later reload can raise it).
+    fn core_level_filter(config: &LoggingConfig) -> LevelFilter {
+        if config.enabled && config.log_path.is_some() {
+            config.level
+        } else {
+            LevelFilter::OFF
+        }
     }
 
     /// Pre-creates the troubleshooting log file with owner-only (`0o600`) permissions on Unix
@@ -496,20 +722,25 @@ impl LogManager {
         Ok(())
     }
 
-    fn build_troubleshooting_layer(log_path: &std::path::Path) -> Result<BoxedLayer, LogError> {
+    /// Builds the troubleshooting appender, pre-creating its directory and log
+    /// file. A directory that cannot be created yields `Ok(None)` (the sink is
+    /// left disabled) after a stderr diagnostic; a failed appender build or a
+    /// permissions failure returns `Err`.
+    fn build_troubleshooting_appender(
+        log_path: &std::path::Path,
+    ) -> Result<Option<Arc<RollingFileAppender>>, LogError> {
         if let Err(e) = std::fs::create_dir_all(log_path) {
             eprintln!(
                 "SNOWFLAKE_TROUBLESHOOTING_REPORT_PATH: failed to create log directory {}: {e}",
                 log_path.display()
             );
-            return Ok(EmptyLayer.boxed());
+            return Ok(None);
         }
 
         let log_file = log_path.join(TROUBLESHOOTING_LOG_FILE);
         Self::ensure_troubleshooting_log_permissions(&log_file)?;
 
-        // Rotation::NEVER → single file, no date/sequence suffix appended.
-        let appender = tracing_appender::rolling::RollingFileAppender::builder()
+        let appender = RollingFileAppender::builder()
             .rotation(tracing_appender::rolling::Rotation::NEVER)
             .filename_prefix(TROUBLESHOOTING_LOG_FILE)
             .build(log_path)
@@ -520,62 +751,47 @@ impl LogManager {
                 .build()
             })?;
 
-        let layer = tracing_subscriber::fmt::layer()
-            .with_ansi(false)
-            .with_writer(appender);
-
-        Ok(layer.boxed())
+        Ok(Some(Arc::new(appender)))
     }
 
-    fn build_core_layer(config: &LoggingConfig) -> Result<BoxedLayer, LogError> {
+    /// Builds the core file appender, or `Ok(None)` when logging is disabled or
+    /// no `log_path` is set.
+    fn build_core_appender(
+        config: &LoggingConfig,
+    ) -> Result<Option<Arc<RollingFileAppender>>, LogError> {
         if !config.enabled {
-            return Ok(EmptyLayer.boxed());
+            return Ok(None);
         }
 
-        if let Some(ref log_path) = config.log_path {
-            let file_name = config.log_file_name.as_deref().unwrap_or("sf_driver.log");
+        let Some(log_path) = config.log_path.as_ref() else {
+            return Ok(None);
+        };
 
-            // When max_file_count is set but rotation is Never, default to
-            // Daily so that file pruning actually takes effect (rotation is a
-            // prerequisite for max_log_files in tracing-appender).
-            let effective_rotation = if config.max_file_count.is_some()
-                && config.rotation == super::LogRotation::Never
-            {
+        let file_name = config.log_file_name.as_deref().unwrap_or("sf_driver.log");
+
+        let effective_rotation =
+            if config.max_file_count.is_some() && config.rotation == super::LogRotation::Never {
                 super::LogRotation::Daily
             } else {
                 config.rotation
             };
 
-            let mut builder = tracing_appender::rolling::RollingFileAppender::builder()
-                .rotation(effective_rotation.to_appender_rotation())
-                .filename_prefix(file_name);
+        let mut builder = RollingFileAppender::builder()
+            .rotation(effective_rotation.to_appender_rotation())
+            .filename_prefix(file_name);
 
-            if let Some(count) = config.max_file_count {
-                builder = builder.max_log_files(count as usize);
-            }
-
-            let appender = builder.build(log_path).map_err(|e| {
-                InitSnafu {
-                    message: format!("Failed to create log appender: {e}"),
-                }
-                .build()
-            })?;
-
-            if config.max_file_size.is_some() {
-                eprintln!(
-                    "WARNING: max_file_size is configured but size-based log rotation is not \
-                     yet supported; the setting will be ignored"
-                );
-            }
-
-            let fmt_layer = tracing_subscriber::fmt::layer()
-                .with_ansi(false)
-                .with_writer(appender);
-
-            Ok(fmt_layer.with_filter(config.level).boxed())
-        } else {
-            Ok(EmptyLayer.boxed())
+        if let Some(count) = config.max_file_count {
+            builder = builder.max_log_files(count as usize);
         }
+
+        let appender = builder.build(log_path).map_err(|e| {
+            InitSnafu {
+                message: format!("Failed to create log appender: {e}"),
+            }
+            .build()
+        })?;
+
+        Ok(Some(Arc::new(appender)))
     }
 }
 
@@ -589,7 +805,11 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
 
         let dir = tempfile::tempdir().unwrap();
-        assert!(LogManager::build_troubleshooting_layer(dir.path()).is_ok());
+        assert!(
+            LogManager::build_troubleshooting_appender(dir.path())
+                .unwrap()
+                .is_some()
+        );
 
         let log_file = dir.path().join(TROUBLESHOOTING_LOG_FILE);
         assert!(
@@ -610,7 +830,11 @@ mod tests {
         std::fs::write(&log_file, "stale\n").unwrap();
         std::fs::set_permissions(&log_file, std::fs::Permissions::from_mode(0o644)).unwrap();
 
-        assert!(LogManager::build_troubleshooting_layer(dir.path()).is_ok());
+        assert!(
+            LogManager::build_troubleshooting_appender(dir.path())
+                .unwrap()
+                .is_some()
+        );
 
         let mode = std::fs::metadata(&log_file).unwrap().permissions().mode() & 0o777;
         assert_eq!(
@@ -620,37 +844,39 @@ mod tests {
     }
 
     #[test]
-    fn build_core_layer_disabled_returns_empty() {
+    fn build_core_appender_disabled_returns_none() {
         let config = LoggingConfig {
             enabled: false,
             ..LoggingConfig::default()
         };
-        assert!(LogManager::build_core_layer(&config).is_ok());
+        assert!(LogManager::build_core_appender(&config).unwrap().is_none());
+        assert_eq!(LogManager::core_level_filter(&config), LevelFilter::OFF);
     }
 
     #[test]
-    fn build_core_layer_no_path_returns_empty() {
+    fn build_core_appender_no_path_returns_none() {
         let config = LoggingConfig {
             enabled: true,
             log_path: None,
             ..LoggingConfig::default()
         };
-        assert!(LogManager::build_core_layer(&config).is_ok());
+        assert!(LogManager::build_core_appender(&config).unwrap().is_none());
+        assert_eq!(LogManager::core_level_filter(&config), LevelFilter::OFF);
     }
 
     #[test]
-    fn build_core_layer_with_path_succeeds() {
+    fn build_core_appender_with_path_succeeds() {
         let dir = tempfile::tempdir().unwrap();
         let config = LoggingConfig {
             enabled: true,
             log_path: Some(dir.path().to_path_buf()),
             ..LoggingConfig::default()
         };
-        assert!(LogManager::build_core_layer(&config).is_ok());
+        assert!(LogManager::build_core_appender(&config).unwrap().is_some());
     }
 
     #[test]
-    fn build_core_layer_with_custom_file_name() {
+    fn build_core_appender_with_custom_file_name() {
         let dir = tempfile::tempdir().unwrap();
         let config = LoggingConfig {
             enabled: true,
@@ -659,15 +885,13 @@ mod tests {
             ..LoggingConfig::default()
         };
         assert!(
-            LogManager::build_core_layer(&config).is_ok(),
-            "build_core_layer should succeed with a custom file name"
+            LogManager::build_core_appender(&config).unwrap().is_some(),
+            "build_core_appender should succeed with a custom file name"
         );
     }
 
     #[test]
-    fn build_core_layer_respects_level_filter() {
-        use tracing::level_filters::LevelFilter;
-
+    fn core_level_filter_tracks_config_level_when_enabled_with_path() {
         let dir = tempfile::tempdir().unwrap();
         for level in [
             LevelFilter::OFF,
@@ -683,10 +907,8 @@ mod tests {
                 level,
                 ..LoggingConfig::default()
             };
-            assert!(
-                LogManager::build_core_layer(&config).is_ok(),
-                "build_core_layer should succeed for level {level:?}"
-            );
+            assert!(LogManager::build_core_appender(&config).unwrap().is_some());
+            assert_eq!(LogManager::core_level_filter(&config), level);
         }
     }
 
@@ -740,6 +962,12 @@ mod tests {
         let lm = LogManager::with_none_subscriber(Arc::new(crate::fs_adapter::RealFs));
         let guard = lm.telemetry_sessions().read().unwrap();
         assert!(guard.is_empty(), "session registry should start empty");
+    }
+
+    #[test]
+    fn with_none_subscriber_has_no_reload_handle() {
+        let lm = LogManager::with_none_subscriber(Arc::new(RealFs));
+        assert!(lm.reload_handle().is_none());
     }
 
     #[tokio::test]
