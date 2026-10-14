@@ -615,7 +615,13 @@ jobs:
         shell: bash
         run: |
           mkdir -p reports
+          xdist_args=()
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            # macOS ARM runners OOM or flake under pytest-xdist -n auto (SNOW-4204469).
+            xdist_args=(-n 4)
+          fi
           hatch run ${{ matrix.hatch_env }}.py${{ matrix.py }}:cov \
+            "${xdist_args[@]}" \
             --json-report --json-report-file=reports/universal-${{ env.MATRIX_KEY }}.json \
             --junitxml=reports/universal-${{ env.MATRIX_KEY }}.xml \
             --cov-report=xml:reports/coverage-${{ env.MATRIX_KEY }}.xml \
