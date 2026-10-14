@@ -80,6 +80,16 @@ describe('toCoreConnectionOptions', () => {
     });
   });
 
+  it('should map workloadIdentityHost onto wif_host', () => {
+    expect(
+      toCoreConnectionOptions({
+        workloadIdentityHost: 'sts.sc2s.sgov.gov',
+      }),
+    ).toEqual({
+      wif_host: 'sts.sc2s.sgov.gov',
+    });
+  });
+
   it('should map crlAllowCertificatesWithoutCrlURL onto crl_allow_certificates_without_crl_url', () => {
     expect(toCoreConnectionOptions({ crlAllowCertificatesWithoutCrlURL: true })).toEqual({
       crl_allow_certificates_without_crl_url: 'true',

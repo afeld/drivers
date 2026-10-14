@@ -23,6 +23,7 @@ const CONNECTION_OPTION_ALIASES: Record<string, string> = {
   workloadIdentityProvider: 'workload_identity_provider',
   workloadIdentityAzureClientId: 'workload_identity_azure_client_id',
   workloadIdentityAzureEntraIdResource: 'workload_identity_entra_resource',
+  workloadIdentityHost: 'wif_host',
   clientStoreTemporaryCredential: 'client_store_temporary_credential',
   database: 'database',
   schema: 'schema',

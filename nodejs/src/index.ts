@@ -97,6 +97,7 @@ export type ConnectionOptions = Record<string, unknown> & {
    */
   protocol?: 'http' | 'https';
   workloadIdentityProvider?: 'AWS' | 'AZURE' | 'GCP' | 'OIDC';
+  workloadIdentityHost?: string;
   rowMode?: RowMode;
   fetchAsString?: DataType[];
   jsTreatIntegerAsBigInt?: boolean;
