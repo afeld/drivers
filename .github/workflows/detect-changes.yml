@@ -146,12 +146,16 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v3
         with:
-          # On push, `base` must name the branch that was pushed to for the
-          # action to diff against the commit immediately before the push;
-          # left empty it falls back to the repository default branch, which
-          # would compare a release/** push against all of main. Empty (the
-          # action's default) is correct for pull_request and merge_group.
-          base: ${{ github.event_name == 'push' && github.ref || '' }}
+          # Push: name the branch that was pushed to. An empty base falls
+          # back to the default branch and compares a release/** push
+          # against all of main.
+          # Merge queue: the parent of this merge group. dorny/paths-filter@v3
+          # treats any other event as a branch diff, so an empty base
+          # three-dot-diffs the queue ref against main and includes every
+          # pull request already stacked ahead of this one. A commit SHA
+          # selects a two-dot diff against that parent, which is only the
+          # files this group introduces. pull_request ignores `base`.
+          base: ${{ github.event_name == 'push' && github.ref || github.event_name == 'merge_group' && github.event.merge_group.base_sha || '' }}
           # `list-files: json` makes each filter expose `<filter>_files` as
           # a JSON array of matching paths. The computed step below uses
           # `all_files` (from the catch-all `all` filter) to verify every
