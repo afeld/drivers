@@ -132,20 +132,72 @@ fn catalog_arg_is_percent(arg: Option<&crate::model::CatalogStringArg>) -> bool 
 fn catalog_arg_is_empty_selector(arg: Option<&crate::model::CatalogStringArg>) -> bool {
     match arg {
         None => true,
-        Some(a) if a.value.as_deref() == Some("") => true,
-        Some(a) if a.value.is_none() && a.length == Some(0) => true,
-        _ => false,
+        Some(a) => match a.selector {
+            Some(crate::model::CatalogStringSelector::EmptyString) => true,
+            Some(_) => a.value.as_deref() == Some(""),
+            None => a.value.as_deref() == Some("") || (a.value.is_none() && a.length == Some(0)),
+        },
     }
 }
 
-/// True when a `SQLTables` string arg is an explicit null-pointer selector: the
-/// DM passed this position (the arg is present) but captured no string, and the
-/// captured length is the null-pointer sentinel `SQL_NTS` (-3) rather than the
-/// empty-string sentinel (length 0). A null pointer means "match every object
-/// at this level". An absent arg (a synthetic call that omits the position)
-/// returns false so it stays unrolled.
+/// True when a present `SQLTables` string arg is a null pointer, which matches
+/// every object at that level. An absent arg returns false so the call stays
+/// unrolled. A `selector` decides this. Without one, a missing value whose
+/// length is not 0 is a null pointer; length 0 is the empty-string form.
 fn arg_is_null_pointer(arg: Option<&crate::model::CatalogStringArg>) -> bool {
-    matches!(arg, Some(a) if a.value.is_none() && a.length != Some(0))
+    match arg {
+        Some(a) if a.selector == Some(crate::model::CatalogStringSelector::NullPointer) => true,
+        Some(a) if a.selector.is_some() => false,
+        Some(a) => a.value.is_none() && a.length != Some(0),
+        None => false,
+    }
+}
+
+fn push_catalog_string_arg(
+    args: &mut Vec<String>,
+    arg: &crate::model::CatalogStringArg,
+    enumeration: bool,
+) {
+    match arg.selector {
+        Some(crate::model::CatalogStringSelector::NullPointer) => {
+            args.push("nullptr".to_string());
+            args.push(arg.length.unwrap_or(0).to_string());
+        }
+        Some(crate::model::CatalogStringSelector::EmptyString) => {
+            args.push("sqlchar(\"\")".to_string());
+            args.push(arg.length.unwrap_or(0).to_string());
+        }
+        Some(crate::model::CatalogStringSelector::Literal) => {
+            let literal = arg.value.as_deref().unwrap_or("");
+            args.push(format!(
+                "sqlchar(\"{}\")",
+                escape_cpp_string_literal(literal)
+            ));
+            args.push(
+                arg.length
+                    .map(|l| l.to_string())
+                    .unwrap_or_else(|| "SQL_NTS".to_string()),
+            );
+        }
+        None if enumeration && arg.length == Some(0) && arg.value.is_none() => {
+            args.push("sqlchar(\"\")".to_string());
+            args.push("0".to_string());
+        }
+        None => match &arg.value {
+            None => {
+                args.push("nullptr".to_string());
+                args.push(arg.length.unwrap_or(0).to_string());
+            }
+            Some(s) => {
+                args.push(format!("sqlchar(\"{}\")", escape_cpp_string_literal(s)));
+                args.push(
+                    arg.length
+                        .map(|l| l.to_string())
+                        .unwrap_or_else(|| "SQL_NTS".to_string()),
+                );
+            }
+        },
+    }
 }
 
 /// True for the `SQLTables` enumerate-all forms whose result set is a property
@@ -154,12 +206,16 @@ fn arg_is_null_pointer(arg: Option<&crate::model::CatalogStringArg>) -> bool {
 ///
 /// * catalog list — `SQLTables("%", "", "", "")`;
 /// * account-wide schema list — `SQLTables("", "%", "", "")`, where the catalog
-///   is the empty-string sentinel (empty string or captured length 0), not a
-///   null pointer;
+///   is an empty string, not a null pointer. With a selector, only
+///   `EmptyString` is an empty catalog; a `NullPointer` at length 0 is not.
+///   Without a selector, length 0 remains the empty sentinel;
 /// * all objects in a catalog — `SQLTables(<catalog>, NULL, NULL, [types])`,
 ///   the form Excel MS Query issues to list every table/view/synonym. Both the
 ///   schema and table names are null pointers, so the result is every object in
 ///   the catalog across all schemas — a count that grows as the fixture grows.
+///   The same clause covers `SQLTables(NULL, NULL, NULL, NULL)`. The captured
+///   name length is not the null-pointer test: applications pass `0` or
+///   `SQL_NTS`.
 ///
 /// A literal schema or table name, a `"%"` schema on a catalog-scoped listing,
 /// or `"%"` only in `TableType` is a scoped listing and stays unrolled.
@@ -1683,37 +1739,17 @@ impl<'a> GenContext<'a> {
     fn emit_catalog(&mut self, call: &crate::model::CatalogFunction) {
         let stmt_var = self.stmt_var_for(&call.handle);
         let fn_name = &call.function_name;
-        // The catalog-enumeration special forms — `SQLTables("%", "", "")`
-        // (catalogs), `SQLTables("", "%", "")` (schemas) — REQUIRE empty-string
-        // selectors: a captured length of 0 is the ODBC empty-string sentinel
-        // (rendered `<zero length>`), semantically distinct from a null pointer
-        // (`<null pointer>`, length SQL_NTS = -3), and passing null instead
-        // makes the driver return no rows. We only honour that distinction for
-        // these enumeration calls: elsewhere (e.g. `SQLColumns`' ColumnName) an
-        // empty string means "match nothing" while null means "match all", and
-        // the trace's intent is the latter, so non-enumeration empty selectors
-        // stay null.
+        // `SQLTables("%", "", "")` and `SQLTables("", "%", "")` pass empty
+        // strings. A null pointer is a different selector and matches every
+        // object at that level. `selector` chooses. IR without one still treats
+        // length 0 on an enumeration as the empty string, and every other
+        // missing value as a null pointer. Outside an enumeration a missing
+        // value stays a null pointer, so a scoped listing does not turn a
+        // length-0 table type into an empty string.
         let enumeration = is_object_enumeration(call);
         let mut args = vec![stmt_var.clone()];
         for arg in &call.string_args {
-            match &arg.value {
-                None if enumeration && arg.length == Some(0) => {
-                    args.push("sqlchar(\"\")".to_string());
-                    args.push("0".to_string());
-                }
-                None => {
-                    args.push("nullptr".to_string());
-                    args.push(arg.length.unwrap_or(0).to_string());
-                }
-                Some(s) => {
-                    args.push(format!("sqlchar(\"{}\")", escape_cpp_string_literal(s)));
-                    args.push(
-                        arg.length
-                            .map(|l| l.to_string())
-                            .unwrap_or_else(|| "SQL_NTS".to_string()),
-                    );
-                }
-            }
+            push_catalog_string_arg(&mut args, arg, enumeration);
         }
         self.writeln(&format!("// {fn_name}"));
         self.writeln("{");
@@ -1849,20 +1885,7 @@ impl<'a> GenContext<'a> {
 
         let mut args = vec![stmt_var.clone(), identifier];
         for arg in &call.string_args {
-            match &arg.value {
-                None => {
-                    args.push("nullptr".to_string());
-                    args.push(arg.length.unwrap_or(0).to_string());
-                }
-                Some(s) => {
-                    args.push(format!("sqlchar(\"{}\")", escape_cpp_string_literal(s)));
-                    args.push(
-                        arg.length
-                            .map(|l| l.to_string())
-                            .unwrap_or_else(|| "SQL_NTS".to_string()),
-                    );
-                }
-            }
+            push_catalog_string_arg(&mut args, arg, false);
         }
         args.push(scope);
         args.push(nullable);
@@ -4437,6 +4460,7 @@ mod tests {
         let nullarg = || CatalogStringArg {
             value: None,
             length: Some(0),
+            selector: None,
         };
         let calls = vec![
             OdbcCall::Catalog(CatalogFunction {
@@ -4449,12 +4473,14 @@ mod tests {
                     CatalogStringArg {
                         value: Some("%".to_string()),
                         length: Some(1),
+                        selector: None,
                     },
                     nullarg(),
                     nullarg(),
                     CatalogStringArg {
                         value: Some("TABLE,VIEW".to_string()),
                         length: Some(10),
+                        selector: None,
                     },
                 ],
             }),
@@ -4540,6 +4566,7 @@ mod tests {
         let nullarg = || CatalogStringArg {
             value: None,
             length: Some(0),
+            selector: None,
         };
 
         let calls = vec![
@@ -4551,6 +4578,7 @@ mod tests {
                     CatalogStringArg {
                         value: Some("%".to_string()),
                         length: Some(1),
+                        selector: None,
                     },
                     nullarg(),
                     nullarg(),
@@ -4624,13 +4652,13 @@ mod tests {
         use crate::model::{CatalogFunction, CatalogStringArg, Fetch, OdbcCall, ReturnCode};
 
         // SQLTables(<literal catalog>, NULL, NULL, <types>) — Excel MS Query's
-        // "list every table/view/synonym in this database". The schema and table
-        // names are null pointers (length SQL_NTS = -3), so the result is every
-        // object in the catalog; the count grows as the fixture grows and must
-        // not be pinned.
+        // "list every table/view/synonym in this database". This IR has no
+        // selector; those null pointers are recorded with length -3. The count
+        // grows as the fixture grows and must not be pinned.
         let nullptr_arg = || CatalogStringArg {
             value: None,
             length: Some(-3),
+            selector: None,
         };
         let calls = vec![
             OdbcCall::Catalog(CatalogFunction {
@@ -4641,12 +4669,14 @@ mod tests {
                     CatalogStringArg {
                         value: Some("ODBCMETADATATESTDB".to_string()),
                         length: Some(18),
+                        selector: None,
                     },
                     nullptr_arg(),
                     nullptr_arg(),
                     CatalogStringArg {
                         value: Some("'TABLE','VIEW','SYNONYM'".to_string()),
                         length: Some(24),
+                        selector: None,
                     },
                 ],
             }),
@@ -4713,6 +4743,7 @@ mod tests {
                 string_args: vec![CatalogStringArg {
                     value: Some("ODBCMETADATATESTDB".to_string()),
                     length: None,
+                    selector: None,
                 }],
             }),
             OdbcCall::Fetch(Fetch {
@@ -4761,6 +4792,7 @@ mod tests {
         let nullarg = || CatalogStringArg {
             value: None,
             length: Some(0),
+            selector: None,
         };
         let calls = vec![
             OdbcCall::Catalog(CatalogFunction {
@@ -4772,6 +4804,7 @@ mod tests {
                     CatalogStringArg {
                         value: Some("%".to_string()),
                         length: Some(1),
+                        selector: None,
                     },
                     nullarg(),
                     nullarg(),
@@ -4837,18 +4870,22 @@ mod tests {
                     CatalogStringArg {
                         value: Some("fixture_db".to_string()),
                         length: Some(10),
+                        selector: None,
                     },
                     CatalogStringArg {
                         value: Some("fixture_schema".to_string()),
                         length: Some(14),
+                        selector: None,
                     },
                     CatalogStringArg {
                         value: Some("%".to_string()),
                         length: Some(1),
+                        selector: None,
                     },
                     CatalogStringArg {
                         value: None,
                         length: Some(0),
+                        selector: None,
                     },
                 ],
             }),
@@ -4910,6 +4947,7 @@ mod tests {
         let nullarg = || CatalogStringArg {
             value: None,
             length: Some(0),
+            selector: None,
         };
         let calls = vec![
             OdbcCall::Catalog(CatalogFunction {
@@ -4920,10 +4958,12 @@ mod tests {
                     CatalogStringArg {
                         value: Some("MYDB".to_string()),
                         length: Some(4),
+                        selector: None,
                     },
                     CatalogStringArg {
                         value: Some("%".to_string()),
                         length: Some(1),
+                        selector: None,
                     },
                     nullarg(),
                     nullarg(),
@@ -4981,18 +5021,22 @@ mod tests {
                     CatalogStringArg {
                         value: Some("MYDB".to_string()),
                         length: Some(4),
+                        selector: None,
                     },
                     CatalogStringArg {
                         value: Some("SCH".to_string()),
                         length: Some(3),
+                        selector: None,
                     },
                     CatalogStringArg {
                         value: Some("TBL".to_string()),
                         length: Some(3),
+                        selector: None,
                     },
                     CatalogStringArg {
                         value: Some("%".to_string()),
                         length: Some(1),
+                        selector: None,
                     },
                 ],
             }),
@@ -5040,6 +5084,7 @@ mod tests {
         let nullarg = || CatalogStringArg {
             value: None,
             length: Some(0),
+            selector: None,
         };
         let calls = vec![OdbcCall::Catalog(CatalogFunction {
             return_code: ReturnCode::Success,
@@ -5049,6 +5094,7 @@ mod tests {
                 CatalogStringArg {
                     value: Some("%".to_string()),
                     length: Some(1),
+                    selector: None,
                 },
                 nullarg(),
                 nullarg(),
@@ -5477,6 +5523,268 @@ mod tests {
         assert!(
             output.contains("0xde, 0xad, 0xbe, 0xef"),
             "binary assert uses hex literal; output:\n{output}"
+        );
+    }
+
+    fn catalog_arg(
+        value: Option<&str>,
+        length: i64,
+        selector: crate::model::CatalogStringSelector,
+    ) -> crate::model::CatalogStringArg {
+        crate::model::CatalogStringArg {
+            value: value.map(str::to_string),
+            length: Some(length),
+            selector: Some(selector),
+        }
+    }
+
+    fn tables_line(output: &str) -> String {
+        output
+            .lines()
+            .find(|l| l.contains("SQLRETURN ret = SQLTables("))
+            .expect("SQLTables call")
+            .to_string()
+    }
+
+    #[test]
+    fn four_null_pointers_at_length_zero_drain_as_nullptr() {
+        use crate::model::{CatalogFunction, CatalogStringSelector, Fetch, OdbcCall, ReturnCode};
+
+        let null_ptr = || catalog_arg(None, 0, CatalogStringSelector::NullPointer);
+        let calls = vec![
+            OdbcCall::Catalog(CatalogFunction {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+                function_name: "SQLTables".to_string(),
+                string_args: vec![null_ptr(), null_ptr(), null_ptr(), null_ptr()],
+            }),
+            OdbcCall::Fetch(Fetch {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+            }),
+            OdbcCall::Fetch(Fetch {
+                return_code: ReturnCode::NoData,
+                handle: Some("0xstmt".to_string()),
+            }),
+        ];
+        let config = GeneratorConfig {
+            test_name: "all null tables".to_string(),
+            tag: "replay".to_string(),
+            query_map: None,
+            allow_unsupported: true,
+            ..Default::default()
+        };
+        let output = generate(&calls, &config).expect("generate");
+        assert!(
+            output.contains("while ((ret = SQLFetch("),
+            "four null pointers are an object enumeration; output:\n{output}"
+        );
+        let line = tables_line(&output);
+        assert!(
+            line.contains("nullptr, 0, nullptr, 0, nullptr, 0, nullptr, 0"),
+            "length 0 null pointers stay nullptr; line:\n{line}"
+        );
+        assert!(
+            !line.contains("sqlchar(\"\")"),
+            "length 0 null pointers are not empty strings; line:\n{line}"
+        );
+    }
+
+    #[test]
+    fn literal_catalog_null_schema_and_table_at_length_zero_drains() {
+        use crate::model::{CatalogFunction, CatalogStringSelector, Fetch, OdbcCall, ReturnCode};
+
+        let null_ptr = || catalog_arg(None, 0, CatalogStringSelector::NullPointer);
+        let calls = vec![
+            OdbcCall::Catalog(CatalogFunction {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+                function_name: "SQLTables".to_string(),
+                string_args: vec![
+                    catalog_arg(
+                        Some("ODBCMETADATATESTDB"),
+                        -3,
+                        CatalogStringSelector::Literal,
+                    ),
+                    null_ptr(),
+                    null_ptr(),
+                    null_ptr(),
+                ],
+            }),
+            OdbcCall::Fetch(Fetch {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+            }),
+            OdbcCall::Fetch(Fetch {
+                return_code: ReturnCode::NoData,
+                handle: Some("0xstmt".to_string()),
+            }),
+        ];
+        let config = GeneratorConfig {
+            test_name: "catalog null schema".to_string(),
+            tag: "replay".to_string(),
+            query_map: None,
+            allow_unsupported: true,
+            ..Default::default()
+        };
+        let output = generate(&calls, &config).expect("generate");
+        assert!(
+            output.contains("while ((ret = SQLFetch("),
+            "literal catalog with null schema and table drains; output:\n{output}"
+        );
+        let line = tables_line(&output);
+        assert!(
+            line.contains("sqlchar(\"ODBCMETADATATESTDB\"), -3, nullptr, 0, nullptr, 0"),
+            "null schema and table at length 0 stay nullptr; line:\n{line}"
+        );
+        assert!(
+            !line.contains("sqlchar(\"\")"),
+            "null schema and table are not empty strings; line:\n{line}"
+        );
+    }
+
+    #[test]
+    fn percent_catalog_empty_string_at_sql_nts_drains_as_empty_string() {
+        use crate::model::{CatalogFunction, CatalogStringSelector, Fetch, OdbcCall, ReturnCode};
+
+        let empty = || catalog_arg(None, -3, CatalogStringSelector::EmptyString);
+        let calls = vec![
+            OdbcCall::Catalog(CatalogFunction {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+                function_name: "SQLTables".to_string(),
+                string_args: vec![
+                    catalog_arg(Some("%"), -3, CatalogStringSelector::Literal),
+                    empty(),
+                    empty(),
+                    empty(),
+                ],
+            }),
+            OdbcCall::Fetch(Fetch {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+            }),
+            OdbcCall::Fetch(Fetch {
+                return_code: ReturnCode::NoData,
+                handle: Some("0xstmt".to_string()),
+            }),
+        ];
+        let config = GeneratorConfig {
+            test_name: "catalog list".to_string(),
+            tag: "replay".to_string(),
+            query_map: None,
+            allow_unsupported: true,
+            ..Default::default()
+        };
+        let output = generate(&calls, &config).expect("generate");
+        assert!(
+            output.contains("while ((ret = SQLFetch("),
+            "percent catalog with empty-string selectors drains; output:\n{output}"
+        );
+        let line = tables_line(&output);
+        assert!(
+            line.contains(
+                "sqlchar(\"%\"), -3, sqlchar(\"\"), -3, sqlchar(\"\"), -3, sqlchar(\"\"), -3"
+            ),
+            "empty strings keep SQL_NTS and are not null pointers; line:\n{line}"
+        );
+        assert!(
+            !line.contains("nullptr"),
+            "empty strings are not emitted as null pointers; line:\n{line}"
+        );
+    }
+
+    #[test]
+    fn sql_columns_emits_null_pointer_and_empty_string_from_selector() {
+        use crate::model::{CatalogFunction, CatalogStringSelector, OdbcCall, ReturnCode};
+
+        let calls = vec![OdbcCall::Catalog(CatalogFunction {
+            return_code: ReturnCode::Success,
+            handle: Some("0xstmt".to_string()),
+            function_name: "SQLColumns".to_string(),
+            string_args: vec![
+                catalog_arg(Some("MYDB"), -3, CatalogStringSelector::Literal),
+                catalog_arg(None, 0, CatalogStringSelector::NullPointer),
+                catalog_arg(Some("TBL"), -3, CatalogStringSelector::Literal),
+                catalog_arg(None, -3, CatalogStringSelector::EmptyString),
+            ],
+        })];
+        let config = GeneratorConfig {
+            test_name: "columns selectors".to_string(),
+            tag: "replay".to_string(),
+            query_map: None,
+            allow_unsupported: true,
+            ..Default::default()
+        };
+        let output = generate(&calls, &config).expect("generate");
+        let line = output
+            .lines()
+            .find(|l| l.contains("SQLRETURN ret = SQLColumns("))
+            .expect("SQLColumns call")
+            .to_string();
+        assert!(
+            line.contains(
+                "sqlchar(\"MYDB\"), -3, nullptr, 0, sqlchar(\"TBL\"), -3, sqlchar(\"\"), -3"
+            ),
+            "SQLColumns follows the selector outside an enumeration; line:\n{line}"
+        );
+    }
+
+    #[test]
+    fn null_catalog_at_length_zero_with_percent_schema_stays_unrolled() {
+        use crate::model::{
+            CatalogFunction, CatalogStringSelector, Fetch, GetData, OdbcCall, ReturnCode,
+        };
+
+        let calls = vec![
+            OdbcCall::Catalog(CatalogFunction {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+                function_name: "SQLTables".to_string(),
+                string_args: vec![
+                    catalog_arg(None, 0, CatalogStringSelector::NullPointer),
+                    catalog_arg(Some("%"), 1, CatalogStringSelector::Literal),
+                    catalog_arg(None, 0, CatalogStringSelector::EmptyString),
+                    catalog_arg(None, 0, CatalogStringSelector::EmptyString),
+                ],
+            }),
+            OdbcCall::Fetch(Fetch {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+            }),
+            OdbcCall::GetData(GetData {
+                return_code: ReturnCode::Success,
+                handle: Some("0xstmt".to_string()),
+                column_number: Some(2),
+                target_type: Some(-8),
+                target_type_name: Some("SQL_C_WCHAR".to_string()),
+                buffer_length: Some(2048),
+                value: Some("FIXTURE_SCHEMA".to_string()),
+                indicator: Some(28),
+                captured: None,
+                seq: None,
+            }),
+        ];
+        let config = GeneratorConfig {
+            test_name: "null catalog percent schema".to_string(),
+            tag: "replay".to_string(),
+            query_map: None,
+            allow_unsupported: true,
+            ..Default::default()
+        };
+        let output = generate(&calls, &config).expect("generate");
+        assert!(
+            !output.contains("while ((ret = SQLFetch("),
+            "a null catalog at length 0 is not a schema list; output:\n{output}"
+        );
+        assert!(
+            output.contains("FIXTURE_SCHEMA"),
+            "schema name stays pinned; output:\n{output}"
+        );
+        let line = tables_line(&output);
+        assert!(
+            line.contains("nullptr, 0, sqlchar(\"%\"), 1, sqlchar(\"\"), 0, sqlchar(\"\"), 0"),
+            "null catalog stays nullptr and empty table stays an empty string; line:\n{line}"
         );
     }
 }

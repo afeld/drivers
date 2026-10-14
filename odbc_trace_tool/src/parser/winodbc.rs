@@ -1579,4 +1579,136 @@ proc-1 1234-5678\tEXIT  SQLColAttributes  with return code 0 (SQL_SUCCESS)\n\
             "SQLColAttributes must route to OdbcCall::ColAttribute, not Unsupported",
         );
     }
+
+    #[test]
+    fn sql_tables_keeps_null_pointer_length_zero_apart_from_empty_string_sql_nts() {
+        use crate::model::{CatalogStringSelector, OdbcCall};
+
+        let trace = "\
+proc-1 1234-5678\tENTER SQLTablesW \n\
+\t\tHSTMT               0x0000000000000080\n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\n\
+proc-1 1234-5678\tEXIT  SQLTablesW  with return code 0 (SQL_SUCCESS)\n\
+\t\tHSTMT               0x0000000000000080\n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\n\
+proc-1 1234-5678\tENTER SQLTablesW \n\
+\t\tHSTMT               0x0000000000000080\n\
+\t\tWCHAR *             0x0000018E006DF854 [      -3] \"%\\ 0\"\n\
+\t\tSWORD                       -3 \n\
+\t\tWCHAR *             0x0000018E006DF855 [      -3] \"\\ 0\"\n\
+\t\tSWORD                       -3 \n\
+\t\tWCHAR *             0x0000018E006DF856 [      -3] \"\\ 0\"\n\
+\t\tSWORD                       -3 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\n\
+proc-1 1234-5678\tEXIT  SQLTablesW  with return code 0 (SQL_SUCCESS)\n\
+\t\tHSTMT               0x0000000000000080\n\
+\t\tWCHAR *             0x0000018E006DF854 [      -3] \"%\\ 0\"\n\
+\t\tSWORD                       -3 \n\
+\t\tWCHAR *             0x0000018E006DF855 [      -3] \"\\ 0\"\n\
+\t\tSWORD                       -3 \n\
+\t\tWCHAR *             0x0000018E006DF856 [      -3] \"\\ 0\"\n\
+\t\tSWORD                       -3 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\n\
+proc-1 1234-5678\tENTER SQLTablesW \n\
+\t\tHSTMT               0x0000000000000080\n\
+\t\tWCHAR *             0x0000018E006DF860 <zero length>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000018E006DF861 <zero length>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\n\
+proc-1 1234-5678\tEXIT  SQLTablesW  with return code 0 (SQL_SUCCESS)\n\
+\t\tHSTMT               0x0000000000000080\n\
+\t\tWCHAR *             0x0000018E006DF860 <zero length>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000018E006DF861 <zero length>\n\
+\t\tSWORD                        0 \n\
+\t\tWCHAR *             0x0000000000000000 <null pointer>\n\
+\t\tSWORD                        0 \n";
+
+        let parsed = parse_str(trace).expect("parse");
+        let tables: Vec<_> = parsed
+            .calls
+            .iter()
+            .filter_map(|c| match &c.call {
+                OdbcCall::Catalog(cat) if cat.function_name == "SQLTables" => Some(cat),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(tables.len(), 3);
+
+        for arg in &tables[0].string_args {
+            assert_eq!(arg.selector, Some(CatalogStringSelector::NullPointer));
+            assert_eq!(arg.length, Some(0));
+            assert!(arg.value.is_none());
+            let yaml = serde_yaml::to_string(arg).expect("yaml");
+            assert!(
+                yaml.contains("selector: null_pointer"),
+                "null pointer length 0 dumps the selector; yaml:\n{yaml}"
+            );
+        }
+
+        assert_eq!(
+            tables[1].string_args[0].selector,
+            Some(CatalogStringSelector::Literal)
+        );
+        assert_eq!(tables[1].string_args[0].value.as_deref(), Some("%"));
+        assert_eq!(tables[1].string_args[0].length, Some(-3));
+        for arg in &tables[1].string_args[1..3] {
+            assert_eq!(arg.selector, Some(CatalogStringSelector::EmptyString));
+            assert_eq!(arg.length, Some(-3));
+            assert!(arg.value.is_none());
+            let yaml = serde_yaml::to_string(arg).expect("yaml");
+            assert!(
+                yaml.contains("selector: empty_string"),
+                "empty string at SQL_NTS dumps the selector; yaml:\n{yaml}"
+            );
+        }
+        assert_eq!(
+            tables[1].string_args[3].selector,
+            Some(CatalogStringSelector::NullPointer)
+        );
+        assert_eq!(tables[1].string_args[3].length, Some(0));
+
+        assert_eq!(tables[2].string_args.len(), 4);
+        for (idx, arg) in tables[2].string_args.iter().enumerate() {
+            if idx % 2 == 0 {
+                assert_eq!(arg.selector, Some(CatalogStringSelector::EmptyString));
+                let yaml = serde_yaml::to_string(arg).expect("yaml");
+                assert!(
+                    yaml.contains("selector: empty_string"),
+                    "<zero length> dumps the empty-string selector; yaml:\n{yaml}"
+                );
+            } else {
+                assert_eq!(arg.selector, Some(CatalogStringSelector::NullPointer));
+            }
+            assert_eq!(arg.length, Some(0));
+            assert!(arg.value.is_none());
+        }
+    }
 }

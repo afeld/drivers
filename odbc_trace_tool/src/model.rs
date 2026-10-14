@@ -367,10 +367,25 @@ pub struct CatalogFunction {
     pub string_args: Vec<CatalogStringArg>,
 }
 
+/// How a catalog string argument was passed. The captured name length is not
+/// this fact: a null pointer arrives with either `0` or `SQL_NTS`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CatalogStringSelector {
+    NullPointer,
+    EmptyString,
+    Literal,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CatalogStringArg {
     pub value: Option<String>,
     pub length: Option<i64>,
+    /// Absent when only `value` and `length` were stored. On an enumeration,
+    /// length 0 is then an empty string and any other missing value is a null
+    /// pointer. Outside an enumeration a missing value is a null pointer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selector: Option<CatalogStringSelector>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1559,19 +1574,32 @@ mod raw {
         )
     }
 
-    fn catalog_string_value(p: &Parameter) -> Option<String> {
-        match &p.value {
-            ParamValue::StringValue { value, .. } if !value.is_empty() => Some(value.clone()),
-            ParamValue::StringValue { .. } | ParamValue::NullPointer => None,
-            ParamValue::Address(a)
-                if a.starts_with("0x0000000000000000")
-                    || a.contains("<null pointer>")
-                    || a.contains("<zero length>") =>
-            {
-                None
+    fn catalog_string_arg(
+        value_param: &Parameter,
+        length_param: Option<&Parameter>,
+    ) -> CatalogStringArg {
+        let (value, selector) = match &value_param.value {
+            ParamValue::StringValue { value, .. } if value.is_empty() => {
+                (None, Some(CatalogStringSelector::EmptyString))
             }
-            ParamValue::Address(_) => None,
-            _ => None,
+            ParamValue::StringValue { value, .. } => {
+                (Some(value.clone()), Some(CatalogStringSelector::Literal))
+            }
+            ParamValue::NullPointer => (None, Some(CatalogStringSelector::NullPointer)),
+            ParamValue::Address(a)
+                if a.starts_with("0x0000000000000000") || a.contains("<null pointer>") =>
+            {
+                (None, Some(CatalogStringSelector::NullPointer))
+            }
+            ParamValue::Address(a) if a.contains("<zero length>") => {
+                (None, Some(CatalogStringSelector::EmptyString))
+            }
+            _ => (None, None),
+        };
+        CatalogStringArg {
+            value,
+            length: length_param.and_then(catalog_length_value),
+            selector,
         }
     }
 
@@ -1595,10 +1623,7 @@ mod raw {
             let mut i = 1;
             while i < input.len() {
                 if is_catalog_string_slot(&input[i]) {
-                    string_args.push(CatalogStringArg {
-                        value: catalog_string_value(&input[i]),
-                        length: input.get(i + 1).and_then(catalog_length_value),
-                    });
+                    string_args.push(catalog_string_arg(&input[i], input.get(i + 1)));
                     i += 2;
                 } else {
                     i += 1;
@@ -1632,10 +1657,7 @@ mod raw {
         let mut i = 2;
         while i < input.len() && string_args.len() < 3 {
             if is_catalog_string_slot(&input[i]) {
-                string_args.push(CatalogStringArg {
-                    value: catalog_string_value(&input[i]),
-                    length: input.get(i + 1).and_then(catalog_length_value),
-                });
+                string_args.push(catalog_string_arg(&input[i], input.get(i + 1)));
                 i += 2;
             } else {
                 i += 1;
