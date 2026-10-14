@@ -305,6 +305,8 @@ class SnowflakeColumnMetadataTest {
     assertEquals(Types.BIGINT, meta.getType());
     assertEquals("NUMBER", meta.getTypeName());
     assertEquals(SnowflakeType.FIXED, meta.getBase());
+    assertEquals(18, meta.getPrecision());
+    assertEquals(0, meta.getScale());
   }
 
   @Test
@@ -373,5 +375,49 @@ class SnowflakeColumnMetadataTest {
     assertTrue(new SnowflakeColumnMetadata(fixedCol, true).isFixed());
     assertTrue(new SnowflakeColumnMetadata(fixedCol, false).isFixed());
     assertFalse(new SnowflakeColumnMetadata(unfixedCol, true).isFixed());
+  }
+
+  @Test
+  void shouldMapJsonFixedScaleZeroToBigintWhenTreatDecimalAsIntEnabled() {
+    ObjectNode col = JsonTestUtils.objectNode();
+    col.put("name", "num_col");
+    col.put("type", "fixed");
+    col.put("scale", 0);
+    col.put("precision", 12);
+
+    SnowflakeColumnMetadata meta = new SnowflakeColumnMetadata(col, true);
+
+    assertEquals(Types.BIGINT, meta.getType());
+    assertEquals(12, meta.getPrecision());
+  }
+
+  @Test
+  void shouldMapProtoVectorWireTypeToExtraTypesVectorWithDimension() {
+    ColumnMetadata col =
+        ColumnMetadata.newBuilder()
+            .setName("embedding")
+            .setType("vector")
+            .setDimension(768)
+            .build();
+
+    SnowflakeColumnMetadata meta = new SnowflakeColumnMetadata(col, false);
+
+    assertEquals("VECTOR", meta.getTypeName());
+    assertEquals(SnowflakeType.EXTRA_TYPES_VECTOR, meta.getType());
+    assertEquals(SnowflakeType.VECTOR, meta.getBase());
+    assertEquals(768, meta.getDimension());
+  }
+
+  @Test
+  void shouldUseVectorDimensionWhenJsonDimensionIsZero() {
+    ObjectNode col = JsonTestUtils.objectNode();
+    col.put("name", "embedding");
+    col.put("type", "vector");
+    col.put("dimension", 0);
+    col.put("vectorDimension", 256);
+
+    SnowflakeColumnMetadata meta = new SnowflakeColumnMetadata(col, false);
+
+    assertEquals(256, meta.getDimension());
   }
 }
