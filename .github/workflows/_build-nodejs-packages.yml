@@ -1,0 +1,159 @@
+name: Build Node.js Packages
+
+# Builds the Node.js npm packages (unsigned, not published):
+#   - snowflake-sdk: the TypeScript package. Platform independent, built once.
+#   - @snowflake/sdk-core-<platform>: the native addon (release Rust build),
+#     one package per build_core matrix row.
+#   - nodejs-packages: one artifact with all of the above.
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_core:
+    strategy:
+      fail-fast: false
+      # TODO: one OS for now since we run text matric only on x64 ubuntu
+      #
+      # One row per napi target from nodejs/package.json. `pack:core` builds for
+      # the runner it runs on, so each row needs a runner of that platform.
+      # `name` matches the napi platform suffix (@snowflake/sdk-core-<name>),
+      # which keeps artifact names unique.
+      matrix:
+        include:
+          - { name: linux-x64-gnu, os: ubuntu-latest }
+    runs-on: ${{ matrix.os }}
+    name: build_core (${{ matrix.name }})
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # npm 10.x (the version bundled with Node 22) crashes on `npm install`
+      # with "Cannot read properties of null (reading 'edgesOut')". npm 11
+      # does not hit it. https://github.com/npm/cli/issues/9787
+      - name: Upgrade npm
+        run: npm install -g npm@11
+
+      # Release output lives in target/release, so it cannot reuse the debug
+      # cache from Node.js CI. It gets its own key per platform.
+      - name: Restore Rust cache
+        id: rust-cache
+        continue-on-error: true
+        uses: ./.github/actions/cargo-cache
+        with:
+          mode: restore
+          shared-key: nodejs-release-${{ matrix.name }}
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: nodejs
+
+      - name: Build and pack @snowflake/sdk-core
+        run: npm run pack:core
+        working-directory: nodejs
+
+      # build_sdk compiles against the committed file, so it must match the
+      # types of the binary built here.
+      - name: Check committed binary types match the core build
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --exit-code -- nodejs/src/core/binary-types.generated.ts; then
+            echo "nodejs/src/core/binary-types.generated.ts does not match the core build." >&2
+            echo "Run \`npm run build:core\` in nodejs/ and commit the result. Do not edit the file by hand." >&2
+            exit 1
+          fi
+
+      - name: Upload core package
+        uses: actions/upload-artifact@v7
+        with:
+          name: nodejs-core-${{ matrix.name }}
+          path: nodejs/_build/*.tgz
+          if-no-files-found: error
+
+      - name: Save Rust cache
+        if: always()
+        timeout-minutes: 20
+        continue-on-error: true
+        uses: ./.github/actions/cargo-cache
+        with:
+          mode: save
+          slim-mode: aggressive
+          shared-key: nodejs-release-${{ matrix.name }}
+          registry-cache-hit: ${{ steps.rust-cache.outputs.registry-cache-hit }}
+          target-cache-hit: ${{ steps.rust-cache.outputs.target-cache-hit }}
+
+  # Needs no Rust: tsc compiles src/ against the committed
+  # src/core/binary-types.generated.ts.
+  build_sdk:
+    runs-on: ubuntu-latest
+    name: build_sdk
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # Same npm 10.x crash as in build_core.
+      - name: Upgrade npm
+        run: npm install -g npm@11
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: nodejs
+
+      - name: Build and pack snowflake-sdk
+        run: npm run pack:sdk
+        working-directory: nodejs
+
+      - name: Upload sdk package
+        uses: actions/upload-artifact@v7
+        with:
+          name: nodejs-sdk
+          path: nodejs/_build/*.tgz
+          if-no-files-found: error
+
+  bundle:
+    needs: [build_core, build_sdk]
+    runs-on: ubuntu-latest
+    name: bundle packages
+    timeout-minutes: 10
+    steps:
+      - name: Download core packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nodejs-core-*
+          merge-multiple: true
+          path: release
+
+      - name: Download sdk package
+        uses: actions/download-artifact@v8
+        with:
+          name: nodejs-sdk
+          path: release
+
+      - name: Show packages
+        run: ls -l release
+
+      # overwrite: a re-run of this job in the same workflow run uploads the
+      # same artifact name again.
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: nodejs-packages
+          path: release/*.tgz
+          if-no-files-found: error
+          overwrite: true

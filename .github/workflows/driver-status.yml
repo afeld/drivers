@@ -6,7 +6,8 @@ name: Driver CI
 # `plan` job below).
 #
 # Packaging / release builds (build-python-release.yml, build-jdbc-jars.yml,
-# build-odbc-packages.yml, cold-wheel-check.yml) stay as their own workflows.
+# build-odbc-packages.yml, build-nodejs-packages.yml, cold-wheel-check.yml)
+# stay as their own workflows.
 on:
   pull_request:
     # Scope labels re-run the orchestrator at the requested matrix level.

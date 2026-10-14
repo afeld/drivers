@@ -1,0 +1,29 @@
+name: Build Node.js Packages
+
+# Release Rust builds take longer than the debug build Node.js CI uses, so
+# packages are built only on demand, on release branches, and when this
+# pipeline itself changes. Regular Node.js and Rust changes do not trigger it.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'release/nodejs-**'
+  pull_request:
+    paths:
+      - '.github/workflows/build-nodejs-packages.yml'
+      - '.github/workflows/_build-nodejs-packages.yml'
+
+concurrency:
+  # PR number for PRs; unique run ID for release pushes / dispatch so a later
+  # push cannot cancel an in-flight non-PR run.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build_nodejs_packages:
+    # Mirror: dispatch + release/* only (no PR tax).
+    if: >-
+      github.repository_owner != 'snowflakedb'
+      || github.event_name == 'workflow_dispatch'
+      || startsWith(github.ref, 'refs/heads/release/')
+    uses: ./.github/workflows/_build-nodejs-packages.yml
