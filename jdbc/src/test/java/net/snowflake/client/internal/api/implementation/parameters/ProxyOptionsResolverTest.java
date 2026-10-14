@@ -152,6 +152,49 @@ class ProxyOptionsResolverTest {
   }
 
   @Test
+  void shouldSkipJvmProxyInferenceWhenUseProxyEnvIsSet() {
+    Properties properties = new Properties();
+    properties.setProperty("use_proxy_env", "true");
+    Map<String, String> systemProperties = new HashMap<>();
+    systemProperties.put("http.useProxy", "true");
+    systemProperties.put("http.proxyHost", "proxy.example.com");
+    systemProperties.put("http.proxyPort", "8080");
+
+    Properties resolved =
+        ProxyOptionsResolver.resolve(
+            properties, new MapEnvironment(systemProperties, Collections.emptyMap()));
+
+    assertAll(
+        () -> assertEquals("true", resolved.getProperty("use_proxy_env")),
+        () -> assertFalse(resolved.containsKey("proxy_host")),
+        () -> assertFalse(resolved.containsKey("proxy_port")));
+  }
+
+  @Test
+  void shouldSkipJvmProxyInferenceWhenUseProxyEnvIsPresentButNotEnabled() {
+    // The key's presence is canonical configuration. "false" and "" must not fall through to JVM
+    // proxy inference the way useProxy does, which only honors "true" and "on".
+    for (String value : new String[] {"false", ""}) {
+      Properties properties = new Properties();
+      properties.setProperty("use_proxy_env", value);
+      Map<String, String> systemProperties = new HashMap<>();
+      systemProperties.put("http.useProxy", "true");
+      systemProperties.put("http.proxyHost", "proxy.example.com");
+      systemProperties.put("http.proxyPort", "8080");
+
+      Properties resolved =
+          ProxyOptionsResolver.resolve(
+              properties, new MapEnvironment(systemProperties, Collections.emptyMap()));
+
+      assertAll(
+          value,
+          () -> assertEquals(value, resolved.getProperty("use_proxy_env")),
+          () -> assertFalse(resolved.containsKey("proxy_host")),
+          () -> assertFalse(resolved.containsKey("proxy_port")));
+    }
+  }
+
+  @Test
   void shouldPreserveCanonicalCoreProxySettings() {
     Properties properties = new Properties();
     properties.setProperty("proxy_host", "canonical-proxy.example.com");

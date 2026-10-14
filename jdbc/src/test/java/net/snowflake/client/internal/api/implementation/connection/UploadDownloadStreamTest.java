@@ -15,6 +15,8 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -60,6 +62,7 @@ import net.snowflake.client.internal.unicore.protobuf_gen.DatabaseDriverV1.Uploa
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 
 /**
  * Unit tests for {@link SnowflakeConnectionImpl#uploadStream} and {@link
@@ -375,6 +378,89 @@ class UploadDownloadStreamTest {
         .connectionDownloadStreamBegin(
             eq(CONN_HANDLE), eq("@my_stage"), eq("data.csv.gz"), eq(true));
     verify(mockCoreApi).connectionDownloadStreamClose(DOWNLOAD_HANDLE);
+  }
+
+  @Test
+  void shouldCloseOpenDownloadStreamsWhenConnectionCloses() throws Exception {
+    // The try-with-resources close runs after connection.close(). That second close is a no-op, so
+    // InOrder still sees download-stream close before connectionClose.
+    try (InputStream stream = connection.downloadStream("@my_stage", "data.csv.gz")) {
+      connection.close();
+    }
+
+    InOrder inOrder = inOrder(mockCoreApi);
+    inOrder.verify(mockCoreApi).connectionDownloadStreamClose(DOWNLOAD_HANDLE);
+    inOrder.verify(mockCoreApi).connectionClose(CONN_HANDLE);
+  }
+
+  @Test
+  void shouldNotDoubleCloseDownloadStreamWhenAlreadyClosedBeforeConnectionClose() throws Exception {
+    InputStream stream = connection.downloadStream("@my_stage", "data.csv.gz");
+    stream.close();
+    verify(mockCoreApi).connectionDownloadStreamClose(DOWNLOAD_HANDLE);
+
+    clearInvocations(mockCoreApi);
+    connection.close();
+
+    verify(mockCoreApi, never()).connectionDownloadStreamClose(any());
+    verify(mockCoreApi).connectionClose(CONN_HANDLE);
+  }
+
+  @Test
+  void shouldCloseEveryOpenDownloadStreamBeforeConnectionClose() throws Exception {
+    DownloadStreamHandle secondHandle =
+        DownloadStreamHandle.newBuilder().setId(21).setMagic(2001).build();
+    when(mockCoreApi.connectionDownloadStreamBegin(any(), anyString(), anyString(), anyBoolean()))
+        .thenReturn(
+            ConnectionDownloadStreamBeginResponse.newBuilder()
+                .setDownloadHandle(DOWNLOAD_HANDLE)
+                .build(),
+            ConnectionDownloadStreamBeginResponse.newBuilder()
+                .setDownloadHandle(secondHandle)
+                .build());
+
+    // try-with-resources closes both streams again after connection.close(). Those closes are
+    // no-ops, so both download-stream closes still happen before connectionClose.
+    try (InputStream first = connection.downloadStream("@my_stage", "one.csv.gz");
+        InputStream second = connection.downloadStream("@my_stage", "two.csv.gz")) {
+      connection.close();
+    }
+
+    verify(mockCoreApi).connectionDownloadStreamClose(DOWNLOAD_HANDLE);
+    verify(mockCoreApi).connectionDownloadStreamClose(secondHandle);
+    InOrder inOrder = inOrder(mockCoreApi);
+    inOrder.verify(mockCoreApi, times(2)).connectionDownloadStreamClose(any());
+    inOrder.verify(mockCoreApi).connectionClose(CONN_HANDLE);
+  }
+
+  @Test
+  void shouldStillCloseRemainingStreamsAndConnectionWhenDownloadStreamCloseThrows()
+      throws Exception {
+    DownloadStreamHandle secondHandle =
+        DownloadStreamHandle.newBuilder().setId(21).setMagic(2001).build();
+    when(mockCoreApi.connectionDownloadStreamBegin(any(), anyString(), anyString(), anyBoolean()))
+        .thenReturn(
+            ConnectionDownloadStreamBeginResponse.newBuilder()
+                .setDownloadHandle(DOWNLOAD_HANDLE)
+                .build(),
+            ConnectionDownloadStreamBeginResponse.newBuilder()
+                .setDownloadHandle(secondHandle)
+                .build());
+    when(mockCoreApi.connectionDownloadStreamClose(DOWNLOAD_HANDLE))
+        .thenThrow(new CoreException("close rpc failed"));
+
+    try (InputStream first = connection.downloadStream("@my_stage", "one.csv.gz");
+        InputStream second = connection.downloadStream("@my_stage", "two.csv.gz")) {
+      // close() swallows the stream IOException and still closes the other stream, then the
+      // connection. The later try-with-resources closes are no-ops.
+      assertDoesNotThrow(connection::close);
+    }
+
+    verify(mockCoreApi).connectionDownloadStreamClose(DOWNLOAD_HANDLE);
+    verify(mockCoreApi).connectionDownloadStreamClose(secondHandle);
+    InOrder inOrder = inOrder(mockCoreApi);
+    inOrder.verify(mockCoreApi, times(2)).connectionDownloadStreamClose(any());
+    inOrder.verify(mockCoreApi).connectionClose(CONN_HANDLE);
   }
 
   @Test
