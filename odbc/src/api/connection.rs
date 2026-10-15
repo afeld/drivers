@@ -4086,6 +4086,19 @@ mod tests {
     }
 
     #[test]
+    fn normalize_connection_string_options_forwards_odbc_query_result_format() {
+        let options = normalize_connection_string_options(HashMap::from([(
+            "ODBC_QUERY_RESULT_FORMAT".to_owned(),
+            "JSON".to_owned(),
+        )]));
+
+        assert_eq!(
+            config_string(&options, "odbc_query_result_format"),
+            Some("JSON")
+        );
+    }
+
+    #[test]
     fn normalize_connection_string_options_drops_ignored_odbc_dm_keys() {
         let options = normalize_connection_string_options(HashMap::from([
             ("DSN".to_owned(), "MyDsn".to_owned()),
@@ -4399,6 +4412,12 @@ mod tests {
     fn unrecognized_connection_string_keys_accepts_registry_keys() {
         let params =
             parse_connection_string("DSN=my_dsn;UID=admin;SERVER=foo;WAREHOUSE=wh").unwrap();
+        assert!(unrecognized_connection_string_keys(&params).is_empty());
+    }
+
+    #[test]
+    fn unrecognized_connection_string_keys_accepts_odbc_query_result_format() {
+        let params = parse_connection_string("ODBC_QUERY_RESULT_FORMAT=JSON").unwrap();
         assert!(unrecognized_connection_string_keys(&params).is_empty());
     }
 

@@ -21,8 +21,7 @@ use super::validation::{
 };
 use crate::apis::operation_ctx::{OperationCtx, run_opt, with_cleanup_opt};
 use crate::config::ParamStore;
-use crate::config::param_registry::ParamKey;
-use crate::config::param_registry::param_names;
+use crate::config::param_registry::{self, param_names};
 use crate::config::settings::Setting;
 use crate::handle_manager::Handle;
 use crate::rest::snowflake::{
@@ -1003,24 +1002,17 @@ fn setting_to_json_value(setting: &Setting) -> serde_json::Value {
     }
 }
 
-/// Server-side parameter names forwarded in the query request.
-/// Each entry maps a local `ParamKey` to the Snowflake server-side parameter name.
-/// Statement-scoped options forwarded to GS in the query-request `parameters`
-/// map. Maps the local `ParamKey` to the server-side parameter name. Only
-/// registry-recognized, server-meaningful options belong here (the client-only
-/// `skip_upload_on_content_match` is intentionally excluded). Settings with no
-/// registry entry at all are not in this list; `build_query_parameters`
-/// forwards those separately, unchanged and unvalidated.
-const QUERY_PARAMETER_NAMES: &[(ParamKey, &str)] = &[
-    (param_names::MULTI_STATEMENT_COUNT, "MULTI_STATEMENT_COUNT"),
-    (param_names::QUERY_TAG, "QUERY_TAG"),
-];
-
 fn build_query_parameters(settings: &ParamStore) -> Option<HashMap<String, serde_json::Value>> {
     let mut params = HashMap::new();
-    for (key, server_name) in QUERY_PARAMETER_NAMES {
-        if let Some(setting) = settings.get(*key) {
-            params.insert(server_name.to_string(), setting_to_json_value(setting));
+    for def in param_registry::registry().all_params() {
+        if !def.is_sent_as_query_parameter() {
+            continue;
+        }
+        if let Some(setting) = settings.get_any(def.canonical_name) {
+            params.insert(
+                def.canonical_name.to_ascii_uppercase(),
+                setting_to_json_value(setting),
+            );
         }
     }
     // Keys with no registry entry reach GS unchanged: no server-side name
@@ -1275,16 +1267,6 @@ mod tests {
         assert_eq!(parse_bool_setting(&Setting::Bool(false)), Some(false));
     }
 
-    /// `skip_upload_on_content_match` is the first Statement-scoped param that
-    /// must stay client-only. Adding it to `QUERY_PARAMETER_NAMES` would forward
-    /// it to GS where it has no meaning.
-    #[test]
-    fn skip_upload_on_content_match_is_not_forwarded_to_gs() {
-        for (key, _server_name) in QUERY_PARAMETER_NAMES {
-            assert_ne!(key.as_str(), "skip_upload_on_content_match");
-        }
-    }
-
     #[test]
     fn query_tag_statement_option_is_forwarded_as_query_parameter() {
         // Stored under the canonical key (as `statement_set_options` resolves it).
@@ -1298,6 +1280,36 @@ mod tests {
             params.get("QUERY_TAG"),
             Some(&serde_json::Value::String("stmt_tag".to_string()))
         );
+    }
+
+    #[test]
+    fn timezone_statement_option_is_forwarded_as_query_parameter() {
+        let mut settings = ParamStore::new();
+        settings.insert(
+            "timezone".to_string(),
+            Setting::String("America/New_York".to_string()),
+        );
+        let params = build_query_parameters(&settings).expect("TIMEZONE should be forwarded");
+        assert_eq!(
+            params.get("TIMEZONE"),
+            Some(&serde_json::Value::String("America/New_York".to_string()))
+        );
+    }
+
+    #[tokio::test]
+    async fn statement_accepts_timezone_override() {
+        let ds = DatabaseDriverV1::new();
+        let ch = ds.connection_new();
+        let sh = ds.statement_new(ch).unwrap();
+        ds.statement_set_option(
+            sh,
+            "TIMEZONE".into(),
+            Setting::String("America/New_York".into()),
+        )
+        .await
+        .unwrap();
+        ds.statement_release(sh).unwrap();
+        ds.connection_release(ch).unwrap();
     }
 
     #[test]

@@ -466,7 +466,7 @@ class ConnectionConfig(ConnectionConfigMixin):
     """Snowflake service name"""
 
     timezone: str | None = None
-    """Session timezone"""
+    """Session timezone, overridable per statement"""
 
     use_s3_regional_url: bool | None = False
     """Force the S3 regional endpoint for PUT/GET (PrivateLink-to-S3). Default: False"""

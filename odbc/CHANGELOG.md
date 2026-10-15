@@ -2,6 +2,10 @@
 
 ## Upcoming Release
 
+Bug fixes:
+
+- Fixed `SQLDriverConnect` so `ODBC_QUERY_RESULT_FORMAT` is sent to the server and selects the session query result format. (snowflakedb/drivers#2753)
+
 ## v4.1.0
 
 New features:

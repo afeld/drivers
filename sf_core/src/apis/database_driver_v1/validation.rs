@@ -1160,6 +1160,22 @@ mod tests {
     }
 
     #[test]
+    fn collect_registered_session_parameters_forwards_odbc_query_result_format() {
+        let mut store = ParamStore::new();
+        store.insert(
+            "odbc_query_result_format".to_string(),
+            Setting::String("JSON".to_string()),
+        );
+
+        let parameters = collect_registered_session_parameters(&store);
+
+        assert_eq!(
+            parameters.get("ODBC_QUERY_RESULT_FORMAT"),
+            Some(&"JSON".to_string())
+        );
+    }
+
+    #[test]
     fn collect_login_session_parameters_clamps_heartbeat_and_sends_explicit_validation() {
         let mut resolved = ParamStore::new();
         resolved.insert(

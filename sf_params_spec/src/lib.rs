@@ -114,6 +114,7 @@ pub mod param_names {
     pub const GCS_USE_DOWNSCOPED_CREDENTIAL: ParamKey = ParamKey("gcs_use_downscoped_credential");
     pub const CLIENT_OUT_OF_BAND_TELEMETRY_ENABLED: ParamKey =
         ParamKey("client_out_of_band_telemetry_enabled");
+    pub const ODBC_QUERY_RESULT_FORMAT: ParamKey = ParamKey("odbc_query_result_format");
     pub const SECONDARY_ROLES: ParamKey = ParamKey("secondary_roles");
     pub const CONNECTION_NAME: ParamKey = ParamKey("connection_name");
     pub const CUSTOM_ROOT_STORE_PATH: ParamKey = ParamKey("custom_root_store_path");
@@ -588,9 +589,6 @@ pub struct ParamDef {
     /// session/connection level and per-statement).
     pub scopes: &'static [ParamScope],
 
-    /// When true, the resolved connection-seed value participates in login / new session.
-    pub used_at_connect: bool,
-
     /// When false, connection-level setters must reject changes once connected.
     pub mutable_after_connect: bool,
 
@@ -609,6 +607,11 @@ pub struct ParamDef {
     pub ignored: bool,
 
     pub send_as_session_parameter: Option<SendAsSessionParameter>,
+
+    /// When true, a statement value is sent in the query-request `parameters`
+    /// map under the uppercased canonical name. Requires statement scope;
+    /// [`ParamDef::is_sent_as_query_parameter`] is false otherwise.
+    pub send_as_query_parameter: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -670,7 +673,6 @@ impl ParamDef {
             value_type: None,
             description: None,
             scopes: None,
-            used_at_connect: None,
             mutable_after_connect: None,
             sensitive: None,
             auth: None,
@@ -683,6 +685,7 @@ impl ParamDef {
             logical_type: LogicalType::Unspecified,
             ignored: false,
             send_as_session_parameter: None,
+            send_as_query_parameter: false,
         }
     }
 
@@ -692,18 +695,6 @@ impl ParamDef {
             .iter()
             .filter(move |a| a.wrapper.is_none() || a.wrapper == Some(wrapper))
             .map(|a| a.name)
-    }
-
-    /// Whether the resolved value may participate in login / new session creation.
-    ///
-    /// Statement-only parameters (no connection/session scope) are never consumed
-    /// at connect regardless of stored metadata.
-    #[inline]
-    pub fn effective_used_at_connect(&self) -> bool {
-        if self.is_statement_only() {
-            return false;
-        }
-        self.used_at_connect
     }
 
     /// True when the parameter can only be set per-statement (no connection or
@@ -732,6 +723,11 @@ impl ParamDef {
         self.send_as_session_parameter.is_some() && !self.is_statement_only()
     }
 
+    #[inline]
+    pub fn is_sent_as_query_parameter(&self) -> bool {
+        self.is_statement_scoped() && self.send_as_query_parameter
+    }
+
     /// True when `wrapper` may resolve this parameter's canonical name.
     #[inline]
     pub fn is_visible_to(&self, wrapper: Wrapper) -> bool {
@@ -749,7 +745,6 @@ pub struct ParamDefBuilder {
     value_type: Option<ValueType>,
     description: Option<&'static str>,
     scopes: Option<&'static [ParamScope]>,
-    used_at_connect: Option<bool>,
     mutable_after_connect: Option<bool>,
     sensitive: Option<bool>,
     auth: Option<bool>,
@@ -762,6 +757,7 @@ pub struct ParamDefBuilder {
     logical_type: LogicalType,
     ignored: bool,
     send_as_session_parameter: Option<SendAsSessionParameter>,
+    send_as_query_parameter: bool,
 }
 
 impl ParamDefBuilder {
@@ -782,11 +778,6 @@ impl ParamDefBuilder {
 
     pub const fn scopes(mut self, value: &'static [ParamScope]) -> Self {
         self.scopes = Some(value);
-        self
-    }
-
-    pub const fn used_at_connect(mut self, value: bool) -> Self {
-        self.used_at_connect = Some(value);
         self
     }
 
@@ -855,6 +846,11 @@ impl ParamDefBuilder {
         self
     }
 
+    pub const fn send_as_query_parameter(mut self, value: bool) -> Self {
+        self.send_as_query_parameter = value;
+        self
+    }
+
     pub const fn build(self) -> ParamDef {
         ParamDef {
             canonical_name: match self.canonical_name {
@@ -872,10 +868,6 @@ impl ParamDefBuilder {
             scopes: match self.scopes {
                 Some(value) => value,
                 None => panic!("ParamDef::builder() requires scopes"),
-            },
-            used_at_connect: match self.used_at_connect {
-                Some(value) => value,
-                None => panic!("ParamDef::builder() requires used_at_connect"),
             },
             mutable_after_connect: match self.mutable_after_connect {
                 Some(value) => value,
@@ -898,6 +890,7 @@ impl ParamDefBuilder {
             logical_type: self.logical_type,
             ignored: self.ignored,
             send_as_session_parameter: self.send_as_session_parameter,
+            send_as_query_parameter: self.send_as_query_parameter,
         }
     }
 }
@@ -912,7 +905,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Snowflake account identifier")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -927,7 +919,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Snowflake server hostname")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -937,7 +928,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Server port number")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -947,7 +937,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Connection protocol (http or https)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -958,7 +947,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .description("Enable or disable SSL/TLS (sets protocol to https or http)")
         .deprecated_by("protocol")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -968,7 +956,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Full server URL (alternative to host/port/protocol)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .logical_type(LogicalType::Url)
         .build(),
@@ -982,7 +969,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Preserve underscores in the hostname derived from the account name")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── Auth ────────────────────────────────────────────────────────────
@@ -997,7 +983,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Login username")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1011,7 +996,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Login password")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1021,7 +1005,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Authenticator type for the connection")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .logical_type(LogicalType::Url)
         .build(),
@@ -1042,7 +1025,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Private key for key-pair authentication (base64-encoded or PEM)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1054,7 +1036,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Path to private key file for key-pair authentication")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1078,7 +1059,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Passphrase for encrypted private key")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1089,7 +1069,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Pre-acquired bearer token (PAT, legacy OAUTH, or OIDC WIF). Alternative to token_file_path")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1109,7 +1088,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Path to a file containing a pre-acquired bearer token (PAT, legacy OAUTH, or OIDC WIF). If both token and token_file_path are set, the file contents are used")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1120,7 +1098,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("External session identifier used with authenticator=PAT_WITH_EXTERNAL_SESSION. Sent as X-Snowflake-External-Session-ID on every request; the server keys the session by (PAT, external_session_id)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1130,7 +1107,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Pre-acquired session token for session token authentication")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1140,7 +1116,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Pre-acquired master token for session token authentication")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1150,7 +1125,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Remaining validity in seconds for the master token (session token auth)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1160,7 +1134,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("MFA passcode for USERNAME_PASSWORD_MFA authentication")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1180,7 +1153,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Whether the MFA passcode is appended to the password")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1196,7 +1168,6 @@ static PARAM_DEFS: &[ParamDef] = &[
              Defaults to true. An explicit value always wins",
         )
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1211,7 +1182,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("JDBC-only. When false, client-side PUT/GET file transfers are disabled")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .visible_to(visible_to!(Jdbc))
         .build(),
@@ -1226,7 +1196,6 @@ static PARAM_DEFS: &[ParamDef] = &[
                       <user, host> when clientStoreTemporaryCredential is enabled. Set to false to \
                       allow each concurrent connection to show its own prompt.")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1251,7 +1220,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .description("When true, disables the client-side query context cache. \
                       No context is sent in requests and server-returned context is ignored.")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1265,7 +1233,6 @@ static PARAM_DEFS: &[ParamDef] = &[
              wrapper's preset, client-only. Set at connect, cannot be changed after.",
         )
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1284,7 +1251,6 @@ static PARAM_DEFS: &[ParamDef] = &[
                       the retry, or 0 for transport errors with no HTTP response) \
                       alongside retryCount on retried query requests.")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1305,7 +1271,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Timeout in seconds for native Okta SSO authentication")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1315,7 +1280,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Okta username (defaults to the Snowflake user if omitted)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1326,7 +1290,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Skip the Okta SAML URL host-match safety check")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── OAuth ───────────────────────────────────────────────────────────
@@ -1355,7 +1318,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("OAuth client identifier (LOCAL_APPLICATION when Snowflake is the IdP)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1366,7 +1328,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("OAuth client secret (redacted from logs)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1377,7 +1338,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("IdP authorization endpoint (defaults to https://{host}/oauth/authorize)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .logical_type(LogicalType::Url)
         .build(),
@@ -1395,7 +1355,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("IdP token endpoint (CC only; defaults to https://{host}/oauth/token-request for AC)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .logical_type(LogicalType::Url)
         .build(),
@@ -1407,7 +1366,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Loopback redirect URI advertised to the IdP (defaults to http://127.0.0.1:<random>)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .logical_type(LogicalType::Url)
         .build(),
@@ -1419,7 +1377,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("OAuth scope (space-separated; defaults to session:role:<role>)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1431,7 +1388,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Request single-use refresh-token rotation (Snowflake-IdP only)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1442,7 +1398,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Disable PKCE S256 challenge for OAUTH_AUTHORIZATION_CODE (Python-compatible escape hatch)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1453,7 +1408,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Enable RFC 9449 DPoP proof-of-possession (JDBC-compatible)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1464,7 +1418,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Send client_id/client_secret in the OAUTH_CLIENT_CREDENTIALS token request body (client_secret_post) instead of the HTTP Basic header")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1475,7 +1428,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Disable EXTERNALBROWSER console-login (JDBC parity; does not gate OAuth)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── Session ─────────────────────────────────────────────────────────
@@ -1486,7 +1438,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Default database to use")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1496,7 +1447,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Default schema to use")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1506,7 +1456,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Default warehouse to use")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1516,7 +1465,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Default role to use")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1524,11 +1472,11 @@ static PARAM_DEFS: &[ParamDef] = &[
         .value_type(ValueType::String)
         .sensitive(false)
         .auth(false)
-        .description("Session timezone")
-        .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
+        .description("Session timezone, overridable per statement")
+        .scopes(&[ParamScope::Session, ParamScope::Statement])
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
+        .send_as_query_parameter(true)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::AUTOCOMMIT.as_str())
@@ -1537,7 +1485,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Session autocommit mode")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
@@ -1548,7 +1495,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Timestamp type used for generic timestamp values")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
@@ -1559,7 +1505,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Use the connection context for metadata requests")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
@@ -1570,7 +1515,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Snowflake service name")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
@@ -1581,7 +1525,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Use downscoped credentials for GCS")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
@@ -1592,8 +1535,18 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Enable out-of-band client telemetry")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::ODBC_QUERY_RESULT_FORMAT.as_str())
+        .value_type(ValueType::String)
+        .sensitive(false)
+        .auth(false)
+        .description("Session query result format (JSON or ARROW)")
+        .scopes(&[ParamScope::Session])
+        .mutable_after_connect(true)
+        .visible_to(visible_to!(Odbc))
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
@@ -1608,7 +1561,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Secondary-roles activation mode sent at login (e.g. ALL or NONE)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── TLS ─────────────────────────────────────────────────────────────
@@ -1622,7 +1574,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Path to custom root certificate store")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1632,7 +1583,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Path to root certificates added to the default root store")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .visible_to(visible_to!(NodeJs))
         .build(),
@@ -1646,7 +1596,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Whether to verify the server hostname in TLS")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1658,7 +1607,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Whether to verify TLS certificates")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1669,7 +1617,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Skip all TLS verification with a single switch: disables both certificate and hostname checks (and, since certificate verification is off, CRL revocation checks are bypassed too). Insecure; intended for testing only")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // TLS protocol-version window.
@@ -1681,7 +1628,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Minimum TLS protocol version to negotiate (tls12 or tls13)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1692,7 +1638,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum TLS protocol version to negotiate (tls12 or tls13)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── CRL ─────────────────────────────────────────────────────────────
@@ -1714,7 +1659,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Certificate revocation check mode (DISABLED, ENABLED, ADVISORY)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1726,7 +1670,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Enable disk caching for CRL responses")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1738,7 +1681,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Enable in-memory caching for CRL responses")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1748,7 +1690,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Directory for CRL cache files")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1759,7 +1700,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum CRL download size in bytes before the download is aborted")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1770,7 +1710,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum age in seconds of a cached CRL before it is re-fetched")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1781,7 +1720,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Delay in seconds after a CRL's nextUpdate before it is purged from the on-disk cache")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1792,7 +1730,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Interval in seconds between background CRL cache cleanup passes")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1803,7 +1740,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Run the background CRL cache cleanup task")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1814,7 +1750,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Skip verification that on-disk CRL cache files and directory are owner-only (0600/0700)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1826,7 +1761,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Allow certificates that do not include a CRL distribution URL")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1838,7 +1772,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("HTTP timeout in seconds for CRL endpoint requests")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1849,7 +1782,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Connection timeout in seconds for CRL endpoints")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── Client ──────────────────────────────────────────────────────────
@@ -1860,7 +1792,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Named connection to load from TOML configuration files")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1871,7 +1802,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum number of characters of a query string to include in log messages")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1883,7 +1813,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Include the (truncated) SQL text in INFO query logs")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1895,7 +1824,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Include the (truncated) JSON bindings in INFO query logs (requires log_query_text)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     // ── Logout ────────────────────────────────────────────────────────
@@ -1906,7 +1834,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Control server session lifecycle: true=keep alive, false=always logout, null=auto-detect")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1916,7 +1843,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Enable auto-detection of async queries before logout (SNOW-2314152)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1926,7 +1852,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Error handling strategy for logout: 'best_effort' or 'strict'")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1936,7 +1861,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Total timeout budget for logout operation including retries")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1946,7 +1870,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum total attempts for logout (1 = no retry, 3 = 2 retries)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1956,7 +1879,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Per-request socket timeout for individual logout attempts")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -1968,7 +1890,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum total attempts for general HTTP calls (login, query, logout). 1 = no retry")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1978,7 +1899,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Additional HTTP status codes (comma-separated) to retry on general HTTP and PUT/GET calls, beyond the built-in 408/429/307/308/5xx set")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -1993,7 +1913,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum total attempts for a single PUT/GET file transfer (1 = no retry)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     // ── Retry backoff curve (shared by HTTP and PUT/GET pipelines) ──────
@@ -2005,7 +1924,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Initial exponential-backoff delay in milliseconds between retry attempts")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2016,7 +1934,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Maximum exponential-backoff delay in milliseconds between retry attempts")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2027,7 +1944,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Multiplier applied to the backoff delay after each retry attempt")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2038,7 +1954,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Backoff jitter strategy: 'none', 'full', or 'decorrelated'")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     // ── Timeout configuration ─────────────────────────────────────────
@@ -2056,7 +1971,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Wall-clock timeout in seconds for the entire login operation including retries (0 = no timeout)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2067,7 +1981,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Wall-clock timeout in seconds for query execution including retries (0 = no timeout)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2078,7 +1991,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Wall-clock timeout in seconds for all other operations (close session, heartbeat, etc.) including retries (0 = no timeout)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2088,7 +2000,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Per-request timeout in seconds for a single HTTP attempt within a retry loop (0 or absent = no per-request timeout)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2098,7 +2009,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("TCP connect timeout in seconds for the HTTP client (0 or absent = system default)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2111,7 +2021,6 @@ static PARAM_DEFS: &[ParamDef] = &[
              cloud-metadata platform check is limited to 2 seconds.",
         )
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .visible_to(visible_to!(Python))
         .build(),
@@ -2125,7 +2034,6 @@ static PARAM_DEFS: &[ParamDef] = &[
                       during connection setup. Use in environments where permissions cannot be \
                       controlled (CI runners, containers). Unix-only; ignored on Windows")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2137,7 +2045,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .description("When true, GET downloads use the process umask permissions instead of owner-only \
                       (0600). Unix-only; ignored on Windows")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -2147,7 +2054,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Driver identity sent as CLIENT_APP_ID in the login request (e.g. PythonConnector, SnowSQL)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2157,7 +2063,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Driver version sent as CLIENT_APP_VERSION in the login request")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2167,7 +2072,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("User-facing application name sent as CLIENT_ENVIRONMENT.APPLICATION (falls back to client_app_id)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .build(),
     // ── Statement ──────────────────────────────────────────────────────
@@ -2179,7 +2083,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Execute queries asynchronously")
         .scopes(&[ParamScope::Statement])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -2189,8 +2092,8 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Exact number of statements in a multi-statement query")
         .scopes(&[ParamScope::Statement])
-        .used_at_connect(false)
         .mutable_after_connect(true)
+        .send_as_query_parameter(true)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::QUERY_TAG.as_str())
@@ -2202,9 +2105,9 @@ static PARAM_DEFS: &[ParamDef] = &[
                       forwarded as a login session parameter) and overridable per-statement.")
         // A session parameter that may also be overridden per-statement.
         .scopes(&[ParamScope::Session, ParamScope::Statement])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
+        .send_as_query_parameter(true)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::SKIP_UPLOAD_ON_CONTENT_MATCH.as_str())
@@ -2214,7 +2117,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Skip re-uploading a PUT object when the remote stored digest (S3 x-amz-meta-sfc-digest / Azure x-ms-meta-sfcdigest / GCS x-goog-meta-sfc-digest) equals the local SHA-256. Optimization for racing concurrent uploaders; only meaningful when overwrite=true. Set per-statement via statement_set_options before each execute. Client-only, never forwarded to GS.")
         .scopes(&[ParamScope::Statement])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -2224,7 +2126,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Directory used to resolve relative local paths in PUT and GET. Set per-statement via statement_set_options before each execute. Client-only, never forwarded to GS.")
         .scopes(&[ParamScope::Statement])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -2241,7 +2142,6 @@ static PARAM_DEFS: &[ParamDef] = &[
             ParamScope::Session,
             ParamScope::Statement,
         ])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .visible_to(visible_to!(Odbc))
         .build(),
@@ -2255,7 +2155,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Gzip compression level (0–9) used when PUT AUTO_COMPRESS rewrites a file. Unset and out-of-range values use gzip default preset level. Client-only, never forwarded to GS.")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .visible_to(visible_to!(Odbc))
         .build(),
@@ -2267,7 +2166,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Directory used for gzip tempfiles created by PUT AUTO_COMPRESS. Unset uses the process temp directory. Nested directories are created. Mirrors old ODBC's PUT_TEMPDIR connection attribute. Client-only, never forwarded to GS.")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .visible_to(visible_to!(Odbc))
         .build(),
@@ -2283,7 +2181,6 @@ static PARAM_DEFS: &[ParamDef] = &[
             ParamScope::Session,
             ParamScope::Statement,
         ])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .visible_to(visible_to!(Odbc))
         .build(),
@@ -2296,7 +2193,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Number of concurrent chunk prefetch threads for result set downloading")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(true)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
@@ -2308,7 +2204,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Memory budget in MB for chunk prefetch buffer (0 = unlimited)")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     // ── Session keep-alive ─────────────────────────────────────────────
@@ -2320,7 +2215,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Keep the session alive with periodic heartbeat requests")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
@@ -2331,7 +2225,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Heartbeat frequency in seconds (clamped to interval master_token_validity/16..master_token_validity/4)")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .send_as_session_parameter(SendAsSessionParameter::Clamped { min: 900, max: 3600 })
         .build(),
@@ -2356,7 +2249,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Force the S3 regional endpoint for PUT/GET (PrivateLink-to-S3)")
         .scopes(&[ParamScope::Session])
-        .used_at_connect(false)
         .mutable_after_connect(true)
         .build(),
     ParamDef::builder()
@@ -2366,7 +2258,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Validate that the default database, schema, and warehouse exist on the server at connect time")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .send_as_session_parameter(SendAsSessionParameter::Aliased {
             alias: "CLIENT_VALIDATE_DEFAULT_PARAMETERS",
@@ -2384,7 +2275,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Proxy server hostname")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2394,7 +2284,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Proxy server port")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2404,7 +2293,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Scheme for the hop to the proxy: http (default) or https")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2414,7 +2302,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Proxy server username for Basic auth")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2424,7 +2311,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Proxy server password for Basic auth")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2438,7 +2324,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Comma-separated list of hosts to bypass the proxy for")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── Workload Identity Federation (WIF) ────────────────────────────
@@ -2450,7 +2335,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Cloud provider for WIF attestation (AWS, AZURE, GCP, OIDC)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2460,7 +2344,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Azure Entra resource URI for managed-identity token (Azure only; defaults to api://fd3f753b-eed3-462c-b6a7-a4b5bb650aad)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .logical_type(LogicalType::Url)
         .build(),
@@ -2471,7 +2354,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Azure user-assigned managed-identity client id (Azure only; falls back to MANAGED_IDENTITY_CLIENT_ID)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .visible_to(visible_to!(NodeJs))
         .build(),
@@ -2482,7 +2364,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Comma-separated impersonation chain for WIF (AWS role ARNs or GCP service account emails)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2493,7 +2374,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("Use outbound STS GetWebIdentityToken for AWS WIF (default: pre-signed GetCallerIdentity)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2510,7 +2390,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(true)
         .description("AWS STS hostname for Workload Identity Federation. Unset keeps the regional default")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // Legacy ODBC PROXY URL form (parsed and merged with the fields above).
@@ -2521,7 +2400,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Proxy URL ([scheme://][user:pass@]host[:port]); legacy ODBC `PROXY` form")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .logical_type(LogicalType::Url)
         .build(),
@@ -2537,7 +2415,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Honour HTTP_PROXY/HTTPS_PROXY/NO_PROXY env vars when no explicit proxy is set")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2551,7 +2428,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Empty PROXY value explicitly disables proxy (overrides env)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2570,7 +2446,6 @@ static PARAM_DEFS: &[ParamDef] = &[
              CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX fills it",
         )
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2588,7 +2463,6 @@ static PARAM_DEFS: &[ParamDef] = &[
              Client-only, never forwarded to GS.",
         )
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .visible_to(visible_to!(Odbc))
         .build(),
@@ -2607,7 +2481,6 @@ static PARAM_DEFS: &[ParamDef] = &[
              Client-only, never forwarded to GS.",
         )
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .visible_to(visible_to!(Odbc))
         .build(),
@@ -2626,7 +2499,6 @@ static PARAM_DEFS: &[ParamDef] = &[
              Client-only, never forwarded to GS.",
         )
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .visible_to(visible_to!(Odbc))
         .build(),
@@ -2642,7 +2514,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Run connectivity diagnostics during connect and write a report")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2652,7 +2523,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Directory where the diagnostic report file is written (defaults to system tmpdir)")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     ParamDef::builder()
@@ -2662,7 +2532,6 @@ static PARAM_DEFS: &[ParamDef] = &[
         .auth(false)
         .description("Path to a pre-fetched allowlist.json; if absent the driver fetches it via system$allowlist()")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(true)
         .mutable_after_connect(false)
         .build(),
     // ── ODBC keywords the driver accepts and does not apply ───────────
@@ -2843,7 +2712,6 @@ const fn ignored_odbc_param(canonical: &'static str) -> ParamDef {
         .auth(false)
         .description("ODBC keyword the driver accepts and does not apply.")
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .ignored(true)
         .visible_to(visible_to!(Odbc))
@@ -2865,7 +2733,6 @@ const fn odbc_deprecated(
         .description(description)
         .deprecated(deprecated)
         .scopes(&[ParamScope::Connection])
-        .used_at_connect(false)
         .mutable_after_connect(false)
         .ignored(true)
         .visible_to(visible_to!(Odbc))
@@ -3349,7 +3216,6 @@ mod tests {
             .auth(false)
             .description("")
             .scopes(&[ParamScope::Connection])
-            .used_at_connect(false)
             .mutable_after_connect(false)
             .build();
         assert!(DEF.aliases.is_empty());
@@ -3391,7 +3257,6 @@ mod tests {
                 .unwrap_or_else(|| panic!("{key} should resolve for ODBC"));
             assert_eq!(def.canonical_name, canonical);
             assert!(def.ignored, "{canonical} should be ignored");
-            assert!(!def.used_at_connect, "{canonical} is unused at connect");
             assert!(
                 r.resolve(key).is_none(),
                 "{key} must not resolve without wrapper context"
@@ -3572,7 +3437,6 @@ mod tests {
             .expect("DEFAULT_VARCHAR_SIZE should resolve for Odbc");
         assert_eq!(d.canonical_name, "default_varchar_size");
         assert_eq!(d.scopes, &[ParamScope::Connection]);
-        assert!(!d.used_at_connect);
         assert!(!d.mutable_after_connect);
         assert_eq!(d.value_type, ValueType::Int);
         assert_eq!(d.default, Some(DefaultValue::Int(-1)));
@@ -3592,7 +3456,6 @@ mod tests {
             .expect("DEFAULT_BINARY_SIZE should resolve for Odbc");
         assert_eq!(d.canonical_name, "default_binary_size");
         assert_eq!(d.scopes, &[ParamScope::Connection]);
-        assert!(!d.used_at_connect);
         assert!(!d.mutable_after_connect);
         assert_eq!(d.value_type, ValueType::Int);
         assert_eq!(d.default, Some(DefaultValue::Int(-1)));
@@ -3773,7 +3636,6 @@ mod tests {
         // Default is true: locking is ON by default.
         let default_val = def.default.expect("param must have a default");
         assert_eq!(default_val, DefaultValue::Bool(true));
-        assert!(def.used_at_connect);
         assert!(!def.mutable_after_connect);
         assert!(!def.sensitive);
 
@@ -3798,7 +3660,6 @@ mod tests {
         assert_eq!(def.value_type, ValueType::Bool);
         assert!(def.default.is_none());
         assert_eq!(def.scopes, &[ParamScope::Connection]);
-        assert!(!def.used_at_connect);
         assert!(!def.mutable_after_connect);
         assert!(r.resolve("SERIALIZE_SESSION_OPERATIONS").is_some());
     }
@@ -3811,14 +3672,11 @@ mod tests {
             .expect("CLIENT_SESSION_KEEP_ALIVE should resolve");
         assert_eq!(keep_alive.value_type, ValueType::Bool);
         assert_eq!(keep_alive.scopes, &[ParamScope::Session]);
-        assert!(keep_alive.used_at_connect);
-
         let freq = r
             .resolve("CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY")
             .expect("heartbeat frequency param should resolve");
         assert_eq!(freq.value_type, ValueType::Int);
         assert_eq!(freq.scopes, &[ParamScope::Session]);
-        assert!(freq.used_at_connect);
     }
 
     #[test]
@@ -3837,8 +3695,6 @@ mod tests {
             assert_eq!(d.canonical_name, key);
             assert_eq!(d.value_type, value_type, "key {key}");
             assert_eq!(d.scopes, &[ParamScope::Connection], "key {key}");
-            // Client-only knobs: not sent at login, immutable after connect.
-            assert!(!d.used_at_connect, "key {key}");
             assert!(!d.mutable_after_connect, "key {key}");
             assert!(!d.sensitive, "key {key}");
             assert!(d.default.is_some(), "key {key} must have a static default");
@@ -3864,7 +3720,6 @@ mod tests {
             assert_eq!(d.canonical_name, key);
             assert_eq!(d.value_type, ValueType::String);
             assert_eq!(d.scopes, &[ParamScope::Connection]);
-            assert!(d.used_at_connect, "key {key} must be used at connect");
             assert!(
                 !d.mutable_after_connect,
                 "key {key} must be immutable after connect"
@@ -4029,7 +3884,6 @@ mod tests {
         assert_eq!(def.canonical_name, "log_max_query_length");
         assert_eq!(def.value_type, ValueType::Int);
         assert_eq!(def.scopes, &[ParamScope::Connection]);
-        assert!(!def.used_at_connect);
         assert!(!def.mutable_after_connect);
         assert_eq!(def.default.unwrap(), DefaultValue::Int(80));
     }
@@ -4044,7 +3898,6 @@ mod tests {
         assert_eq!(def.value_type, ValueType::Bool);
         assert_eq!(def.additional_value_type, Some(ValueType::String));
         assert_eq!(def.scopes, &[ParamScope::Connection]);
-        assert!(!def.used_at_connect);
         assert!(!def.mutable_after_connect);
         assert!(!def.sensitive);
         assert_eq!(def.default.unwrap(), DefaultValue::Bool(false));
@@ -4060,7 +3913,6 @@ mod tests {
         assert_eq!(def.value_type, ValueType::Bool);
         assert_eq!(def.additional_value_type, Some(ValueType::String));
         assert_eq!(def.scopes, &[ParamScope::Connection]);
-        assert!(!def.used_at_connect);
         assert!(!def.mutable_after_connect);
         assert!(!def.sensitive);
         assert_eq!(def.default.unwrap(), DefaultValue::Bool(false));
@@ -4085,21 +3937,6 @@ mod tests {
     }
 
     #[test]
-    fn statement_scope_params_are_never_used_at_connect() {
-        let r = registry();
-        for p in r.all_params() {
-            if p.scopes.contains(&ParamScope::Statement) {
-                assert!(
-                    !p.used_at_connect,
-                    "expected used_at_connect == false for {}",
-                    p.canonical_name
-                );
-                assert!(!p.effective_used_at_connect());
-            }
-        }
-    }
-
-    #[test]
     fn session_context_params_are_session_scoped_and_mutable_after_connect() {
         let r = registry();
         for key in ["database", "schema", "warehouse", "role"] {
@@ -4107,7 +3944,6 @@ mod tests {
                 .resolve(key)
                 .unwrap_or_else(|| panic!("expected registry entry for {key}"));
             assert_eq!(d.scopes, &[ParamScope::Session], "key {key}");
-            assert!(d.used_at_connect, "key {key}");
             assert!(d.mutable_after_connect, "key {key}");
         }
     }
@@ -4116,7 +3952,6 @@ mod tests {
     fn server_session_params_have_session_scope_and_login_metadata() {
         let r = registry();
         for (key, value_type) in [
-            ("timezone", ValueType::String),
             ("autocommit", ValueType::Bool),
             ("client_timestamp_type_mapping", ValueType::String),
             (
@@ -4132,10 +3967,46 @@ mod tests {
                 .unwrap_or_else(|| panic!("expected ODBC registry entry for {key}"));
             assert_eq!(d.value_type, value_type, "key {key}");
             assert_eq!(d.scopes, &[ParamScope::Session], "key {key}");
-            assert!(d.used_at_connect, "key {key}");
             assert!(d.mutable_after_connect, "key {key}");
             assert!(d.is_sent_as_session_parameter(), "key {key}");
         }
+        let timezone = r
+            .resolve_for(Wrapper::Odbc, "timezone")
+            .expect("expected ODBC registry entry for timezone");
+        assert_eq!(timezone.value_type, ValueType::String);
+        assert_eq!(
+            timezone.scopes,
+            &[ParamScope::Session, ParamScope::Statement]
+        );
+        assert!(timezone.mutable_after_connect);
+        assert!(timezone.is_sent_as_session_parameter());
+        assert!(timezone.send_as_query_parameter);
+    }
+
+    #[test]
+    fn odbc_query_result_format_is_an_odbc_session_parameter() {
+        let r = registry();
+        assert!(r.resolve("odbc_query_result_format").is_none());
+        let d = r
+            .resolve_for(Wrapper::Odbc, "ODBC_QUERY_RESULT_FORMAT")
+            .expect("ODBC_QUERY_RESULT_FORMAT should resolve for Odbc");
+        assert_eq!(d.canonical_name, "odbc_query_result_format");
+        assert_eq!(d.value_type, ValueType::String);
+        assert_eq!(d.scopes, &[ParamScope::Session]);
+        assert!(d.mutable_after_connect);
+        assert!(d.is_sent_as_session_parameter());
+        assert!(matches!(
+            d.send_as_session_parameter,
+            Some(SendAsSessionParameter::Exact)
+        ));
+        assert_eq!(
+            d.canonical_name.to_ascii_uppercase(),
+            "ODBC_QUERY_RESULT_FORMAT"
+        );
+        assert!(d.is_visible_to(Wrapper::Odbc));
+        assert!(!d.is_visible_to(Wrapper::Python));
+        assert!(!d.is_visible_to(Wrapper::Jdbc));
+        assert!(!d.is_visible_to(Wrapper::NodeJs));
     }
 
     #[test]
@@ -4179,13 +4050,26 @@ mod tests {
     }
 
     #[test]
+    fn query_parameters_are_statement_scoped_registry_entries() {
+        let mut names = Vec::new();
+        for def in registry().all_params() {
+            if !def.send_as_query_parameter {
+                continue;
+            }
+            assert!(def.is_statement_scoped(), "key {}", def.canonical_name);
+            names.push(def.canonical_name);
+        }
+        names.sort_unstable();
+        assert_eq!(names, ["multi_statement_count", "query_tag", "timezone"]);
+    }
+
+    #[test]
     fn secondary_roles_is_connection_scoped_and_immutable_after_connect() {
         let r = registry();
         let d = r
             .resolve("secondary_roles")
             .expect("expected registry entry for secondary_roles");
         assert_eq!(d.scopes, &[ParamScope::Connection]);
-        assert!(d.used_at_connect);
         assert!(!d.mutable_after_connect);
         assert_eq!(d.value_type, ValueType::String);
     }
@@ -4199,7 +4083,6 @@ mod tests {
             .expect("MapToLongVarchar should resolve for Odbc");
         assert_eq!(d.canonical_name, "map_to_long_varchar");
         assert_eq!(d.scopes, &[ParamScope::Connection]);
-        assert!(!d.used_at_connect);
         assert!(!d.mutable_after_connect);
         assert_eq!(d.value_type, ValueType::Int);
         assert_eq!(d.default, Some(DefaultValue::Int(-1)));
@@ -4217,7 +4100,6 @@ mod tests {
             .expect("PUT_COMPRESSLV should resolve for Odbc");
         assert_eq!(d.canonical_name, "put_compress_level");
         assert_eq!(d.scopes, &[ParamScope::Connection]);
-        assert!(!d.used_at_connect);
         assert!(d.mutable_after_connect);
         assert_eq!(d.value_type, ValueType::Int);
         assert!(d.is_visible_to(Wrapper::Odbc));
@@ -4234,7 +4116,6 @@ mod tests {
             .expect("platform_detection_timeout_seconds should resolve for Python");
         assert_eq!(d.canonical_name, "platform_detection_timeout_seconds");
         assert_eq!(d.scopes, &[ParamScope::Connection]);
-        assert!(d.used_at_connect);
         assert!(!d.mutable_after_connect);
         assert_eq!(d.value_type, ValueType::Double);
         assert!(d.is_visible_to(Wrapper::Python));
@@ -4252,7 +4133,6 @@ mod tests {
             .expect("PUT_TEMPDIR should resolve for Odbc");
         assert_eq!(d.canonical_name, "put_tempdir");
         assert_eq!(d.scopes, &[ParamScope::Connection]);
-        assert!(!d.used_at_connect);
         assert!(d.mutable_after_connect);
         assert_eq!(d.value_type, ValueType::String);
         assert!(d.is_visible_to(Wrapper::Odbc));
@@ -4278,7 +4158,6 @@ mod tests {
                 .resolve(key)
                 .unwrap_or_else(|| panic!("expected registry entry for {key}"));
             assert_eq!(d.scopes, &[ParamScope::Connection], "key {key}");
-            assert!(d.used_at_connect, "key {key}");
             assert!(!d.mutable_after_connect, "key {key}");
         }
         let port = r.resolve("proxy_port").unwrap();

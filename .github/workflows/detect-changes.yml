@@ -407,13 +407,11 @@ jobs:
             echo "run_jdbc=false" >> $GITHUB_OUTPUT
           fi
 
-          # Node.js should run only if files inside nodejs/** or nodejs_bridge/** changed.
-          # Intentionally excludes `core` and `shared` for now: the Node.js
-          # driver is a fresh skeleton with no real integration yet, so
-          # changes to shared infra do not trigger nodejs tests.
-          # Broaden this rule (add `core`/`shared`) once the wrapper actually depends on them.
+          # Node.js should run if: nodejs OR core OR shared changed
           if [[ "$IS_SNOWFLAKE_ENG" == "true" ]] && \
-             [[ "${{ steps.filter.outputs.nodejs }}" == "true" ]]; then
+             { [[ "${{ steps.filter.outputs.nodejs }}" == "true" ]] || \
+               [[ "${{ steps.filter.outputs.core }}" == "true" ]] || \
+               [[ "${{ steps.filter.outputs.shared }}" == "true" ]]; }; then
             echo "run_nodejs=true" >> $GITHUB_OUTPUT
           else
             echo "run_nodejs=false" >> $GITHUB_OUTPUT

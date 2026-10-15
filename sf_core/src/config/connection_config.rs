@@ -577,7 +577,7 @@ impl LoginParameters {
     /// Build Snowflake login parameters from a validated [`ConnectionConfig`].
     ///
     /// Session defaults (`database`, `schema`, `warehouse`, `role`) reflect the resolved
-    /// connection seed at login time (`used_at_connect` session fields).
+    /// connection seed at login time.
     pub fn from_connection_config(
         config: &ConnectionConfig,
         client_info: ClientInfo,
