@@ -439,16 +439,35 @@ pub(crate) fn collect_unknown_settings(settings: &ParamStore) -> HashMap<String,
         .iter()
         .filter(|(key, _)| is_unregistered_param(key))
         .filter_map(|(key, value)| {
-            let str_value = match value {
-                Setting::String(s) => s.clone(),
-                Setting::Int(i) => i.to_string(),
-                Setting::Bool(b) => b.to_string(),
-                Setting::Double(d) => d.to_string(),
-                Setting::Bytes(_) => return None,
-            };
-            Some((key.to_uppercase(), str_value))
+            session_parameter_value(value).map(|value| (key.to_uppercase(), value))
         })
         .collect()
+}
+
+pub(crate) fn collect_registered_session_parameters(
+    settings: &ParamStore,
+) -> HashMap<String, String> {
+    param_registry::registry()
+        .all_params()
+        .iter()
+        .filter(|def| def.is_sent_as_session_parameter())
+        .filter_map(|def| {
+            settings.get_any(def.canonical_name).and_then(|value| {
+                session_parameter_value(value)
+                    .map(|value| (def.canonical_name.to_ascii_uppercase(), value))
+            })
+        })
+        .collect()
+}
+
+fn session_parameter_value(value: &Setting) -> Option<String> {
+    match value {
+        Setting::String(value) => Some(value.clone()),
+        Setting::Int(value) => Some(value.to_string()),
+        Setting::Bool(value) => Some(value.to_string()),
+        Setting::Double(value) => Some(value.to_string()),
+        Setting::Bytes(_) => None,
+    }
 }
 
 #[cfg(test)]
@@ -999,19 +1018,16 @@ mod tests {
     }
 
     #[test]
-    fn collect_unknown_settings_forwards_gcs_use_downscoped_credential() {
+    fn collect_unknown_settings_excludes_registered_session_parameters() {
         let mut store = ParamStore::new();
         store.insert(
             "gcs_use_downscoped_credential".to_string(),
-            Setting::String("true".to_string()),
+            Setting::Bool(true),
         );
 
         let unknown = collect_unknown_settings(&store);
 
-        assert_eq!(
-            unknown.get("GCS_USE_DOWNSCOPED_CREDENTIAL"),
-            Some(&"true".to_string())
-        );
+        assert!(!unknown.contains_key("GCS_USE_DOWNSCOPED_CREDENTIAL"));
     }
 
     #[test]
@@ -1028,5 +1044,42 @@ mod tests {
         assert_eq!(unknown.len(), 1);
         assert_eq!(unknown.get("SOME_STRING_KEY"), Some(&"my_val".to_string()));
         assert!(!unknown.contains_key("PUT_FASTFAIL"));
+    }
+
+    #[test]
+    fn collect_registered_session_parameters_returns_marked_parameters() {
+        let mut store = ParamStore::new();
+        store.insert(
+            "timezone".to_string(),
+            Setting::String("Europe/Warsaw".to_string()),
+        );
+        store.insert("autocommit".to_string(), Setting::Bool(false));
+        store.insert(
+            "gcs_use_downscoped_credential".to_string(),
+            Setting::Bool(true),
+        );
+        store.insert(
+            "database".to_string(),
+            Setting::String("DATABASE".to_string()),
+        );
+        store.insert(
+            "some_unknown_key".to_string(),
+            Setting::String("unknown".to_string()),
+        );
+
+        let parameters = collect_registered_session_parameters(&store);
+
+        assert_eq!(parameters.len(), 3);
+        assert_eq!(
+            parameters.get("TIMEZONE"),
+            Some(&"Europe/Warsaw".to_string())
+        );
+        assert_eq!(parameters.get("AUTOCOMMIT"), Some(&"false".to_string()));
+        assert_eq!(
+            parameters.get("GCS_USE_DOWNSCOPED_CREDENTIAL"),
+            Some(&"true".to_string())
+        );
+        assert!(!parameters.contains_key("DATABASE"));
+        assert!(!parameters.contains_key("SOME_UNKNOWN_KEY"));
     }
 }

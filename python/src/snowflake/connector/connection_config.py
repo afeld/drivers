@@ -433,8 +433,23 @@ class ConnectionConfig(ConnectionConfigMixin):
     client_session_keep_alive_heartbeat_frequency: int | None = None
     """Heartbeat frequency in seconds (clamped to interval master_token_validity/16..master_token_validity/4)"""
 
+    autocommit: bool | None = None
+    """Session autocommit mode"""
+
+    client_metadata_request_use_connection_ctx: bool | None = None
+    """Use the connection context for metadata requests"""
+
+    client_out_of_band_telemetry_enabled: bool | None = None
+    """Enable out-of-band client telemetry"""
+
+    client_timestamp_type_mapping: str | None = None
+    """Timestamp type used for generic timestamp values"""
+
     database: str | None = None
     """Default database to use"""
+
+    gcs_use_downscoped_credential: bool | None = None
+    """Use downscoped credentials for GCS"""
 
     query_tag: str | None = None
     """String label attached to queries and surfaced in QUERY_HISTORY. Settable at the session level (connection option
@@ -446,6 +461,12 @@ class ConnectionConfig(ConnectionConfigMixin):
 
     schema: str | None = None
     """Default schema to use"""
+
+    service_name: str | None = None
+    """Snowflake service name"""
+
+    timezone: str | None = None
+    """Session timezone"""
 
     use_s3_regional_url: bool | None = False
     """Force the S3 regional endpoint for PUT/GET (PrivateLink-to-S3). Default: False"""

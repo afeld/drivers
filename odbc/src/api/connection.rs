@@ -228,21 +228,17 @@ fn deprecated_registry_param_warnings(params: &HashMap<String, String>) -> Vec<W
 /// The wrapper owns alias→canonical resolution: every key is resolved through
 /// the `sf_core` registry under the ODBC flavor and emitted under its canonical
 /// name, so core receives canonical keys and no longer has to remap ODBC wire
-/// spellings. Keys unknown to the registry are forwarded uppercased as
-/// session/unknown parameters (matching how ODBC passes server session params
-/// through). Registry entries marked `ignored` (ODBC driver-manager metadata
-/// such as `DRIVER` and `DSN`, leftover `TRACING`, deprecated
-/// connection-string logging keys such as `LogLevel`, and removed test-only
-/// knobs such as `INJECT_CURL_TIMEOUT`) are dropped.
+/// spellings. Keys unknown to the registry and registry entries marked
+/// `ignored` (ODBC driver-manager metadata such as `DRIVER` and `DSN`, leftover
+/// `TRACING`, deprecated connection-string logging keys such as `LogLevel`,
+/// and removed test-only knobs such as `INJECT_CURL_TIMEOUT`) are dropped.
 fn normalize_connection_string_option(
     key: String,
     value: String,
 ) -> Option<(String, ConfigSetting)> {
     let upper = key.to_ascii_uppercase();
     let registry = sf_core::config::param_registry::registry();
-    let Some(def) = registry.resolve_for(Wrapper::Odbc, &upper) else {
-        return Some((upper, value.into()));
-    };
+    let def = registry.resolve_for(Wrapper::Odbc, &upper)?;
     if def.ignored {
         return None;
     }
@@ -4043,19 +4039,50 @@ mod tests {
     }
 
     #[test]
-    fn normalize_connection_string_options_preserves_unrecognized_keys() {
-        // A key unknown to the registry (e.g. a Snowflake server session
-        // parameter) is forwarded uppercased and verbatim, so core can pass it
-        // through as a session/unknown parameter.
+    fn normalize_connection_string_options_drops_unrecognized_keys() {
         let options = normalize_connection_string_options(HashMap::from([(
             "SOME_UNKNOWN_SESSION_PARAM".to_owned(),
             "from-odbc".to_owned(),
         )]));
 
-        assert_eq!(
-            config_string(&options, "SOME_UNKNOWN_SESSION_PARAM"),
-            Some("from-odbc")
-        );
+        assert!(options.is_empty());
+    }
+
+    #[test]
+    fn normalize_connection_string_options_canonicalizes_session_parameters() {
+        let options = normalize_connection_string_options(HashMap::from([
+            ("TIMEZONE".to_owned(), "Europe/Warsaw".to_owned()),
+            ("AUTOCOMMIT".to_owned(), "false".to_owned()),
+            (
+                "CLIENT_TIMESTAMP_TYPE_MAPPING".to_owned(),
+                "TIMESTAMP_TZ".to_owned(),
+            ),
+            (
+                "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX".to_owned(),
+                "true".to_owned(),
+            ),
+            ("SERVICE_NAME".to_owned(), "service".to_owned()),
+            (
+                "GCS_USE_DOWNSCOPED_CREDENTIAL".to_owned(),
+                "true".to_owned(),
+            ),
+            (
+                "CLIENT_OUT_OF_BAND_TELEMETRY_ENABLED".to_owned(),
+                "false".to_owned(),
+            ),
+        ]));
+
+        for (key, expected) in [
+            ("timezone", "Europe/Warsaw"),
+            ("autocommit", "false"),
+            ("client_timestamp_type_mapping", "TIMESTAMP_TZ"),
+            ("client_metadata_request_use_connection_ctx", "true"),
+            ("service_name", "service"),
+            ("gcs_use_downscoped_credential", "true"),
+            ("client_out_of_band_telemetry_enabled", "false"),
+        ] {
+            assert_eq!(config_string(&options, key), Some(expected), "{key}");
+        }
     }
 
     #[test]

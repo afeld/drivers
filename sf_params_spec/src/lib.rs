@@ -105,6 +105,15 @@ pub mod param_names {
     pub const SCHEMA: ParamKey = ParamKey("schema");
     pub const WAREHOUSE: ParamKey = ParamKey("warehouse");
     pub const ROLE: ParamKey = ParamKey("role");
+    pub const TIMEZONE: ParamKey = ParamKey("timezone");
+    pub const AUTOCOMMIT: ParamKey = ParamKey("autocommit");
+    pub const CLIENT_TIMESTAMP_TYPE_MAPPING: ParamKey = ParamKey("client_timestamp_type_mapping");
+    pub const CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX: ParamKey =
+        ParamKey("client_metadata_request_use_connection_ctx");
+    pub const SERVICE_NAME: ParamKey = ParamKey("service_name");
+    pub const GCS_USE_DOWNSCOPED_CREDENTIAL: ParamKey = ParamKey("gcs_use_downscoped_credential");
+    pub const CLIENT_OUT_OF_BAND_TELEMETRY_ENABLED: ParamKey =
+        ParamKey("client_out_of_band_telemetry_enabled");
     pub const SECONDARY_ROLES: ParamKey = ParamKey("secondary_roles");
     pub const CONNECTION_NAME: ParamKey = ParamKey("connection_name");
     pub const CUSTOM_ROOT_STORE_PATH: ParamKey = ParamKey("custom_root_store_path");
@@ -598,6 +607,8 @@ pub struct ParamDef {
     /// parameter is registered so it is not an unknown session parameter, and
     /// its value is not applied.
     pub ignored: bool,
+
+    pub send_as_session_parameter: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -664,6 +675,7 @@ impl ParamDef {
             visible_to: VisibleTo::All,
             logical_type: LogicalType::Unspecified,
             ignored: false,
+            send_as_session_parameter: false,
         }
     }
 
@@ -708,6 +720,11 @@ impl ParamDef {
         self.scopes.contains(&ParamScope::Session)
     }
 
+    #[inline]
+    pub fn is_sent_as_session_parameter(&self) -> bool {
+        self.is_session_scoped() && self.send_as_session_parameter
+    }
+
     /// True when `wrapper` may resolve this parameter's canonical name.
     #[inline]
     pub fn is_visible_to(&self, wrapper: Wrapper) -> bool {
@@ -737,6 +754,7 @@ pub struct ParamDefBuilder {
     visible_to: VisibleTo,
     logical_type: LogicalType,
     ignored: bool,
+    send_as_session_parameter: bool,
 }
 
 impl ParamDefBuilder {
@@ -825,6 +843,11 @@ impl ParamDefBuilder {
         self
     }
 
+    pub const fn send_as_session_parameter(mut self, value: bool) -> Self {
+        self.send_as_session_parameter = value;
+        self
+    }
+
     pub const fn build(self) -> ParamDef {
         ParamDef {
             canonical_name: match self.canonical_name {
@@ -867,6 +890,7 @@ impl ParamDefBuilder {
             visible_to: self.visible_to,
             logical_type: self.logical_type,
             ignored: self.ignored,
+            send_as_session_parameter: self.send_as_session_parameter,
         }
     }
 }
@@ -1487,6 +1511,83 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::TIMEZONE.as_str())
+        .value_type(ValueType::String)
+        .sensitive(false)
+        .auth(false)
+        .description("Session timezone")
+        .scopes(&[ParamScope::Session])
+        .used_at_connect(true)
+        .mutable_after_connect(true)
+        .send_as_session_parameter(true)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::AUTOCOMMIT.as_str())
+        .value_type(ValueType::Bool)
+        .sensitive(false)
+        .auth(false)
+        .description("Session autocommit mode")
+        .scopes(&[ParamScope::Session])
+        .used_at_connect(true)
+        .mutable_after_connect(true)
+        .send_as_session_parameter(true)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::CLIENT_TIMESTAMP_TYPE_MAPPING.as_str())
+        .value_type(ValueType::String)
+        .sensitive(false)
+        .auth(false)
+        .description("Timestamp type used for generic timestamp values")
+        .scopes(&[ParamScope::Session])
+        .used_at_connect(true)
+        .mutable_after_connect(true)
+        .send_as_session_parameter(true)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX.as_str())
+        .value_type(ValueType::Bool)
+        .sensitive(false)
+        .auth(false)
+        .description("Use the connection context for metadata requests")
+        .scopes(&[ParamScope::Session])
+        .used_at_connect(true)
+        .mutable_after_connect(true)
+        .send_as_session_parameter(true)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::SERVICE_NAME.as_str())
+        .value_type(ValueType::String)
+        .sensitive(false)
+        .auth(false)
+        .description("Snowflake service name")
+        .scopes(&[ParamScope::Session])
+        .used_at_connect(true)
+        .mutable_after_connect(true)
+        .send_as_session_parameter(true)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::GCS_USE_DOWNSCOPED_CREDENTIAL.as_str())
+        .value_type(ValueType::Bool)
+        .sensitive(false)
+        .auth(false)
+        .description("Use downscoped credentials for GCS")
+        .scopes(&[ParamScope::Session])
+        .used_at_connect(true)
+        .mutable_after_connect(true)
+        .send_as_session_parameter(true)
+        .build(),
+    ParamDef::builder()
+        .canonical_name(param_names::CLIENT_OUT_OF_BAND_TELEMETRY_ENABLED.as_str())
+        .value_type(ValueType::Bool)
+        .sensitive(false)
+        .auth(false)
+        .description("Enable out-of-band client telemetry")
+        .scopes(&[ParamScope::Session])
+        .used_at_connect(true)
+        .mutable_after_connect(true)
+        .send_as_session_parameter(true)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::SECONDARY_ROLES.as_str())
@@ -3994,6 +4095,43 @@ mod tests {
             assert_eq!(d.scopes, &[ParamScope::Session], "key {key}");
             assert!(d.used_at_connect, "key {key}");
             assert!(d.mutable_after_connect, "key {key}");
+        }
+    }
+
+    #[test]
+    fn server_session_params_have_session_scope_and_login_metadata() {
+        let r = registry();
+        for (key, value_type) in [
+            ("timezone", ValueType::String),
+            ("autocommit", ValueType::Bool),
+            ("client_timestamp_type_mapping", ValueType::String),
+            (
+                "client_metadata_request_use_connection_ctx",
+                ValueType::Bool,
+            ),
+            ("service_name", ValueType::String),
+            ("gcs_use_downscoped_credential", ValueType::Bool),
+            ("client_out_of_band_telemetry_enabled", ValueType::Bool),
+        ] {
+            let d = r
+                .resolve_for(Wrapper::Odbc, key)
+                .unwrap_or_else(|| panic!("expected ODBC registry entry for {key}"));
+            assert_eq!(d.value_type, value_type, "key {key}");
+            assert_eq!(d.scopes, &[ParamScope::Session], "key {key}");
+            assert!(d.used_at_connect, "key {key}");
+            assert!(d.mutable_after_connect, "key {key}");
+            assert!(d.send_as_session_parameter, "key {key}");
+        }
+    }
+
+    #[test]
+    fn session_parameter_transport_requires_session_scope() {
+        for d in registry()
+            .all_params()
+            .iter()
+            .filter(|d| d.send_as_session_parameter)
+        {
+            assert!(d.is_session_scoped(), "key {}", d.canonical_name);
         }
     }
 

@@ -11,9 +11,9 @@ use super::heartbeat::{HeartbeatHandle, compute_heartbeat_interval, spawn_heartb
 use super::query_submit::{query_context, submit_query, update_caches};
 use super::spcs_token::read_spcs_token;
 use super::validation::{
-    ValidationIssue, ValidationSeverity, canonicalize_setting_key, collect_unknown_settings,
-    normalize_host_underscores, resolve_options, validate_connection_seed_write,
-    validate_session_override_write,
+    ValidationIssue, ValidationSeverity, canonicalize_setting_key,
+    collect_registered_session_parameters, collect_unknown_settings, normalize_host_underscores,
+    resolve_options, validate_connection_seed_write, validate_session_override_write,
 };
 use super::{Setting, WrapperPresets, logout};
 use crate::apis::operation_ctx::OperationCtx;
@@ -313,14 +313,8 @@ impl DatabaseDriverV1 {
                     let init_params = conn.init_session_parameters.clone();
                     let resolved_snapshot = resolved.clone();
 
-                    // Session parameters to send in the login request. Seeded
-                    // with unrecognized connection options (so drivers can set
-                    // arbitrary Snowflake session params via regular connection
-                    // options), then augmented below with registered session
-                    // params that belong in SESSION_PARAMETERS
-                    // (CLIENT_SESSION_KEEP_ALIVE, its heartbeat frequency,
-                    // CLIENT_PREFETCH_THREADS, QUERY_TAG) to match the Python connector.
                     let mut login_session_params = collect_unknown_settings(&effective_seed);
+                    login_session_params.extend(collect_registered_session_parameters(&resolved));
                     if let Some(v) = resolved.get_bool(param_names::CLIENT_SESSION_KEEP_ALIVE) {
                         login_session_params.insert(
                             param_names::CLIENT_SESSION_KEEP_ALIVE.as_str().to_string(),

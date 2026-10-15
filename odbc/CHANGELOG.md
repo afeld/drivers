@@ -22,6 +22,7 @@ New features:
 
 Changes:
 
+- Changed `SQLDriverConnect` so unrecognized connection-string keywords are reported with a local `01S00` warning and are not forwarded to the server. Recognized session parameters are sent to the server. (snowflakedb/drivers#2712)
 - Changed the leftover ODBC 3.x CRL connection-string keywords `CRL_CHECK` and `CRL_ADVISORY` to be accepted and ignored, posting SQLSTATE `01000` on connect. Set `CRL_MODE` to `ENABLED` for fail-close revocation checking or `ADVISORY` for fail-open. (snowflakedb/drivers#2206)
 
 Bug fixes:

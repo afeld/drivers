@@ -12,7 +12,6 @@
 #include "test_setup.hpp"
 
 TEST_CASE("should forward unrecognized connection option as session parameter", "[session]") {
-  SKIP_OLD_DRIVER("", "Old driver does not forward unknown connection options as session parameters");
   // Given Snowflake client is logged in with connection option TIMEZONE set to
   // "Europe/Warsaw"
   auto conn_str = get_connection_string() + "TIMEZONE=Europe/Warsaw;";

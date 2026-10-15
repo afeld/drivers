@@ -83,6 +83,25 @@ const SUPPORTED_LEGACY_ODBC_DSN_KEYS: &[(&str, &str)] = &[
     ),
     ("QUERY_TAG", "query_tag"),
     ("CLIENT_PREFETCH_THREADS", "CLIENT_PREFETCH_THREADS"),
+    ("TIMEZONE", "timezone"),
+    ("AUTOCOMMIT", "autocommit"),
+    (
+        "CLIENT_TIMESTAMP_TYPE_MAPPING",
+        "client_timestamp_type_mapping",
+    ),
+    (
+        "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX",
+        "client_metadata_request_use_connection_ctx",
+    ),
+    ("SERVICE_NAME", "service_name"),
+    (
+        "GCS_USE_DOWNSCOPED_CREDENTIAL",
+        "gcs_use_downscoped_credential",
+    ),
+    (
+        "CLIENT_OUT_OF_BAND_TELEMETRY_ENABLED",
+        "client_out_of_band_telemetry_enabled",
+    ),
     ("DSN", "dsn"),
     ("DRIVER", "driver"),
     ("FILEDSN", "filedsn"),
@@ -159,15 +178,6 @@ const UNSUPPORTED_LEGACY_ODBC_DSN_KEYS: &[&str] = &[
     "platformDetectionTimeoutMs",
     // Hidden stage-bind safeguard not registered (no 1:1 UD equivalent).
     "StageBindCompressLevel",
-    // Session parameters. The connection-string parser forwards unknown
-    // keys as session parameters, so they do not need registry aliases.
-    "TIMEZONE",
-    "AUTOCOMMIT",
-    "CLIENT_TIMESTAMP_TYPE_MAPPING",
-    "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX",
-    "SERVICE_NAME",
-    "GCS_USE_DOWNSCOPED_CREDENTIAL",
-    "CLIENT_OUT_OF_BAND_TELEMETRY_ENABLED",
 ];
 
 #[test]

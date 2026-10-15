@@ -2093,10 +2093,11 @@ behavior_differences:
       4.x performs an equivalent local unknown-keyword check: SQLDriverConnect posts a diagnostic
       record with SQLSTATE 01S00, native error 17, message "N invalid keys are found in the
       connection string: <KEY>", and the connection still opens (SQL_SUCCESS_WITH_INFO). The
-      keyword is still forwarded to the server as a session parameter. Recognition is driven by the
-      sf_core parameter registry rather than a ported static allowlist. Registry `ignored` entries
-      (`DSN`, `DRIVER`, leftover `TRACING`, and related installer metadata) resolve and are dropped
-      rather than forwarded — see BD#144 for `TRACING`. The connection still opens.
+      keyword is not forwarded to the server as a session parameter. Recognition is driven by the
+      sf_core parameter registry rather than a ported static allowlist. Recognized session-scoped
+      parameters are sent to the server, while registry `ignored` entries (`DSN`, `DRIVER`,
+      leftover `TRACING`, and related installer metadata) resolve and are dropped — see BD#144 for
+      `TRACING`. The connection still opens.
     description: |
       Aligns with the customer feature request SNOW-3765949. Recognition uses the sf_core registry
       as the single source of truth, avoiding a drift-prone copy of 3.x's acceptedConnectionKeys
