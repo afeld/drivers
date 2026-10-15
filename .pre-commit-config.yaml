@@ -173,6 +173,13 @@ repos:
         pass_filenames: false
         files: ^(\.github/workflows/notify-slack-failure\.yml|scripts/test_notify_slack_failure\.py)$
         language: python
+    -   id: retry-on-network-error-test
+        name: retry_on_network_error.sh test
+        description: Guard which npm/nuget failures the CI install retry wrapper retries
+        entry: python3 -m unittest scripts/test_retry_on_network_error.py
+        pass_filenames: false
+        files: ^scripts/(retry_on_network_error\.sh|test_retry_on_network_error\.py)$
+        language: python
     -   id: tests-format-validator
         name: Tests format validator
         description: Validate that test implementations match Gherkin feature scenarios

@@ -186,7 +186,7 @@ jobs:
           name: jdbc-tests-artifacts-java${{ matrix.java-version }}-${{ matrix.cloud }}${{ matrix.result_format != 'default' && format('-{0}', matrix.result_format) || '' }}
           path: |
             jdbc/build/test-results/test/**/*.xml
-          if-no-files-found: error
+          if-no-files-found: ${{ job.status == 'success' && 'error' || 'warn' }}
           retention-days: 14
 
       - name: Upload NEW driver coverage (primary Linux cell)
@@ -197,7 +197,7 @@ jobs:
           path: |
             jdbc/build/jacoco/test.exec
             jdbc/build/reports/jacoco/test/**
-          if-no-files-found: error
+          if-no-files-found: ${{ job.status == 'success' && 'error' || 'warn' }}
 
       - name: Print NEW driver overall coverage
         if: always() && matrix.java-version == '21' && matrix.cloud == 'aws' && matrix.result_format == 'default'
@@ -343,7 +343,7 @@ jobs:
           name: jdbc-tests-artifacts-java21-aws-windows
           path: |
             jdbc/build/test-results/test/**/*.xml
-          if-no-files-found: error
+          if-no-files-found: ${{ job.status == 'success' && 'error' || 'warn' }}
 
       - name: Save generated protobuf Java
         if: always() && steps.protobuf-gen-cache.outputs.cache-hit != 'true'
@@ -466,7 +466,7 @@ jobs:
           name: jdbc-tests-artifacts-java21-aws-macos
           path: |
             jdbc/build/test-results/test/**/*.xml
-          if-no-files-found: error
+          if-no-files-found: ${{ job.status == 'success' && 'error' || 'warn' }}
 
       - name: Save generated protobuf Java
         if: always() && steps.protobuf-gen-cache.outputs.cache-hit != 'true'
@@ -589,7 +589,7 @@ jobs:
             jdbc/build/test-results/referenceTest/**/*.xml
             jdbc/build/jacoco/referenceTest.exec
             jdbc/build/reports/jacoco/referenceTest/**
-          if-no-files-found: error
+          if-no-files-found: ${{ job.status == 'success' && 'error' || 'warn' }}
 
       - name: Print OLD reference overall coverage
         if: always()

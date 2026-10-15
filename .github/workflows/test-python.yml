@@ -1061,7 +1061,7 @@ jobs:
   python_compare_results:
     needs: [python_tests, python_tests_reference]
     if: |
-      always() &&
+      !cancelled() &&
       needs.python_tests.result != 'skipped' &&
       needs.python_tests_reference.result != 'skipped'
     strategy:
@@ -1092,23 +1092,47 @@ jobs:
         with:
           version: "0.9.28"
 
+      # A python_tests cell that failed before its upload step leaves no
+      # artifact. That failure already fails python-status through
+      # needs.python_tests, so the comparison is skipped instead of adding a
+      # second red job. When python_tests succeeded, a missing artifact
+      # still fails here.
       - name: Download universal test results
+        id: universal
         uses: ./.github/actions/download-artifact-retry
         with:
           name: results-universal-${{ env.MATRIX_KEY }}-${{ matrix.cloud_provider }}
           path: ${{ github.workspace }}/universal-results
+          allow-missing: ${{ needs.python_tests.result != 'success' }}
+
+      - name: Report skipped comparison
+        if: steps.universal.outputs.found == 'false'
+        shell: bash
+        env:
+          ARTIFACT: results-universal-${{ env.MATRIX_KEY }}-${{ matrix.cloud_provider }}
+          PYTHON_TESTS_RESULT: ${{ needs.python_tests.result }}
+        run: |
+          {
+            echo "### ⚠️ Universal vs reference comparison SKIPPED"
+            echo ""
+            echo "Artifact \`${ARTIFACT}\` was not uploaded by the paired python_tests cell (python_tests result: \`${PYTHON_TESTS_RESULT}\`)."
+            echo "No regression check ran for ${MATRIX_KEY}-${{ matrix.cloud_provider }}; see the python_tests failure for the cause."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Download reference test results
+        if: steps.universal.outputs.found == 'true'
         uses: ./.github/actions/download-artifact-retry
         with:
           name: results-reference-${{ env.REF_MATRIX_KEY }}
           path: ${{ github.workspace }}/reference-results
 
       - name: Install Hatch
+        if: steps.universal.outputs.found == 'true'
         shell: bash
         run: *setup_env
 
       - name: Compare integration test results
+        if: steps.universal.outputs.found == 'true'
         working-directory: python
         shell: bash
         run: |

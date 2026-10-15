@@ -16,24 +16,56 @@ inputs:
     required: false
     default: '5'
     description: Number of download attempts with linear backoff
+  allow-missing:
+    required: false
+    default: 'false'
+    description: >
+      When 'true', an artifact that the run never uploaded is reported as a
+      warning and the step succeeds with output found=false. Any other
+      download failure still fails the step.
+
+outputs:
+  found:
+    description: "'true' when the artifact was downloaded, 'false' when it was absent and allow-missing was 'true'"
+    value: ${{ steps.download.outputs.found }}
 
 runs:
   using: composite
   steps:
     - name: Download ${{ inputs.name }}
+      id: download
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         ARTIFACT_NAME: ${{ inputs.name }}
         DEST: ${{ inputs.path }}
         MAX_ATTEMPTS: ${{ inputs.max-attempts }}
+        ALLOW_MISSING: ${{ inputs.allow-missing }}
         RUN_ID: ${{ github.run_id }}
       run: |
         set -euo pipefail
         mkdir -p "$DEST"
+        if [ "$ALLOW_MISSING" = "true" ]; then
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            if count=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts?name=${ARTIFACT_NAME}" --jq '.total_count'); then
+              break
+            fi
+            if [ "$attempt" -eq "$MAX_ATTEMPTS" ]; then
+              echo "listing artifacts exhausted ${MAX_ATTEMPTS} attempts: ${ARTIFACT_NAME}" >&2
+              exit 1
+            fi
+            sleep $((15 * attempt))
+          done
+          if [ "$count" = "0" ]; then
+            echo "::warning::Artifact ${ARTIFACT_NAME} was not uploaded by run ${RUN_ID}."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+        fi
         for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
           echo "gh run download ${RUN_ID} -n ${ARTIFACT_NAME} (attempt ${attempt}/${MAX_ATTEMPTS})"
           if gh run download "$RUN_ID" -n "$ARTIFACT_NAME" -D "$DEST"; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if [ "$attempt" -eq "$MAX_ATTEMPTS" ]; then
