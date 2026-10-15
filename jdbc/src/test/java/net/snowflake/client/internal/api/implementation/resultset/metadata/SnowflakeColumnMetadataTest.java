@@ -152,6 +152,32 @@ class SnowflakeColumnMetadataTest {
   }
 
   @Test
+  void shouldCopyProtoDimensionWhenPresent() {
+    ColumnMetadata col =
+        ColumnMetadata.newBuilder().setName("vec").setType("vector").setDimension(128).build();
+
+    SnowflakeColumnMetadata meta = new SnowflakeColumnMetadata(col, false);
+
+    assertEquals(128, meta.getDimension());
+  }
+
+  @Test
+  void shouldReportZeroDimensionWhenProtoDimensionIsAbsent() {
+    ColumnMetadata col =
+        ColumnMetadata.newBuilder()
+            .setName("vec")
+            .setType("vector")
+            .setPrecision(18)
+            .setScale(2)
+            .setLength(40)
+            .build();
+
+    SnowflakeColumnMetadata meta = new SnowflakeColumnMetadata(col, false);
+
+    assertEquals(0, meta.getDimension());
+  }
+
+  @Test
   void shouldMapProtoBinaryWireGeometryExtToBinaryWhenUdtOutputIsBinary() {
     ColumnMetadata col =
         ColumnMetadata.newBuilder()
@@ -224,6 +250,20 @@ class SnowflakeColumnMetadataTest {
     SnowflakeColumnMetadata meta = new SnowflakeColumnMetadata(col, false);
 
     assertEquals(128, meta.getDimension());
+  }
+
+  @Test
+  void shouldReportZeroDimensionWhenJsonCatalogHasNoDimensionFields() {
+    ObjectNode col = JsonTestUtils.objectNode();
+    col.put("name", "vec_col");
+    col.put("type", "vector");
+    col.put("precision", 18);
+    col.put("scale", 2);
+    col.put("length", 40);
+
+    SnowflakeColumnMetadata meta = new SnowflakeColumnMetadata(col, false);
+
+    assertEquals(0, meta.getDimension());
   }
 
   @Test
