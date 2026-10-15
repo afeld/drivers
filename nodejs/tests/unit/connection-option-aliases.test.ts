@@ -144,6 +144,18 @@ describe('toCoreConnectionOptions', () => {
     ).toThrow("Expected type Int for parameter 'browserActionTimeout'");
   });
 
+  it('should normalize workload identity option values for sf_core', () => {
+    expect(
+      toCoreConnectionOptions({
+        workloadIdentityImpersonationPath: ['role-a', 'role-b'],
+        workloadIdentityAwsUseOutboundToken: true,
+      }),
+    ).toEqual({
+      workload_identity_impersonation_path: 'role-a,role-b',
+      workload_identity_aws_use_outbound_token: 'true',
+    });
+  });
+
   it('should reject a key that is not in the alias map', () => {
     expect(() =>
       toCoreConnectionOptions({

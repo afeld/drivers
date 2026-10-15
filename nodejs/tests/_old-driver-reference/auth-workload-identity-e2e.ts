@@ -1,5 +1,4 @@
 import assert from 'assert';
-import { execSync } from 'child_process';
 import { WIP_ConnectionOptions } from '../lib/connection/types';
 // NOTE:
 // Using require() as we can't pull types from index.d.ts
@@ -17,7 +16,6 @@ describe('Workload Identity Authentication E2E', () => {
   const account = getValueFromEnv('SNOWFLAKE_TEST_WIF_ACCOUNT');
   const host = getValueFromEnv('SNOWFLAKE_TEST_WIF_HOST');
   const provider = getValueFromEnv('SNOWFLAKE_TEST_WIF_PROVIDER');
-  const expectedUsername = getValueFromEnv('SNOWFLAKE_TEST_WIF_USERNAME');
 
   const connectionOptions: WIP_ConnectionOptions = {
     authenticator: 'WORKLOAD_IDENTITY',
@@ -25,10 +23,6 @@ describe('Workload Identity Authentication E2E', () => {
     host,
     workloadIdentityProvider: provider as WIP_ConnectionOptions['workloadIdentityProvider'],
   };
-
-  it(`connects using ${provider}`, async () => {
-    await connectAndVerify(connectionOptions, expectedUsername);
-  });
 
   if (provider === 'AWS' || provider === 'GCP') {
     it('connects using transitive impersonation', async () => {
@@ -39,29 +33,6 @@ describe('Workload Identity Authentication E2E', () => {
       await connectAndVerify(
         { ...connectionOptions, workloadIdentityImpersonationPath: impersonationPath },
         expectedUsernameImpersonation,
-      );
-    });
-  }
-
-  // NOTE:
-  // GCP token works as OIDC token, so we test it on GCP VM but with different username
-  if (provider === 'GCP') {
-    it('connects using OIDC', async () => {
-      const token = execSync(
-        'wget -O - --header="Metadata-Flavor: Google" "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity?audience=snowflakecomputing.com"',
-      )
-        .toString()
-        .trim();
-      if (!token) {
-        throw new Error('Failed to retrieve GCP access token: empty response');
-      }
-      await connectAndVerify(
-        {
-          ...connectionOptions,
-          workloadIdentityProvider: 'OIDC',
-          token,
-        },
-        'TEST_WIF_E2E_OIDC',
       );
     });
   }

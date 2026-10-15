@@ -24,8 +24,15 @@ Each test file ends up in one of these buckets:
 
 Deferred work — covered **last**, only once the corresponding feature support lands:
 
-- [`auth-workload-identity-e2e.ts`](./auth-workload-identity-e2e.ts) — migrate when we add
-  Workload Identity Federation (WIF) support.
+- `auth-workload-identity-e2e.ts` — basic login and the GCP OIDC case are migrated to
+  [`../e2e/authentication/workload-identity.test.ts`](../e2e/authentication/workload-identity.test.ts).
+  `connects using transitive impersonation` stays in this snapshot until #2614.
+  `connects using GetWebIdentityToken` landed in `a3fe4130` (2026-06-24), after this
+  snapshot (`415160294a48087b18b0a70bb09534078fe4afac`, 2026-05-06), so it was not copied.
+  It maps to `should authenticate AWS WIF using GetWebIdentityToken when opted in` and
+  `should authenticate AWS WIF using GetWebIdentityToken when workload_identity_aws_use_outbound_token is true`.
+  Both assume the issuer role and assert `CURRENT_USER()` is `TEST_WIF_E2E_AWS_WITH_ISSUER`.
+  The opt-in selects `GetWebIdentityToken`; neither test observes the STS call.
 - Everything under [`authentication/`](./authentication/) — migrate **one file at a time**, each
   one only when support for the corresponding auth provider (Key Pair, MFA, OAuth, Okta, PAT,
   session-token renewal) lands in the new driver.
@@ -308,6 +315,20 @@ called out explicitly.
 
 ### Authentication
 
+- `unit/authentication/auth_workload_identity/` — pushed down to the WIF tests in
+  [`../../../sf_core/src/rest/snowflake/workload_identity/`](../../../sf_core/src/rest/snowflake/workload_identity/)
+  and migrated to
+  [`../e2e/authentication/workload-identity.test.ts`](../e2e/authentication/workload-identity.test.ts).
+  Azure `throws error when impersonation path is provided` stays in
+  [`./unit/authentication/auth_workload_identity/auth_workload_identity_test.ts`](./unit/authentication/auth_workload_identity/auth_workload_identity_test.ts)
+  until #2614. That follow-up replaces this case and the retained AWS/GCP live impersonation
+  case with `should authenticate with WIF using impersonation`.
+- The WIF cases in `unit/connection/normalize_connection_options_test.ts` — migrated to
+  [`../unit/normalize-connection-options.test.ts`](../unit/normalize-connection-options.test.ts).
+  `getAuthenticator()` row `workload identity` → `AuthWorkloadIdentity` is retired with that
+  class. The other rows in that table, except `unknown`, named removed Node authenticator
+  classes and are retired with them. `unknown` stays: it is the only assertion that an
+  unrecognized authenticator falls back to `AuthDefault`.
 - [`unit/authentication/`](./unit/authentication/) — defer until after the beta release and
   revisit when implementing each auth provider, the same way the integration `authentication/`
   folder is handled.

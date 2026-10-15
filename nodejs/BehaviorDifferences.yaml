@@ -1958,3 +1958,87 @@ behavior_differences:
     new_driver_behavior: |
       The cancelled execute fails with a plain Error "Operation was cancelled",
       with no code or SQLSTATE.
+
+  106:
+    name: 'WIF validation and OIDC-impersonation error messages use snake_case core wording'
+    status: todo
+    type: bug
+    reviewed: false
+    is_breaking_change: true
+    impact: low
+    old_driver_behavior: |
+      Missing and invalid workloadIdentityProvider share one error:
+      `Invalid authenticator: WORKLOAD_IDENTITY parameters. workloadIdentityProvider must be one of: AWS, AZURE, GCP, OIDC`.
+      OIDC without a token reports `workloadIdentityProvider: OIDC requires token in connection options`.
+      OIDC with an impersonation path reports `workloadIdentityImpersonationPath for OIDC is not supported`.
+    new_driver_behavior: |
+      Missing provider reports `missing required parameter` citing `workload_identity_provider`.
+      An invalid provider reports `invalid workload_identity_provider` and `allowed values`.
+      OIDC without a token reports a missing required `token` parameter.
+      OIDC with an impersonation path reports `workload_identity_impersonation_path` is
+      `only supported for gcp, aws, and azure`.
+    status_rationale: |
+      TODO(SNOW-4232907): report these names in the invoking wrapper's dialect.
+      Core accepts the Node camelCase aliases, then these messages cite the
+      canonical snake_case keys.
+
+  107:
+    name: 'Malformed OIDC WIF tokens are rejected before a network call'
+    status: allowed
+    type: bugfix
+    reviewed: false
+    is_breaking_change: false
+    impact: low
+    old_driver_behavior: |
+      A non-JWT OIDC token is not checked client-side. Connect proceeds. The error is
+      `RequestFailedError: Request to Snowflake failed.` The error does not mention JWT
+      or a malformed token.
+    new_driver_behavior: |
+      A non-JWT OIDC token is rejected with
+      `OIDC token is not a valid JWT (expected header.payload.signature)`.
+
+  108:
+    name: 'WIF-only connection options are rejected unless authenticator is WORKLOAD_IDENTITY'
+    status: allowed
+    type: bugfix
+    reviewed: false
+    is_breaking_change: true
+    impact: medium
+    old_driver_behavior: |
+      workloadIdentityProvider, workloadIdentityAzureEntraIdResource,
+      workloadIdentityImpersonationPath, and workloadIdentityAwsUseOutboundToken are ignored
+      when authenticator is not WORKLOAD_IDENTITY. Login uses the non-WIF authenticator
+      (JWT or password) as if those options were absent.
+    new_driver_behavior: |
+      Each of those options errors with `{param} was set but authenticator was not set to
+      WORKLOAD_IDENTITY`, citing the snake_case parameter name.
+
+  109:
+    name: 'Azure WIF accepts a single-hop impersonation path'
+    status: allowed
+    type: enhancement
+    reviewed: false
+    is_breaking_change: false
+    impact: low
+    old_driver_behavior: |
+      Any workloadIdentityImpersonationPath with provider AZURE errors with
+      `workloadIdentityImpersonationPath for AZURE is not supported`.
+    new_driver_behavior: |
+      A single Azure service-principal client_id in workloadIdentityImpersonationPath is
+      accepted. Connect may still fail later (no IMDS or unreachable host) but the error is
+      not the old AZURE-not-supported reject. Two or more client_ids error as Azure
+      single-hop (`exactly one client_id`).
+
+  110:
+    name: 'WIF disallowed-host error wording'
+    status: allowed
+    type: enhancement
+    reviewed: false
+    is_breaking_change: false
+    impact: low
+    old_driver_behavior: |
+      WORKLOAD_IDENTITY to a disallowed host errors with
+      `WORKLOAD_IDENTITY requires a recognized Snowflake host. Got: 127.0.0.1.`
+    new_driver_behavior: |
+      WORKLOAD_IDENTITY to a disallowed host errors with
+      `Refusing to send a Workload Identity attestation to '127.0.0.1': host is not snowflakecomputing.com/.cn/.mil (or an SNOWFLAKE_WIF_ALLOWED_HOST_SUFFIXES entry)`

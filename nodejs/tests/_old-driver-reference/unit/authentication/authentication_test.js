@@ -634,37 +634,6 @@ describe('okta authentication', function () {
 
 describe('test getAuthenticator()', () => {
   [
-    {
-      name: 'default',
-      providedAuth: AuthenticationTypes.DEFAULT_AUTHENTICATOR,
-      expectedAuth: 'AuthDefault',
-    },
-    {
-      name: 'external browser',
-      providedAuth: AuthenticationTypes.EXTERNAL_BROWSER_AUTHENTICATOR,
-      expectedAuth: 'AuthWeb',
-    },
-    {
-      name: 'id token',
-      providedAuth: AuthenticationTypes.EXTERNAL_BROWSER_AUTHENTICATOR,
-      expectedAuth: 'AuthIDToken',
-      idToken: 'idToken',
-    },
-    {
-      name: 'key pair',
-      providedAuth: AuthenticationTypes.KEY_PAIR_AUTHENTICATOR,
-      expectedAuth: 'AuthKeypair',
-    },
-    // The getAuthenticator() row oauth → AuthOauth that used to live here has been
-    // removed. Factory coverage is
-    // sf_core/tests/integration/authentication/oauth.rs
-    // should_login_with_legacy_oauth_using_pre_acquired_token.
-    { name: 'okta', providedAuth: 'https://mycustom.okta.com:8443', expectedAuth: 'AuthOkta' },
-    {
-      name: 'workload identity',
-      providedAuth: AuthenticationTypes.WORKLOAD_IDENTITY,
-      expectedAuth: 'AuthWorkloadIdentity',
-    },
     { name: 'unknown', providedAuth: 'unknown', expectedAuth: 'AuthDefault' },
   ].forEach(({ name, providedAuth, expectedAuth, idToken }) => {
     it(`${name}`, () => {
@@ -686,7 +655,6 @@ describe('test getAuthenticator()', () => {
         browserRedirectPort: 0,
         idToken: idToken || null,
         host: 'host',
-        workloadIdentityProvider: 'AWS',
       };
 
       assert.strictEqual(
