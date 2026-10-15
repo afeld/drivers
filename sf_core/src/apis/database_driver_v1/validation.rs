@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use super::error::{ApiError, InvalidArgumentSnafu};
 use crate::config::ParamStore;
-use crate::config::param_registry::{self, ValueType, Wrapper, param_names};
+use crate::config::param_registry::{
+    self, SendAsSessionParameter, ValueType, Wrapper, param_names,
+};
 use crate::config::settings::{Setting, Settings};
 
 pub use crate::config::connection_config::{ValidationCode, ValidationIssue, ValidationSeverity};
@@ -430,10 +432,8 @@ pub(crate) fn is_unregistered_param(key: &str) -> bool {
     !registry.is_known(key) && registry.resolve(key).is_none()
 }
 
-/// Collect string-typed settings whose keys are not recognized by the param
-/// registry. These are forwarded as session parameters at login time so that
-/// drivers can set arbitrary Snowflake session parameters (e.g. `QUERY_TAG`)
-/// via regular connection options.
+/// Collect settings whose keys are not recognized by the param registry.
+/// These are forwarded as session parameters at login time.
 pub(crate) fn collect_unknown_settings(settings: &ParamStore) -> HashMap<String, String> {
     settings
         .iter()
@@ -447,17 +447,53 @@ pub(crate) fn collect_unknown_settings(settings: &ParamStore) -> HashMap<String,
 pub(crate) fn collect_registered_session_parameters(
     settings: &ParamStore,
 ) -> HashMap<String, String> {
+    collect_marked_session_parameters(settings)
+}
+
+pub(crate) fn collect_login_session_parameters(
+    seed: &ParamStore,
+    resolved: &ParamStore,
+) -> HashMap<String, String> {
+    let mut params = collect_unknown_settings(seed);
+    params.extend(collect_marked_session_parameters(resolved));
+    params
+}
+
+fn collect_marked_session_parameters(settings: &ParamStore) -> HashMap<String, String> {
     param_registry::registry()
         .all_params()
         .iter()
         .filter(|def| def.is_sent_as_session_parameter())
         .filter_map(|def| {
-            settings.get_any(def.canonical_name).and_then(|value| {
-                session_parameter_value(value)
-                    .map(|value| (def.canonical_name.to_ascii_uppercase(), value))
-            })
+            let mode = def.send_as_session_parameter?;
+            let value = settings.get_any(def.canonical_name)?;
+            rendered_session_parameter(def, mode, value)
         })
         .collect()
+}
+
+fn rendered_session_parameter(
+    def: &param_registry::ParamDef,
+    mode: SendAsSessionParameter,
+    value: &Setting,
+) -> Option<(String, String)> {
+    match mode {
+        SendAsSessionParameter::Exact => {
+            let rendered = session_parameter_value(value)?;
+            Some((def.canonical_name.to_ascii_uppercase(), rendered))
+        }
+        SendAsSessionParameter::Aliased { alias } => {
+            let rendered = session_parameter_value(value)?;
+            Some((alias.to_ascii_uppercase(), rendered))
+        }
+        SendAsSessionParameter::Clamped { min, max } => {
+            let Setting::Int(secs) = value else {
+                return None;
+            };
+            let clamped = u64::try_from(*secs).unwrap_or(0).clamp(min, max);
+            Some((def.canonical_name.to_ascii_uppercase(), clamped.to_string()))
+        }
+    }
 }
 
 fn session_parameter_value(value: &Setting) -> Option<String> {
@@ -1081,5 +1117,98 @@ mod tests {
         );
         assert!(!parameters.contains_key("DATABASE"));
         assert!(!parameters.contains_key("SOME_UNKNOWN_KEY"));
+    }
+
+    #[test]
+    fn collect_registered_session_parameters_renders_marked_values() {
+        let mut store = ParamStore::new();
+        store.insert(
+            "query_tag".to_string(),
+            Setting::String("batch".to_string()),
+        );
+        store.insert("CLIENT_PREFETCH_THREADS".to_string(), Setting::Int(5));
+        store.insert("CLIENT_SESSION_KEEP_ALIVE".to_string(), Setting::Bool(true));
+        store.insert(
+            "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY".to_string(),
+            Setting::Int(100),
+        );
+        store.insert(
+            "validate_default_parameters".to_string(),
+            Setting::Bool(true),
+        );
+
+        let parameters = collect_registered_session_parameters(&store);
+
+        assert_eq!(parameters.get("QUERY_TAG"), Some(&"batch".to_string()));
+        assert_eq!(
+            parameters.get("CLIENT_PREFETCH_THREADS"),
+            Some(&"5".to_string())
+        );
+        assert_eq!(
+            parameters.get("CLIENT_SESSION_KEEP_ALIVE"),
+            Some(&"true".to_string())
+        );
+        assert_eq!(
+            parameters.get("CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY"),
+            Some(&"900".to_string())
+        );
+        assert_eq!(
+            parameters.get("CLIENT_VALIDATE_DEFAULT_PARAMETERS"),
+            Some(&"true".to_string())
+        );
+        assert!(!parameters.contains_key("VALIDATE_DEFAULT_PARAMETERS"));
+    }
+
+    #[test]
+    fn collect_login_session_parameters_clamps_heartbeat_and_sends_explicit_validation() {
+        let mut resolved = ParamStore::new();
+        resolved.insert(
+            "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY".to_string(),
+            Setting::Int(100),
+        );
+        resolved.insert(
+            "CLIENT_SESSION_KEEP_ALIVE".to_string(),
+            Setting::Bool(false),
+        );
+
+        let parameters = collect_login_session_parameters(&ParamStore::new(), &resolved);
+
+        assert_eq!(
+            parameters.get("CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY"),
+            Some(&"900".to_string())
+        );
+        assert!(!parameters.contains_key("CLIENT_VALIDATE_DEFAULT_PARAMETERS"));
+
+        resolved.insert(
+            "validate_default_parameters".to_string(),
+            Setting::Bool(false),
+        );
+        let parameters = collect_login_session_parameters(&ParamStore::new(), &resolved);
+        assert_eq!(
+            parameters.get("CLIENT_VALIDATE_DEFAULT_PARAMETERS"),
+            Some(&"false".to_string())
+        );
+        assert_eq!(
+            parameters.get("CLIENT_SESSION_KEEP_ALIVE"),
+            Some(&"false".to_string())
+        );
+
+        resolved.insert(
+            "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY".to_string(),
+            Setting::Int(9_000),
+        );
+        resolved.insert(
+            "validate_default_parameters".to_string(),
+            Setting::Bool(true),
+        );
+        let parameters = collect_login_session_parameters(&ParamStore::new(), &resolved);
+        assert_eq!(
+            parameters.get("CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY"),
+            Some(&"3600".to_string())
+        );
+        assert_eq!(
+            parameters.get("CLIENT_VALIDATE_DEFAULT_PARAMETERS"),
+            Some(&"true".to_string())
+        );
     }
 }

@@ -608,7 +608,14 @@ pub struct ParamDef {
     /// its value is not applied.
     pub ignored: bool,
 
-    pub send_as_session_parameter: bool,
+    pub send_as_session_parameter: Option<SendAsSessionParameter>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SendAsSessionParameter {
+    Exact,
+    Aliased { alias: &'static str },
+    Clamped { min: u64, max: u64 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -675,7 +682,7 @@ impl ParamDef {
             visible_to: VisibleTo::All,
             logical_type: LogicalType::Unspecified,
             ignored: false,
-            send_as_session_parameter: false,
+            send_as_session_parameter: None,
         }
     }
 
@@ -722,7 +729,7 @@ impl ParamDef {
 
     #[inline]
     pub fn is_sent_as_session_parameter(&self) -> bool {
-        self.is_session_scoped() && self.send_as_session_parameter
+        self.send_as_session_parameter.is_some() && !self.is_statement_only()
     }
 
     /// True when `wrapper` may resolve this parameter's canonical name.
@@ -754,7 +761,7 @@ pub struct ParamDefBuilder {
     visible_to: VisibleTo,
     logical_type: LogicalType,
     ignored: bool,
-    send_as_session_parameter: bool,
+    send_as_session_parameter: Option<SendAsSessionParameter>,
 }
 
 impl ParamDefBuilder {
@@ -843,8 +850,8 @@ impl ParamDefBuilder {
         self
     }
 
-    pub const fn send_as_session_parameter(mut self, value: bool) -> Self {
-        self.send_as_session_parameter = value;
+    pub const fn send_as_session_parameter(mut self, value: SendAsSessionParameter) -> Self {
+        self.send_as_session_parameter = Some(value);
         self
     }
 
@@ -1521,7 +1528,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
-        .send_as_session_parameter(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::AUTOCOMMIT.as_str())
@@ -1532,7 +1539,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
-        .send_as_session_parameter(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CLIENT_TIMESTAMP_TYPE_MAPPING.as_str())
@@ -1543,7 +1550,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
-        .send_as_session_parameter(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX.as_str())
@@ -1554,7 +1561,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
-        .send_as_session_parameter(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::SERVICE_NAME.as_str())
@@ -1565,7 +1572,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
-        .send_as_session_parameter(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::GCS_USE_DOWNSCOPED_CREDENTIAL.as_str())
@@ -1576,7 +1583,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
-        .send_as_session_parameter(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CLIENT_OUT_OF_BAND_TELEMETRY_ENABLED.as_str())
@@ -1587,7 +1594,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
-        .send_as_session_parameter(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::SECONDARY_ROLES.as_str())
@@ -2197,6 +2204,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session, ParamScope::Statement])
         .used_at_connect(false)
         .mutable_after_connect(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::SKIP_UPLOAD_ON_CONTENT_MATCH.as_str())
@@ -2290,6 +2298,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(true)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CLIENT_MEMORY_LIMIT.as_str())
@@ -2313,6 +2322,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .send_as_session_parameter(SendAsSessionParameter::Exact)
         .build(),
     ParamDef::builder()
         .canonical_name(param_names::CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY.as_str())
@@ -2323,6 +2333,7 @@ static PARAM_DEFS: &[ParamDef] = &[
         .scopes(&[ParamScope::Session])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .send_as_session_parameter(SendAsSessionParameter::Clamped { min: 900, max: 3600 })
         .build(),
     // ── PUT/GET — S3 regional endpoint ─────────────────────────────────
     //
@@ -2351,13 +2362,15 @@ static PARAM_DEFS: &[ParamDef] = &[
     ParamDef::builder()
         .canonical_name(param_names::VALIDATE_DEFAULT_PARAMETERS.as_str())
         .value_type(ValueType::Bool)
-        .default(DefaultValue::Bool(false))
         .sensitive(false)
         .auth(false)
         .description("Validate that the default database, schema, and warehouse exist on the server at connect time")
         .scopes(&[ParamScope::Connection])
         .used_at_connect(true)
         .mutable_after_connect(false)
+        .send_as_session_parameter(SendAsSessionParameter::Aliased {
+            alias: "CLIENT_VALIDATE_DEFAULT_PARAMETERS",
+        })
         .build(),
     // ── Proxy ──────────────────────────────────────────────────────────
     ParamDef::builder()
@@ -3351,6 +3364,7 @@ mod tests {
         assert_eq!(DEF.visible_to, VisibleTo::All);
         const {
             assert!(!DEF.ignored);
+            assert!(DEF.send_as_session_parameter.is_none());
         }
     }
 
@@ -4120,18 +4134,47 @@ mod tests {
             assert_eq!(d.scopes, &[ParamScope::Session], "key {key}");
             assert!(d.used_at_connect, "key {key}");
             assert!(d.mutable_after_connect, "key {key}");
-            assert!(d.send_as_session_parameter, "key {key}");
+            assert!(d.is_sent_as_session_parameter(), "key {key}");
         }
     }
 
     #[test]
-    fn session_parameter_transport_requires_session_scope() {
-        for d in registry()
-            .all_params()
-            .iter()
-            .filter(|d| d.send_as_session_parameter)
-        {
-            assert!(d.is_session_scoped(), "key {}", d.canonical_name);
+    fn session_parameter_transport_excludes_statement_only_params() {
+        for d in registry().all_params() {
+            if d.is_statement_only() {
+                assert!(
+                    !d.is_sent_as_session_parameter(),
+                    "key {}",
+                    d.canonical_name
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn login_session_parameters_use_server_names() {
+        let r = registry();
+        for (key, wire_name) in [
+            ("query_tag", "QUERY_TAG"),
+            ("CLIENT_PREFETCH_THREADS", "CLIENT_PREFETCH_THREADS"),
+            ("CLIENT_SESSION_KEEP_ALIVE", "CLIENT_SESSION_KEEP_ALIVE"),
+            (
+                "validate_default_parameters",
+                "CLIENT_VALIDATE_DEFAULT_PARAMETERS",
+            ),
+        ] {
+            let d = r
+                .resolve(key)
+                .unwrap_or_else(|| panic!("expected registry entry for {key}"));
+            assert!(d.is_sent_as_session_parameter(), "key {key}");
+            let wire = match d.send_as_session_parameter {
+                Some(SendAsSessionParameter::Aliased { alias }) => alias.to_ascii_uppercase(),
+                Some(SendAsSessionParameter::Exact | SendAsSessionParameter::Clamped { .. }) => {
+                    d.canonical_name.to_ascii_uppercase()
+                }
+                None => panic!("expected a login session parameter for {key}"),
+            };
+            assert_eq!(wire, wire_name, "key {key}");
         }
     }
 

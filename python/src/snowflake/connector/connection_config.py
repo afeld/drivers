@@ -394,8 +394,8 @@ class ConnectionConfig(ConnectionConfigMixin):
     user: str | None = None
     """Login username. Required"""
 
-    validate_default_parameters: bool | None = False
-    """Validate that the default database, schema, and warehouse exist on the server at connect time. Default: False"""
+    validate_default_parameters: bool | None = None
+    """Validate that the default database, schema, and warehouse exist on the server at connect time"""
 
     verify_certificates: bool | None = True
     """Whether to verify TLS certificates. Default: True"""

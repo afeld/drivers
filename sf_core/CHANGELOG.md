@@ -55,6 +55,7 @@ New features:
 
 Changes:
 
+- Changed login to send `CLIENT_SESSION_KEEP_ALIVE`, `CLIENT_PREFETCH_THREADS`, `QUERY_TAG`, and a heartbeat frequency clamped to 900–3600 seconds as session parameters, and to send a set `validate_default_parameters` value, true or false, as `CLIENT_VALIDATE_DEFAULT_PARAMETERS`, leaving that parameter off the login request when it is unset. (snowflakedb/drivers#2722)
 - Improved connection setup time by loading system root certificates once per driver instead of on every connection. OS trust changes after the first connection apply on process restart. (snowflakedb/drivers#2586)
 - Changed a Python build with `SNOWFLAKE_FIPS` set outside an unpacked source distribution to fail instead of linking the standard module. (snowflakedb/drivers#2489)
 - Standardized the opt-in build feature as `fips` and build/test environment variables as `SF_CORE_FIPS` and `SF_CORE_EXPECT_FIPS`. (SNOW-3927213)

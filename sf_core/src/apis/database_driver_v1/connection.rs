@@ -12,8 +12,8 @@ use super::query_submit::{query_context, submit_query, update_caches};
 use super::spcs_token::read_spcs_token;
 use super::validation::{
     ValidationIssue, ValidationSeverity, canonicalize_setting_key,
-    collect_registered_session_parameters, collect_unknown_settings, normalize_host_underscores,
-    resolve_options, validate_connection_seed_write, validate_session_override_write,
+    collect_login_session_parameters, normalize_host_underscores, resolve_options,
+    validate_connection_seed_write, validate_session_override_write,
 };
 use super::{Setting, WrapperPresets, logout};
 use crate::apis::operation_ctx::OperationCtx;
@@ -313,47 +313,8 @@ impl DatabaseDriverV1 {
                     let init_params = conn.init_session_parameters.clone();
                     let resolved_snapshot = resolved.clone();
 
-                    let mut login_session_params = collect_unknown_settings(&effective_seed);
-                    login_session_params.extend(collect_registered_session_parameters(&resolved));
-                    if let Some(v) = resolved.get_bool(param_names::CLIENT_SESSION_KEEP_ALIVE) {
-                        login_session_params.insert(
-                            param_names::CLIENT_SESSION_KEEP_ALIVE.as_str().to_string(),
-                            v.to_string(),
-                        );
-                    }
-                    if let Some(v) =
-                        resolved.get_int(param_names::CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY)
-                    {
-                        let clamped_frequency =
-                            compute_heartbeat_interval(None, u64::try_from(v).ok()).as_secs();
-                        login_session_params.insert(
-                            param_names::CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY
-                                .as_str()
-                                .to_string(),
-                            clamped_frequency.to_string(),
-                        );
-                    }
-                    if let Some(v) = resolved.get_int(param_names::CLIENT_PREFETCH_THREADS) {
-                        login_session_params.insert(
-                            param_names::CLIENT_PREFETCH_THREADS.as_str().to_string(),
-                            v.to_string(),
-                        );
-                    }
-                    if resolved
-                        .get_bool(param_names::VALIDATE_DEFAULT_PARAMETERS)
-                        .unwrap_or(false)
-                    {
-                        login_session_params.insert(
-                            "CLIENT_VALIDATE_DEFAULT_PARAMETERS".to_string(),
-                            "true".to_string(),
-                        );
-                    }
-                    // QUERY_TAG is a registered session parameter (also
-                    // statement-overridable), so it isn't "unknown"; mirror a
-                    // connection-level value into the login session parameters.
-                    if let Some(v) = resolved.get_string(param_names::QUERY_TAG) {
-                        login_session_params.insert("QUERY_TAG".to_string(), v);
-                    }
+                    let login_session_params =
+                        collect_login_session_parameters(&effective_seed, &resolved);
                     let init_params = match init_params {
                         Some(explicit) => {
                             // Normalize explicit keys to uppercase so precedence
@@ -3232,6 +3193,7 @@ async fn cleanup_connection(conn_ptr: &Arc<Mutex<Connection>>) -> Result<(), Api
 mod tests {
     use super::*;
     use crate::apis::database_driver_v1::global_state::DriverProviders;
+    use crate::apis::database_driver_v1::validation::collect_unknown_settings;
     use crate::config::ParamStore;
     use crate::config::param_registry::param_names;
     use crate::rest::snowflake::TokenExpiry;
