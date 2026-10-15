@@ -47,7 +47,8 @@ repos:
           isolated core-perf-driver workspace. The Core perf Dockerfile builds
           that crate with cargo --locked; a stale lockfile fails the
           drivers-performance-pr-check job on main. Refresh with
-          scripts/check-core-perf-cargo-lock.sh refresh.
+          scripts/check-core-perf-cargo-lock.sh refresh. Check mode succeeds
+          when that workspace is not in the tree.
         entry: bash scripts/check-core-perf-cargo-lock.sh
         pass_filenames: false
         files: ^(tests/performance/drivers/core/app/Cargo\.(toml|lock)|(sf_core|sf_params_spec|proto_utils|error_trace|error_trace_derive|proto_generator)/Cargo\.toml|sf_core/tests/common/arrow_deserialize_macro/Cargo\.toml)$
