@@ -1,4 +1,4 @@
-@python @jdbc @nodejs @core_not_needed @odbc
+@python @jdbc @nodejs @core_not_needed @odbc @dotnet
 Feature: TIMESTAMP_NTZ type support
   # ODBC asserts "Values should [not] have timezone info" only for TIMESTAMP and
   # DATETIME aliases, via SYSTEM$TYPEOF of the alias on the same statement.
@@ -155,7 +155,7 @@ Feature: TIMESTAMP_NTZ type support
       | TIMESTAMP |
       | DATETIME  |
 
-  @python_e2e @jdbc_e2e @nodejs_e2e @odbc_e2e
+  @python_e2e @jdbc_e2e @nodejs_e2e @odbc_e2e @dotnet_e2e
   Scenario: should return aware datetime for TIMESTAMP alias when session mapping is TIMESTAMP_LTZ
     Given Snowflake client is logged in
     And Session TIMESTAMP_TYPE_MAPPING is set to TIMESTAMP_LTZ
