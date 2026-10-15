@@ -2,7 +2,7 @@
 
 ## Upcoming Release
 
-## 5.0.0 (October 14, 2026)
+## 5.0.0 (October 15, 2026)
 
 Breaking changes:
 
