@@ -2,6 +2,8 @@
 
 ## Upcoming Release
 
+## v4.1.0
+
 New features:
 
 - Added recognition of the ODBC 3.x CRL connection-string keys `CRL_ALLOW_NO_CRL`, `CRL_DISK_CACHING`, `CRL_MEMORY_CACHING`, and `CRL_DOWNLOAD_TIMEOUT` as aliases for the matching 4.x CRL settings. `CRL_DOWNLOAD_TIMEOUT=0` applies the 4.x `crl_http_timeout` default of 10 seconds rather than 3.x's 120. (snowflakedb/drivers#2206)
