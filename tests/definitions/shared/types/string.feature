@@ -1,4 +1,4 @@
-@odbc @python @jdbc @nodejs @core_not_needed
+@odbc @python @jdbc @nodejs @dotnet @core_not_needed
 Feature: String datatype handling
   # Snowflake String types: VARCHAR, CHAR, CHARACTER, NCHAR, STRING, TEXT, VARCHAR2, NVARCHAR, NVARCHAR2, CHAR VARYING, NCHAR VARYING
   # All are synonymous with VARCHAR and store Unicode UTF-8 characters.
@@ -21,7 +21,7 @@ Feature: String datatype handling
   # SIMPLE SELECTS - LITERALS (Happy path, Corner cases)
   # ============================================================================
 
-  @odbc_e2e @python_e2e @jdbc_e2e @nodejs_e2e
+  @odbc_e2e @python_e2e @jdbc_e2e @nodejs_e2e @dotnet_e2e
   Scenario: should select hardcoded string literals
     Given Snowflake client is logged in
     When Query "SELECT 'hello' AS str1, 'Hello World' AS str2, 'Snowflake Driver Test' AS str3" is executed
@@ -29,7 +29,7 @@ Feature: String datatype handling
       | str1  | str2        | str3                  |
       | hello | Hello World | Snowflake Driver Test |
 
-  @odbc_e2e @python_e2e @jdbc_e2e @nodejs_e2e
+  @odbc_e2e @python_e2e @jdbc_e2e @nodejs_e2e @dotnet_e2e
   Scenario: should select string literals with corner case values
     # Corner cases: empty string, single character, whitespace-only, unicode characters, escape sequences
     Given Snowflake client is logged in
@@ -61,7 +61,7 @@ Feature: String datatype handling
     When Query "SELECT * FROM {table}" is executed
     Then the result should contain the inserted hardcoded string values
 
-  @odbc_e2e @python_e2e @jdbc_e2e @nodejs_e2e
+  @odbc_e2e @python_e2e @jdbc_e2e @nodejs_e2e @dotnet_e2e
   Scenario: should select corner case string values from table
     Given Snowflake client is logged in
     And A temporary table with VARCHAR column is created
@@ -128,7 +128,7 @@ Feature: String datatype handling
   # MULTIPLE CHUNKS DOWNLOADING
   # ============================================================================
 
-  @odbc_e2e @python_e2e @jdbc_e2e
+  @odbc_e2e @python_e2e @jdbc_e2e @dotnet_e2e
   Scenario: should download string data in multiple chunks
     # This test ensures proper handling of large result sets that span multiple chunks
     # ~10000 values ensures data is downloaded in at least two chunks
