@@ -59,6 +59,7 @@ pub struct OdbcGlobals {
     runtime: tokio::runtime::Runtime,
     client: Arc<DatabaseDriverClient>,
     dispatch: tracing::dispatcher::Dispatch,
+    log_reload: Option<crate::api::log_reload::LogReloadState>,
     pub env_registry: HandleManager<crate::api::Env>,
     pub dbc_registry: HandleManager<crate::api::Dbc>,
     pub stmt_registry: HandleManager<crate::api::Statement>,
@@ -82,6 +83,10 @@ impl OdbcGlobals {
 
     pub fn client(&self) -> Arc<DatabaseDriverClient> {
         Arc::clone(&self.client)
+    }
+
+    pub fn log_reload(&self) -> Option<&crate::api::log_reload::LogReloadState> {
+        self.log_reload.as_ref()
     }
 }
 
@@ -165,6 +170,15 @@ pub fn env_allocated() -> Result<(), OdbcRuntimeError> {
         .as_ref()
         .map(|lm| lm.dispatch().clone())
         .unwrap_or_else(tracing::dispatcher::Dispatch::none);
+    let reload_seed = log_manager.as_ref().and_then(|lm| {
+        lm.reload_handle().map(|handle| {
+            (
+                handle,
+                lm.is_troubleshooting(),
+                lm.troubleshooting_report_dir().to_path_buf(),
+            )
+        })
+    });
     let providers = DriverProviders {
         log_manager,
         wrapper_presets: WrapperPresets::odbc(),
@@ -177,10 +191,14 @@ pub fn env_allocated() -> Result<(), OdbcRuntimeError> {
         .context(RuntimeCreationSnafu)?;
     let client = Arc::new(database_driver_client_with(providers));
     let _log_guard = tracing::dispatcher::set_default(&dispatch);
+    let log_reload = reload_seed.map(|(handle, troubleshooting, report_dir)| {
+        crate::api::log_reload::init_state(handle, troubleshooting, &report_dir)
+    });
     guard.globals = Some(Arc::new(OdbcGlobals {
         runtime,
         client,
         dispatch,
+        log_reload,
         env_registry: HandleManager::new(HandleKind::Env),
         dbc_registry: HandleManager::new(HandleKind::Dbc),
         stmt_registry: HandleManager::new(HandleKind::Stmt),
@@ -255,6 +273,7 @@ mod tests {
                 .expect("test runtime"),
             client: Arc::new(database_driver_client_with(DriverProviders::default())),
             dispatch,
+            log_reload: None,
             env_registry: HandleManager::new(HandleKind::Env),
             dbc_registry: HandleManager::new(HandleKind::Dbc),
             stmt_registry: HandleManager::new(HandleKind::Stmt),

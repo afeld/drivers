@@ -12,6 +12,7 @@ pub mod get_info_bitmasks;
 pub mod handle_allocation;
 pub mod handle_registry;
 pub mod ini_paths;
+pub mod log_reload;
 pub mod oauth;
 pub mod odbc_installer;
 pub mod query_type;

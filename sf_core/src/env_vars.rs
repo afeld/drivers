@@ -27,6 +27,10 @@ pub const SNOWFLAKE_SCHEMA: &str = "SNOWFLAKE_SCHEMA";
 pub const SF_SKIP_WARNING_FOR_READ_PERMISSIONS_ON_CONFIG_FILE: &str =
     "SF_SKIP_WARNING_FOR_READ_PERMISSIONS_ON_CONFIG_FILE";
 
+/// Override path to the ODBC `sf.odbc.ini` configuration file, taking
+/// precedence over the default search path when it names an existing file.
+pub const SF_ODBC_INI: &str = "SF_ODBC_INI";
+
 /// Override directory for the token credential cache file.
 pub const SF_TEMPORARY_CREDENTIAL_CACHE_DIR: &str = "SF_TEMPORARY_CREDENTIAL_CACHE_DIR";
 

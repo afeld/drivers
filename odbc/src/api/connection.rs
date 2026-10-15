@@ -697,6 +697,8 @@ fn connect_with_params(
     dsn_name: Option<String>,
     warnings: &mut Warnings,
 ) -> OdbcResult<()> {
+    crate::api::log_reload::refresh_logging();
+
     tracing::info!(
         "connect_with_params: params={:?}",
         oauth::redacted_param_map(&params)

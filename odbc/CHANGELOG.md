@@ -16,6 +16,7 @@ New features:
 - Added the `PUT_TEMPDIR` connection parameter so PUT AUTO_COMPRESS can write gzip tempfiles to a caller-supplied directory. Unset and empty values keep the process temp directory. Nested directories are created. (snowflakedb/drivers#2084)
 - Added the Snowflake vendor SQL data type macros (`SQL_SF_TIMESTAMP_LTZ`, `SQL_SF_TIMESTAMP_TZ`, `SQL_SF_TIMESTAMP_NTZ`, `SQL_SF_ARRAY`, `SQL_SF_OBJECT`, `SQL_SF_VARIANT`) to the public `sf_odbc.h`, so applications written against the 3.x header compile without redefining them. (snowflakedb/drivers#2366)
 - Added `SQL_SF_VECTOR` (2006) to the public `sf_odbc.h` so applications can name the VECTOR type that `SQLGetTypeInfo` already reports. Binding VECTOR remains unsupported. (snowflakedb/drivers#2400)
+- Added per-connect re-reading of `sf.odbc.ini` logging configuration: each `SQLConnect`/`SQLDriverConnect`/`SQLBrowseConnect` now re-resolves `LogLevel`/`LogPath` (and the troubleshooting environment variables) and applies any change in place before the connection proceeds, so editing the ini or dropping in a new one takes effect on the next connect with no process restart. An unchanged configuration is detected by a cheap fingerprint and skipped without reading the file; `DriverManagerEncoding` stays negotiated once per process and DSN `LogLevel`/`LogPath`/`TRACING` remain ignored. (snowflakedb/drivers#2589)
 
 Changes:
 
