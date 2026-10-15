@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-import net.snowflake.jdbc.utils.SkipOldDriver;
 import net.snowflake.jdbc.utils.TestParameters;
 import net.snowflake.jdbc.utils.WithQueryUtils;
 import org.junit.jupiter.api.Test;
@@ -56,7 +55,6 @@ class PatTests implements WithQueryUtils {
   }
 
   @Test
-  @SkipOldDriver("BD#1")
   void shouldAuthenticateUsingPatAsToken() throws Exception {
     SnowflakeDataSource ds = createDataSource();
     ds.setAuthenticator("PROGRAMMATIC_ACCESS_TOKEN");
@@ -68,7 +66,6 @@ class PatTests implements WithQueryUtils {
   }
 
   @Test
-  @SkipOldDriver("BD#1")
   void shouldAuthenticateUsingPatAsTokenWithLowercaseAuthenticator() throws Exception {
     SnowflakeDataSource ds = createDataSource();
     ds.setAuthenticator("programmatic_access_token");

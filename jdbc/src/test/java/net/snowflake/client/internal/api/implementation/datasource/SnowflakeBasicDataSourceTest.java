@@ -713,8 +713,7 @@ public class SnowflakeBasicDataSourceTest {
     Connection mockConnection = createDummyConnection();
     testable.setNextConnection(mockConnection);
 
-    // Reference 4.3.1 threw because password was missing; the universal driver allows token auth
-    // without a password (BD#1) and without a username (BD#45).
+    // Token authentication proceeds with no password. A missing username is BD#45.
     Connection result = dataSource.getConnection(null, null);
 
     assertSame(mockConnection, result);
