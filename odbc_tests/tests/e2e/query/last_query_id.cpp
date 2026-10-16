@@ -28,7 +28,7 @@ static bool is_valid_query_id(const std::string& id) {
 // SUCCESSFUL QUERIES
 // =============================================================================
 
-TEST_CASE("should return empty last query ID before any query is executed", "[query][last_query_id]") {
+TEST_CASE("should return empty last query ID before any query is executed", "[e2e][query][last_query_id]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -40,7 +40,7 @@ TEST_CASE("should return empty last query ID before any query is executed", "[qu
   CHECK(id.empty());
 }
 
-TEST_CASE("should set last query ID after successful SQLExecDirect", "[query][last_query_id]") {
+TEST_CASE("should set last query ID after successful SQLExecDirect", "[e2e][query][last_query_id]") {
   SKIP_IODBC("Depends on SQL_SF_STMT_ATTR_LAST_QUERY_ID; iODBC behavior covered in sf_stmt_attrs.cpp");
   // Given Snowflake client is logged in
   Connection conn;
@@ -55,7 +55,7 @@ TEST_CASE("should set last query ID after successful SQLExecDirect", "[query][la
   CHECK(is_valid_query_id(id));
 }
 
-TEST_CASE("should set last query ID after successful SQLPrepare + SQLExecute", "[query][last_query_id]") {
+TEST_CASE("should set last query ID after successful SQLPrepare + SQLExecute", "[e2e][query][last_query_id]") {
   SKIP_IODBC("Depends on SQL_SF_STMT_ATTR_LAST_QUERY_ID; iODBC behavior covered in sf_stmt_attrs.cpp");
   // Given Snowflake client is logged in
   Connection conn;
@@ -72,7 +72,7 @@ TEST_CASE("should set last query ID after successful SQLPrepare + SQLExecute", "
   CHECK(is_valid_query_id(id));
 }
 
-TEST_CASE("should produce different last query IDs for successive queries", "[query][last_query_id]") {
+TEST_CASE("should produce different last query IDs for successive queries", "[e2e][query][last_query_id]") {
   SKIP_IODBC("Depends on SQL_SF_STMT_ATTR_LAST_QUERY_ID; iODBC behavior covered in sf_stmt_attrs.cpp");
   // Given Snowflake client is logged in
   Connection conn;
@@ -100,7 +100,7 @@ TEST_CASE("should produce different last query IDs for successive queries", "[qu
 // FAILED QUERIES
 // =============================================================================
 
-TEST_CASE("should set last query ID after failed query with syntax error", "[query][last_query_id]") {
+TEST_CASE("should set last query ID after failed query with syntax error", "[e2e][query][last_query_id]") {
   SKIP_IODBC("Depends on SQL_SF_STMT_ATTR_LAST_QUERY_ID; iODBC behavior covered in sf_stmt_attrs.cpp");
   // Given Snowflake client is logged in
   Connection conn;
@@ -115,7 +115,7 @@ TEST_CASE("should set last query ID after failed query with syntax error", "[que
   CHECK(is_valid_query_id(id));
 }
 
-TEST_CASE("should set last query ID after failed query referencing nonexistent table", "[query][last_query_id]") {
+TEST_CASE("should set last query ID after failed query referencing nonexistent table", "[e2e][query][last_query_id]") {
   SKIP_IODBC("Depends on SQL_SF_STMT_ATTR_LAST_QUERY_ID; iODBC behavior covered in sf_stmt_attrs.cpp");
   // Given Snowflake client is logged in
   Connection conn;
@@ -130,7 +130,7 @@ TEST_CASE("should set last query ID after failed query referencing nonexistent t
   CHECK(is_valid_query_id(id));
 }
 
-TEST_CASE("should produce different last query IDs for successive failed queries", "[query][last_query_id]") {
+TEST_CASE("should produce different last query IDs for successive failed queries", "[e2e][query][last_query_id]") {
   SKIP_IODBC("Depends on SQL_SF_STMT_ATTR_LAST_QUERY_ID; iODBC behavior covered in sf_stmt_attrs.cpp");
   // Given Snowflake client is logged in
   Connection conn;
@@ -151,7 +151,7 @@ TEST_CASE("should produce different last query IDs for successive failed queries
   CHECK(id1 != id2);
 }
 
-TEST_CASE("should update last query ID from successful to failed query", "[query][last_query_id]") {
+TEST_CASE("should update last query ID from successful to failed query", "[e2e][query][last_query_id]") {
   SKIP_IODBC("Depends on SQL_SF_STMT_ATTR_LAST_QUERY_ID; iODBC behavior covered in sf_stmt_attrs.cpp");
   // Given Snowflake client is logged in
   Connection conn;

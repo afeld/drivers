@@ -47,7 +47,7 @@ SQLRETURN bind_date_and_try_execute(StatementHandleWrapper& stmt, SQLSMALLINT ta
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to TIMESTAMP_NTZ at midnight",
-                 "[c_date][conversion][sql_timestamp]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -80,7 +80,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to TIMESTAMP_NT
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to TIMESTAMP_LTZ at midnight UTC",
-                 "[c_date][conversion][sql_timestamp]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -113,7 +113,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to TIMESTAMP_LT
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to TIMESTAMP_TZ at midnight UTC",
-                 "[c_date][conversion][sql_timestamp]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -146,7 +146,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to TIMESTAMP_TZ
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE leap day 2024-02-29 to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -178,7 +178,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE leap day 2024-0
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE epoch 1970-01-01 to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -208,7 +208,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE epoch 1970-01-0
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE with NULL indicator to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -241,7 +241,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE with NULL indic
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with month=13 bound to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp][invalid]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp][invalid]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -261,7 +261,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with month=13
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with month=0 bound to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp][invalid]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp][invalid]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -281,7 +281,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with month=0 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with day=32 bound to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp][invalid]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp][invalid]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -301,7 +301,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with day=32 b
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with day=0 bound to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp][invalid]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp][invalid]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -321,7 +321,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with day=0 bo
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE with non-leap-year Feb 29 bound to TIMESTAMP target",
-                 "[c_date][conversion][sql_timestamp][invalid]") {
+                 "[e2e][types][c_date][conversion][sql_timestamp][invalid]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 

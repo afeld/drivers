@@ -7,7 +7,8 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT one to SQL_DOUBLE", "[c_bit][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT one to SQL_DOUBLE",
+                 "[e2e][types][c_bit][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -27,7 +28,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT one to SQL_DOUBLE", "
   CHECK_THAT(get_data<SQL_C_DOUBLE>(fetch_stmt, 1), Catch::Matchers::WithinAbs(1.0, 0.001));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT zero to SQL_DOUBLE", "[c_bit][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT zero to SQL_DOUBLE",
+                 "[e2e][types][c_bit][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -47,7 +49,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT zero to SQL_DOUBLE", 
   CHECK_THAT(get_data<SQL_C_DOUBLE>(fetch_stmt, 1), Catch::Matchers::WithinAbs(0.0, 0.001));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT one to SQL_REAL", "[c_bit][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT one to SQL_REAL",
+                 "[e2e][types][c_bit][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -67,7 +70,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT one to SQL_REAL", "[c
   CHECK_THAT(get_data<SQL_C_DOUBLE>(fetch_stmt, 1), Catch::Matchers::WithinAbs(1.0, 0.001));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT zero to SQL_REAL", "[c_bit][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT zero to SQL_REAL",
+                 "[e2e][types][c_bit][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -88,7 +92,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT zero to SQL_REAL", "[
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT with NULL indicator to SQL_REAL",
-                 "[c_bit][conversion][sql_real]") {
+                 "[e2e][types][c_bit][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 

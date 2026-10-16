@@ -14,7 +14,7 @@
 #include "odbc_matchers.hpp"
 #include "test_setup.hpp"
 
-TEST_CASE("Test SELECT 1", "[odbc]") {
+TEST_CASE("Test SELECT 1", "[basic][odbc]") {
   std::string connection_string = get_connection_string();
   EnvironmentHandleWrapper env;
 

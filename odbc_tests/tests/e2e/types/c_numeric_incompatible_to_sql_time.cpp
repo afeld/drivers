@@ -25,7 +25,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to TIME target",
-                 "[c_numeric][incompatible][sql_time]") {
+                 "[e2e][types][c_numeric][incompatible][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 
@@ -45,7 +45,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to TIME tar
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE bound to TIME target",
-                 "[c_numeric][incompatible][sql_time]") {
+                 "[e2e][types][c_numeric][incompatible][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 
@@ -65,7 +65,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE bound to TIME ta
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_FLOAT bound to TIME target",
-                 "[c_numeric][incompatible][sql_time]") {
+                 "[e2e][types][c_numeric][incompatible][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 
@@ -85,7 +85,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_FLOAT bound to TIME tar
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to TIME target",
-                 "[c_numeric][incompatible][sql_time]") {
+                 "[e2e][types][c_numeric][incompatible][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 
@@ -105,7 +105,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to TIME targe
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC bound to TIME target",
-                 "[c_numeric][incompatible][sql_time]") {
+                 "[e2e][types][c_numeric][incompatible][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 
@@ -129,7 +129,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC bound to TIME t
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SBIGINT bound to TIME target",
-                 "[c_numeric][incompatible][sql_time]") {
+                 "[e2e][types][c_numeric][incompatible][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 

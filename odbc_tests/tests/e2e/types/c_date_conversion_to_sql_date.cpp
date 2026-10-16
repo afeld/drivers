@@ -17,7 +17,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to DATE target and read back",
-                 "[c_date][conversion][sql_date]") {
+                 "[e2e][types][c_date][conversion][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -48,7 +48,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to DATE target 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE with NULL indicator to DATE target",
-                 "[c_date][conversion][sql_date]") {
+                 "[e2e][types][c_date][conversion][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 

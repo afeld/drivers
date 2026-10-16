@@ -20,7 +20,7 @@
 #include "get_diag_rec.hpp"
 
 TEST_CASE("TIMESTAMP_TZ to SQL_C_CHAR drops offset even when TIMESTAMP_TZ_OUTPUT_FORMAT is set",
-          "[timestamp_tz][conversion][c_char][output_format]") {
+          "[e2e][types][timestamp_tz][conversion][c_char][output_format]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -56,7 +56,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_CHAR drops offset even when TIMESTAMP_TZ_OUTPUT
 }
 
 TEST_CASE("TIMESTAMP_TZ to SQL_C_CHAR drops offset even with TZHTZM token",
-          "[timestamp_tz][conversion][c_char][output_format]") {
+          "[e2e][types][timestamp_tz][conversion][c_char][output_format]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -69,7 +69,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_CHAR drops offset even with TZHTZM token",
 }
 
 TEST_CASE("TIMESTAMP_TZ to SQL_C_WCHAR drops offset even when TIMESTAMP_TZ_OUTPUT_FORMAT is set",
-          "[timestamp_tz][conversion][c_wchar][output_format]") {
+          "[e2e][types][timestamp_tz][conversion][c_wchar][output_format]") {
   // Given Snowflake client is logged in
   Connection conn;
 

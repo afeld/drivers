@@ -140,7 +140,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL Infinity to NUMERIC returns 22003", "[
   (void)0;  // check_numeric_out_of_range asserts 22003
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_NUMERIC", "[real][conversion][c_numeric][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_NUMERIC", "[e2e][types][real][conversion][c_numeric][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL FLOAT value is queried

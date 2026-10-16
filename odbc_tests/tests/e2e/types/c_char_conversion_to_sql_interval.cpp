@@ -61,7 +61,7 @@ std::string insert_char_interval(Connection& conn, SQLSMALLINT sql_interval_type
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_YEAR",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "5" is bound as SQL_INTERVAL_YEAR and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_YEAR, "5");
@@ -70,7 +70,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_YEAR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_MONTH",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "11" is bound as SQL_INTERVAL_MONTH and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_MONTH, "11");
@@ -79,7 +79,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_MONT
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_DAY",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "10" is bound as SQL_INTERVAL_DAY and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_DAY, "10");
@@ -88,7 +88,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_DAY"
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_HOUR",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "3" is bound as SQL_INTERVAL_HOUR and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_HOUR, "3");
@@ -97,7 +97,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_HOUR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_MINUTE",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "30" is bound as SQL_INTERVAL_MINUTE and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_MINUTE, "30");
@@ -106,7 +106,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_MINU
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_SECOND",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "45" is bound as SQL_INTERVAL_SECOND and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_SECOND, "45");
@@ -119,7 +119,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_SECO
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_YEAR_TO_MONTH",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "1-6" is bound as SQL_INTERVAL_YEAR_TO_MONTH and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_YEAR_TO_MONTH, "1-6");
@@ -128,7 +128,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_YEAR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_DAY_TO_SECOND",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "1 02:03:04" is bound as SQL_INTERVAL_DAY_TO_SECOND and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_DAY_TO_SECOND, "1 02:03:04");
@@ -137,7 +137,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_DAY_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_HOUR_TO_MINUTE",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
   // When SQL_C_CHAR "10:30" is bound as SQL_INTERVAL_HOUR_TO_MINUTE and inserted
   auto stored = insert_char_interval(conn, SQL_INTERVAL_HOUR_TO_MINUTE, "10:30");
@@ -150,7 +150,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_INTERVAL_HOUR
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR to SQL_INTERVAL_YEAR",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
 
   // Given a VARCHAR column
@@ -174,7 +174,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR to SQL_INTERVAL_YEA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR to SQL_INTERVAL_DAY_TO_SECOND",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
 
   // Given a VARCHAR column
@@ -202,7 +202,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR to SQL_INTERVAL_DAY
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator to SQL_INTERVAL_YEAR",
-                 "[c_char][conversion][sql_interval]") {
+                 "[e2e][types][c_char][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#73", kIntervalSkipReason);
 
   // Given a VARCHAR column

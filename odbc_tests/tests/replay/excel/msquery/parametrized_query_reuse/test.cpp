@@ -13,7 +13,7 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("Replay: excel msquery parametrized_query_reuse", "[excel][msquery]") {
+TEST_CASE("Replay: excel msquery parametrized_query_reuse", "[replay][excel][msquery]") {
   SKIP_IODBC("Excel MS Query replays use the Windows ODBC Driver Manager");
   auto config = DataSourceConfig::Snowflake().install();
 

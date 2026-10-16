@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("should convert boolean to SQL_C_NUMERIC", "[datatype][boolean][conversion][c_numeric]") {
+TEST_CASE("should convert boolean to SQL_C_NUMERIC", "[e2e][types][datatype][boolean][conversion][c_numeric]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -25,7 +25,7 @@ TEST_CASE("should convert boolean to SQL_C_NUMERIC", "[datatype][boolean][conver
   check_numeric_val_zero_from(false_numeric, 0);
 }
 
-TEST_CASE("should handle NULL boolean with SQL_C_NUMERIC", "[datatype][boolean][conversion][c_numeric]") {
+TEST_CASE("should handle NULL boolean with SQL_C_NUMERIC", "[e2e][types][datatype][boolean][conversion][c_numeric]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -14,7 +14,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT SQL_C_DEFAULT resolves to SBIGINT for scale=0",
-                 "[fixed][treat_decimal_as_int]") {
+                 "[e2e][types][fixed][treat_decimal_as_int]") {
   // Given A Snowflake connection with ODBC_TREAT_DECIMAL_AS_INT=true
   conn.execute("ALTER SESSION SET ODBC_TREAT_DECIMAL_AS_INT=true");
 
@@ -75,7 +75,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT SQL_C_DEFAULT resolves
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT false keeps scale-zero values as text",
-                 "[fixed][treat_decimal_as_int]") {
+                 "[e2e][types][fixed][treat_decimal_as_int]") {
   for (const char* value : {"false", "FALSE"}) {
     INFO("ODBC_TREAT_DECIMAL_AS_INT=" << value);
 
@@ -97,7 +97,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT false keeps scale-zero
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT does not affect scale > 0", "[fixed][treat_decimal_as_int]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT does not affect scale > 0",
+                 "[e2e][types][fixed][treat_decimal_as_int]") {
   // Given A Snowflake connection with ODBC_TREAT_DECIMAL_AS_INT=true
   conn.execute("ALTER SESSION SET ODBC_TREAT_DECIMAL_AS_INT=true");
 
@@ -115,7 +116,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT does not affect scale 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT applies to precision > 18 too",
-                 "[fixed][treat_decimal_as_int]") {
+                 "[e2e][types][fixed][treat_decimal_as_int]") {
   // Given A Snowflake connection with ODBC_TREAT_DECIMAL_AS_INT=true
   conn.execute("ALTER SESSION SET ODBC_TREAT_DECIMAL_AS_INT=true");
 
@@ -133,7 +134,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT applies to precision >
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_BIG_NUMBER_AS_STRING overrides TREAT_DECIMAL_AS_INT for precision > 18",
-                 "[fixed][treat_big_number_as_string]") {
+                 "[e2e][types][fixed][treat_big_number_as_string]") {
   // Given A Snowflake connection with both TREAT_DECIMAL_AS_INT and TREAT_BIG_NUMBER_AS_STRING
   conn.execute("ALTER SESSION SET ODBC_TREAT_DECIMAL_AS_INT=true");
   conn.execute("ALTER SESSION SET ODBC_TREAT_BIG_NUMBER_AS_STRING=true");
@@ -169,7 +170,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_BIG_NUMBER_AS_STRING overrides TREAT_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_BIG_NUMBER_AS_STRING false preserves integer conversion",
-                 "[fixed][treat_big_number_as_string]") {
+                 "[e2e][types][fixed][treat_big_number_as_string]") {
   conn.execute("ALTER SESSION SET ODBC_TREAT_DECIMAL_AS_INT=true");
 
   for (const char* value : {"false", "FALSE"}) {
@@ -192,7 +193,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_BIG_NUMBER_AS_STRING false preserves 
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT with table columns", "[fixed][treat_decimal_as_int]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "TREAT_DECIMAL_AS_INT with table columns",
+                 "[e2e][types][fixed][treat_decimal_as_int]") {
   // Given A Snowflake connection with ODBC_TREAT_DECIMAL_AS_INT=true and a table with mixed columns
   conn.execute("ALTER SESSION SET ODBC_TREAT_DECIMAL_AS_INT=true");
 

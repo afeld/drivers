@@ -13,7 +13,7 @@
 
 using namespace pg_utils;
 
-TEST_CASE("should return error when putting nonexistent local file", "[put_get]") {
+TEST_CASE("should return error when putting nonexistent local file", "[e2e][put_get]") {
   // Given A stage is created
   Connection conn;
   const std::string stage = create_stage(conn, unique_stage_name("ODBCTST_PUT_ERR"));
@@ -30,7 +30,7 @@ TEST_CASE("should return error when putting nonexistent local file", "[put_get]"
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasDiagMessage("does not exist"));
 }
 
-TEST_CASE("should return empty result set when getting nonexistent file from stage", "[put_get]") {
+TEST_CASE("should return empty result set when getting nonexistent file from stage", "[e2e][put_get]") {
   // Given An empty stage is created
   Connection conn;
   const std::string stage = create_stage(conn, unique_stage_name("ODBCTST_GET_ERR"));

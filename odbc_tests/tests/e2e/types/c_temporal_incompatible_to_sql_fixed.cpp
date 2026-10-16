@@ -15,7 +15,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE bound to SQL_INTEGER",
-                 "[c_temporal][incompatible][sql_fixed]") {
+                 "[e2e][types][c_temporal][incompatible][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -32,7 +32,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_DATE bound to SQL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_TIME bound to SQL_INTEGER",
-                 "[c_temporal][incompatible][sql_fixed]") {
+                 "[e2e][types][c_temporal][incompatible][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -49,7 +49,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_TIME bound to SQL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_TIMESTAMP bound to SQL_INTEGER",
-                 "[c_temporal][incompatible][sql_fixed]") {
+                 "[e2e][types][c_temporal][incompatible][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -66,7 +66,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_TIMESTAMP bound to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_GUID bound to SQL_INTEGER",
-                 "[c_temporal][incompatible][sql_fixed]") {
+                 "[e2e][types][c_temporal][incompatible][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 

@@ -16,7 +16,7 @@ static picojson::value parse_json(const std::string& text) {
   return v;
 }
 
-TEST_CASE("OBJECT to SQL_C_BINARY", "[object][conversion][c_binary]") {
+TEST_CASE("OBJECT to SQL_C_BINARY", "[e2e][types][object][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -33,7 +33,7 @@ TEST_CASE("OBJECT to SQL_C_BINARY", "[object][conversion][c_binary]") {
   CHECK(json.is<picojson::object>());
 }
 
-TEST_CASE("OBJECT to SQL_C_BINARY empty", "[object][conversion][c_binary]") {
+TEST_CASE("OBJECT to SQL_C_BINARY empty", "[e2e][types][object][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -51,7 +51,7 @@ TEST_CASE("OBJECT to SQL_C_BINARY empty", "[object][conversion][c_binary]") {
   CHECK(json.get<picojson::object>().empty());
 }
 
-TEST_CASE("OBJECT to SQL_C_BINARY nested", "[object][conversion][c_binary]") {
+TEST_CASE("OBJECT to SQL_C_BINARY nested", "[e2e][types][object][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -71,7 +71,7 @@ TEST_CASE("OBJECT to SQL_C_BINARY nested", "[object][conversion][c_binary]") {
   CHECK(inner->second.is<picojson::object>());
 }
 
-TEST_CASE("OBJECT to SQL_C_BINARY buffer too small", "[object][conversion][c_binary][01004]") {
+TEST_CASE("OBJECT to SQL_C_BINARY buffer too small", "[e2e][types][object][conversion][c_binary][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -89,7 +89,7 @@ TEST_CASE("OBJECT to SQL_C_BINARY buffer too small", "[object][conversion][c_bin
   CHECK(records[0].sqlState == "01004");
 }
 
-TEST_CASE("OBJECT to SQL_C_BINARY exact buffer fit", "[object][conversion][c_binary]") {
+TEST_CASE("OBJECT to SQL_C_BINARY exact buffer fit", "[e2e][types][object][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -107,7 +107,7 @@ TEST_CASE("OBJECT to SQL_C_BINARY exact buffer fit", "[object][conversion][c_bin
   CHECK(json.is<picojson::object>());
 }
 
-TEST_CASE("OBJECT NULL to SQL_C_BINARY", "[object][conversion][c_binary][null]") {
+TEST_CASE("OBJECT NULL to SQL_C_BINARY", "[e2e][types][object][conversion][c_binary][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

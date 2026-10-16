@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "get_data.hpp"
 
-TEST_CASE("should encode binary as HEX string by default", "[datatype][binary][conversion][string]") {
+TEST_CASE("should encode binary as HEX string by default", "[e2e][types][datatype][binary][conversion][string]") {
   // Given Snowflake client is logged in
   Connection conn;
 

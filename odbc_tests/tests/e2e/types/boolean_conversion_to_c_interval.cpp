@@ -13,7 +13,7 @@
 // SUCCESSFUL CONVERSIONS - Single-field interval types
 // ============================================================================
 
-TEST_CASE("BOOLEAN to single-field interval types", "[datatype][boolean][conversion][c_interval]") {
+TEST_CASE("BOOLEAN to single-field interval types", "[e2e][types][datatype][boolean][conversion][c_interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -84,7 +84,8 @@ TEST_CASE("BOOLEAN to single-field interval types", "[datatype][boolean][convers
 // MULTI-FIELD INTERVAL TYPES (SQLSTATE 22015)
 // ============================================================================
 
-TEST_CASE("BOOLEAN to multi-field interval returns 22015", "[datatype][boolean][conversion][c_interval][22015]") {
+TEST_CASE("BOOLEAN to multi-field interval returns 22015",
+          "[e2e][types][datatype][boolean][conversion][c_interval][22015]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -104,7 +105,7 @@ TEST_CASE("BOOLEAN to multi-field interval returns 22015", "[datatype][boolean][
 // NULL handling
 // ============================================================================
 
-TEST_CASE("BOOLEAN NULL to interval C types", "[datatype][boolean][conversion][c_interval][null]") {
+TEST_CASE("BOOLEAN NULL to interval C types", "[e2e][types][datatype][boolean][conversion][c_interval][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -101,7 +101,7 @@ void assert_login_error(ConnectionHandleWrapper& dbc) {
   REQUIRE(!records[0].messageText.empty());
 }
 
-TEST_CASE("should authenticate using private file with password", "[private_key_auth]") {
+TEST_CASE("should authenticate using private file with password", "[e2e][authentication][private_key_auth]") {
   // Given Authentication is set to JWT and private file with password is provided
   TempTestDir tmp("e2e_auth_pwd_");
   /* TODO: Explicit config installation */
@@ -118,7 +118,8 @@ TEST_CASE("should authenticate using private file with password", "[private_key_
   SQLDisconnect(dbc.getHandle());
 }
 
-TEST_CASE("should fail JWT authentication when invalid private key provided", "[private_key_auth]") {
+TEST_CASE("should fail JWT authentication when invalid private key provided",
+          "[e2e][authentication][private_key_auth]") {
   // Given Authentication is set to JWT and invalid private key file is provided
   /* TODO: Explicit config installation */
   std::string connection_string = get_jwt_connection_string_with_invalid_private_key();
@@ -132,7 +133,7 @@ TEST_CASE("should fail JWT authentication when invalid private key provided", "[
   assert_login_error(dbc);
 }
 
-TEST_CASE("should authenticate using unencrypted private key file", "[private_key_auth]") {
+TEST_CASE("should authenticate using unencrypted private key file", "[e2e][authentication][private_key_auth]") {
   // Given Authentication is set to JWT and an unencrypted private key file is provided (no password)
   TempTestDir tmp("e2e_auth_unenc_");
   auto params = get_test_parameters("testconnection");
@@ -168,7 +169,7 @@ TEST_CASE("should authenticate using unencrypted private key file", "[private_ke
   SQLDisconnect(dbc.getHandle());
 }
 
-TEST_CASE("should authenticate using private_key as base64 string", "[private_key_auth]") {
+TEST_CASE("should authenticate using private_key as base64 string", "[e2e][authentication][private_key_auth]") {
   SKIP_OLD_DRIVER("", "Old driver does not support PRIV_KEY_BASE64 in connection strings");
 
   // Given Authentication is set to JWT and private key is provided as base64-encoded string
@@ -199,7 +200,8 @@ TEST_CASE("should authenticate using private_key as base64 string", "[private_ke
   SQLDisconnect(dbc.getHandle());
 }
 
-TEST_CASE("should authenticate using PRIV_KEY_PWD as alias for private key password", "[private_key_auth]") {
+TEST_CASE("should authenticate using PRIV_KEY_PWD as alias for private key password",
+          "[e2e][authentication][private_key_auth]") {
   // Old driver's PRIV_KEY_PWD only works with inline keys, not PRIV_KEY_FILE.
   // TODO: Re-enable once DSN support is implemented.
   SKIP_OLD_DRIVER("", "Old driver's PRIV_KEY_PWD only works with inline keys, not PRIV_KEY_FILE");

@@ -30,7 +30,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to floating point types",
-                 "[datatype][string][conversion][real]") {
+                 "[e2e][types][datatype][string][conversion][real]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals representing floating point numbers is executed
@@ -66,7 +66,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to floating 
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should fail converting string literals to floating point types when data is out of range",
-                 "[datatype][string][conversion][real]") {
+                 "[e2e][types][datatype][string][conversion][real]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals representing floating point numbers is executed
@@ -102,7 +102,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle special floating point string conversions",
-                 "[datatype][string][conversion][real][edge]") {
+                 "[e2e][types][datatype][string][conversion][real][edge]") {
   // Given Snowflake client is logged in
 
   // When Query selecting special float strings is executed
@@ -133,7 +133,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle special floating point string
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle edge case floating point string formats",
-                 "[datatype][string][conversion][real][edge]") {
+                 "[e2e][types][datatype][string][conversion][real][edge]") {
   // Given Snowflake client is logged in
 
   // When Query selecting strings with special formatting is executed
@@ -158,7 +158,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle edge case floating point stri
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting non-numeric strings to floating point types",
-                 "[datatype][string][conversion][real][failure]") {
+                 "[e2e][types][datatype][string][conversion][real][failure]") {
   // Given Snowflake client is logged in
 
   // When Query selecting various non-numeric strings is executed
@@ -175,7 +175,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting non-numeric strings 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting malformed numeric strings to floating point types",
-                 "[datatype][string][conversion][real][failure]") {
+                 "[e2e][types][datatype][string][conversion][real][failure]") {
   // Given Snowflake client is logged in
 
   // When Query selecting various malformed numeric strings is executed
@@ -192,7 +192,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting malformed numeric st
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL string when converting to floating point types",
-                 "[datatype][string][conversion][real][null]") {
+                 "[e2e][types][datatype][string][conversion][real][null]") {
   // Given Snowflake client is logged in
 
   // When Query selecting NULL is executed
@@ -213,7 +213,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL string when converting t
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert strings to floating point types using SQLBindCol",
-                 "[datatype][string][conversion][real]") {
+                 "[e2e][types][datatype][string][conversion][real]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string numeric value is executed with SQLBindCol for SQL_C_DOUBLE

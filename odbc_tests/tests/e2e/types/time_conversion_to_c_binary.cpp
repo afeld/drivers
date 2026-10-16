@@ -11,7 +11,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("TIME to SQL_C_BINARY", "[time][conversion][c_binary]") {
+TEST_CASE("TIME to SQL_C_BINARY", "[e2e][types][time][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -32,7 +32,7 @@ TEST_CASE("TIME to SQL_C_BINARY", "[time][conversion][c_binary]") {
   }
 }
 
-TEST_CASE("TIME to SQL_C_BINARY struct field verification", "[time][conversion][c_binary]") {
+TEST_CASE("TIME to SQL_C_BINARY struct field verification", "[e2e][types][time][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -104,7 +104,7 @@ TEST_CASE("TIME to SQL_C_BINARY struct field verification", "[time][conversion][
   }
 }
 
-TEST_CASE("TIME to SQL_C_BINARY exact buffer fit", "[time][conversion][c_binary]") {
+TEST_CASE("TIME to SQL_C_BINARY exact buffer fit", "[e2e][types][time][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -128,7 +128,7 @@ TEST_CASE("TIME to SQL_C_BINARY exact buffer fit", "[time][conversion][c_binary]
   }
 }
 
-TEST_CASE("TIME to SQL_C_BINARY buffer too small", "[time][conversion][c_binary][22003]") {
+TEST_CASE("TIME to SQL_C_BINARY buffer too small", "[e2e][types][time][conversion][c_binary][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -145,7 +145,7 @@ TEST_CASE("TIME to SQL_C_BINARY buffer too small", "[time][conversion][c_binary]
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("TIME to SQL_C_BINARY consistent size", "[time][conversion][c_binary]") {
+TEST_CASE("TIME to SQL_C_BINARY consistent size", "[e2e][types][time][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -173,7 +173,7 @@ TEST_CASE("TIME to SQL_C_BINARY consistent size", "[time][conversion][c_binary]"
   }
 }
 
-TEST_CASE("TIME NULL to SQL_C_BINARY", "[time][conversion][c_binary][null]") {
+TEST_CASE("TIME NULL to SQL_C_BINARY", "[e2e][types][time][conversion][c_binary][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

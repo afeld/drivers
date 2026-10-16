@@ -18,7 +18,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_INTEGER and read back",
-                 "[c_float][conversion][sql_fixed]") {
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -39,7 +39,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_INTEGER and
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT to SQL_INTEGER and read back",
-                 "[c_float][conversion][sql_fixed]") {
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -60,7 +60,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT to SQL_INTEGER and 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE with fraction to SQL_INTEGER truncates",
-                 "[c_float][conversion][sql_fixed]") {
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -80,7 +80,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE with fraction to S
   CHECK(get_data<SQL_C_SBIGINT>(fetch_stmt, 1) == 42);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT zero to SQL_INTEGER", "[c_float][conversion][sql_fixed]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT zero to SQL_INTEGER",
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -101,7 +102,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT zero to SQL_INTEGER
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE negative to SQL_BIGINT",
-                 "[c_float][conversion][sql_fixed]") {
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -122,7 +123,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE negative to SQL_BI
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_DECIMAL and read back",
-                 "[c_float][conversion][sql_fixed]") {
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(10,2))");
 
@@ -144,7 +145,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_DECIMAL and
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE overflow into NUMBER(3,0)",
-                 "[c_float][conversion][sql_fixed]") {
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(3,0))");
 
@@ -164,7 +165,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE overflow into NU
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE with NULL indicator to SQL_INTEGER",
-                 "[c_float][conversion][sql_fixed]") {
+                 "[e2e][types][c_float][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 

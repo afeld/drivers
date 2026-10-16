@@ -28,7 +28,7 @@ static bool date_matches(int ts_year, int ts_month, int ts_day, int ref_year, in
   return ts_year == ref_year && ts_month == ref_month && ts_day == ref_day;
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP", "[time][conversion][c_timestamp]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP", "[e2e][types][time][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -48,7 +48,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP", "[time][conversion][c_timestamp]") {
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP midnight", "[time][conversion][c_timestamp]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP midnight", "[e2e][types][time][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -68,7 +68,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP midnight", "[time][conversion][c_timesta
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP end of day", "[time][conversion][c_timestamp]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP end of day", "[e2e][types][time][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -88,7 +88,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP end of day", "[time][conversion][c_times
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with fractional seconds", "[time][conversion][c_timestamp]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with fractional seconds", "[e2e][types][time][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -103,7 +103,8 @@ TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with fractional seconds", "[time][conver
   CHECK(ts.fraction == 123000000);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with high-precision fractional seconds", "[time][conversion][c_timestamp]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with high-precision fractional seconds",
+          "[e2e][types][time][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -117,7 +118,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with high-precision fractional seconds",
   CHECK(ts.fraction == 123456789);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with zero fractional seconds", "[time][conversion][c_timestamp]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with zero fractional seconds", "[e2e][types][time][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -131,7 +132,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP with zero fractional seconds", "[time][c
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP single-digit components", "[time][conversion][c_timestamp]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP single-digit components", "[e2e][types][time][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -151,7 +152,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIMESTAMP single-digit components", "[time][conver
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIME NULL to SQL_C_TYPE_TIMESTAMP", "[time][conversion][c_timestamp][null]") {
+TEST_CASE("TIME NULL to SQL_C_TYPE_TIMESTAMP", "[e2e][types][time][conversion][c_timestamp][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

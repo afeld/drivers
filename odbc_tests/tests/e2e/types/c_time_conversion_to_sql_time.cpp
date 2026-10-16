@@ -17,7 +17,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIME target and read back",
-                 "[c_time][conversion][sql_time]") {
+                 "[e2e][types][c_time][conversion][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 
@@ -48,7 +48,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIME target 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME with NULL indicator to TIME target",
-                 "[c_time][conversion][sql_time]") {
+                 "[e2e][types][c_time][conversion][sql_time]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 

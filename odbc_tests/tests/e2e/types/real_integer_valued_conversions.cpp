@@ -21,7 +21,7 @@
 // ============================================================================
 
 TEST_CASE("should convert small integer-valued floats to all integer C types",
-          "[datatype][float][conversion][integer]") {
+          "[e2e][types][datatype][float][conversion][integer]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -67,7 +67,8 @@ TEST_CASE("should convert small integer-valued floats to all integer C types",
 // i32/u32 boundary .0 values
 // ============================================================================
 
-TEST_CASE("should handle i32 and u32 boundary values stored as float", "[datatype][float][conversion][integer][edge]") {
+TEST_CASE("should handle i32 and u32 boundary values stored as float",
+          "[e2e][types][datatype][float][conversion][integer][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -109,7 +110,7 @@ TEST_CASE("should handle i32 and u32 boundary values stored as float", "[datatyp
 // ============================================================================
 
 TEST_CASE("should convert large integer-valued floats to wider types and strings",
-          "[datatype][float][conversion][integer][edge]") {
+          "[e2e][types][datatype][float][conversion][integer][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -139,7 +140,8 @@ TEST_CASE("should convert large integer-valued floats to wider types and strings
   }
 }
 
-TEST_CASE("should convert 2^53 exactly to wider integer types", "[datatype][float][conversion][integer][edge]") {
+TEST_CASE("should convert 2^53 exactly to wider integer types",
+          "[e2e][types][datatype][float][conversion][integer][edge]") {
   // Only the 2^53 cases need this skip — the i32/u32 boundary values in the
   // test above are short enough to survive JSON intact.
   SKIP_FOR_JSON_RESULT_SET("JSON truncates DOUBLE below f64 fidelity, so 2^53 arrives as 9007199254740990");
@@ -159,7 +161,7 @@ TEST_CASE("should convert 2^53 exactly to wider integer types", "[datatype][floa
 }
 
 TEST_CASE("should lose the low digits of 2^53 in wider integer types in JSON",
-          "[datatype][float][conversion][integer][edge]") {
+          "[e2e][types][datatype][float][conversion][integer][edge]") {
   RUN_ONLY_FOR_JSON_RESULT_SET("Arrow carries exact IEEE-754 doubles, so 2^53 survives there");
 
   // Given Snowflake client is logged in
@@ -183,7 +185,7 @@ TEST_CASE("should lose the low digits of 2^53 in wider integer types in JSON",
 // .0 values to SQL_C_FLOAT (f64 -> f32)
 // ============================================================================
 
-TEST_CASE("should convert integer-valued floats to SQL_C_FLOAT", "[datatype][float][conversion][edge]") {
+TEST_CASE("should convert integer-valued floats to SQL_C_FLOAT", "[e2e][types][datatype][float][conversion][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -210,7 +212,7 @@ TEST_CASE("should convert integer-valued floats to SQL_C_FLOAT", "[datatype][flo
 // ============================================================================
 
 TEST_CASE("should encode large integer-valued floats correctly in SQL_C_NUMERIC",
-          "[datatype][float][conversion][numeric][edge]") {
+          "[e2e][types][datatype][float][conversion][numeric][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -253,7 +255,7 @@ TEST_CASE("should encode large integer-valued floats correctly in SQL_C_NUMERIC"
   }
 }
 
-TEST_CASE("should encode 2^53 exactly in SQL_C_NUMERIC", "[datatype][float][conversion][numeric][edge]") {
+TEST_CASE("should encode 2^53 exactly in SQL_C_NUMERIC", "[e2e][types][datatype][float][conversion][numeric][edge]") {
   // Only the 2^53 cases need this skip — the i32/u32/2^32 boundary values in
   // the test above are short enough to survive JSON intact.
   SKIP_FOR_JSON_RESULT_SET("JSON truncates DOUBLE below f64 fidelity, so 2^53 arrives as 9007199254740990");
@@ -283,7 +285,7 @@ TEST_CASE("should encode 2^53 exactly in SQL_C_NUMERIC", "[datatype][float][conv
 }
 
 TEST_CASE("should encode 2^53 with its low digits lost in SQL_C_NUMERIC in JSON",
-          "[datatype][float][conversion][numeric][edge]") {
+          "[e2e][types][datatype][float][conversion][numeric][edge]") {
   RUN_ONLY_FOR_JSON_RESULT_SET("Arrow carries exact IEEE-754 doubles, so 2^53 survives there");
 
   // Given Snowflake client is logged in

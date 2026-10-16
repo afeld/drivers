@@ -24,7 +24,7 @@ static SQLINTEGER type_info_column_size(StatementHandleWrapper& stmt, SQLSMALLIN
   return columnSize;
 }
 
-TEST_CASE("should report TIMESTAMP COLUMN_SIZE 29 and vendor timestamp types 35", "[query][gettypeinfo]") {
+TEST_CASE("should report TIMESTAMP COLUMN_SIZE 29 and vendor timestamp types 35", "[e2e][query][gettypeinfo]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

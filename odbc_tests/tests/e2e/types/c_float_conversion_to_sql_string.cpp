@@ -9,7 +9,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_VARCHAR and read back",
-                 "[c_float][conversion][sql_string]") {
+                 "[e2e][types][c_float][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -31,7 +31,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_VARCHAR and
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT to SQL_VARCHAR and read back",
-                 "[c_float][conversion][sql_string]") {
+                 "[e2e][types][c_float][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -53,7 +53,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT to SQL_VARCHAR and 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE with NULL indicator to SQL_VARCHAR",
-                 "[c_float][conversion][sql_string]") {
+                 "[e2e][types][c_float][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 

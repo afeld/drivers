@@ -14,7 +14,7 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("should select shape geometry literal", "[geometry]") {
+TEST_CASE("should select shape geometry literal", "[e2e][types][geometry]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -40,7 +40,7 @@ TEST_CASE("should select shape geometry literal", "[geometry]") {
   }
 }
 
-TEST_CASE("should cast geometry to expected_type for format output format", "[geometry]") {
+TEST_CASE("should cast geometry to expected_type for format output format", "[e2e][types][geometry]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -72,7 +72,7 @@ TEST_CASE("should cast geometry to expected_type for format output format", "[ge
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select geometry values from table", "[geometry]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select geometry values from table", "[e2e][types][geometry]") {
   // Given Snowflake client is logged in
 
   // And Table with GEOMETRY column exists with WKT values
@@ -99,7 +99,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select geometry values from table", 
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL geometry values from table", "[geometry]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL geometry values from table", "[e2e][types][geometry]") {
   // Given Snowflake client is logged in
 
   // And Table with GEOMETRY column exists containing NULLs and values
@@ -122,7 +122,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL geometry values from tab
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should download geometry data in multiple chunks", "[geometry]") {
+TEST_CASE("should download geometry data in multiple chunks", "[e2e][types][geometry]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -152,7 +152,7 @@ TEST_CASE("should download geometry data in multiple chunks", "[geometry]") {
   REQUIRE(row_count == 20000);
 }
 
-TEST_CASE("should select geometry using parameter binding with input_type value", "[geometry]") {
+TEST_CASE("should select geometry using parameter binding with input_type value", "[e2e][types][geometry]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -194,7 +194,7 @@ TEST_CASE("should select geometry using parameter binding with input_type value"
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert geometry using parameter binding", "[geometry]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert geometry using parameter binding", "[e2e][types][geometry]") {
   // Given Snowflake client is logged in
 
   // And Table with GEOMETRY column exists

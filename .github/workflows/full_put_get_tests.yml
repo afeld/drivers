@@ -413,16 +413,14 @@ jobs:
           PARAMETERS_JSON_GCP: ${{ secrets.PARAMETERS_JSON_GCP }}
           PARAMETERS_JSON_AZURE: ${{ secrets.PARAMETERS_JSON_AZURE }}
 
-      # run_tests_unix.sh honours `CTEST_FILTER` by appending `-R` to ctest;
-      # all put/get test executables are named `e2e_put_get_*`, so anchoring
-      # to that prefix selects the suite exactly. `-LE flaky` is supplied by
-      # the script itself.
+      # run_tests_unix.sh honours `CTEST_FILTER` by appending `-L` to ctest.
+      # The ctest label is the Catch2 tag without brackets.
       - name: Build and run ODBC put/get tests
         run: |
           export DRIVER_PATH=$(pwd)/target/debug/libsfodbc.so
           export PARAMETER_PATH=$(pwd)/parameters.json
           export DRIVER_TYPE=NEW
-          export CTEST_FILTER='^e2e_put_get_'
+          export CTEST_FILTER='^(put_get)$'
           ./scripts/odbc/run_tests_unix.sh \
             --output-junit "${{ github.workspace }}/odbc-junit.xml"
 

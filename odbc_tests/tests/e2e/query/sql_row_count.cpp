@@ -8,7 +8,7 @@
 #include "get_data.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("SQLRowCount returns HY010 when called without executing statement.", "[query]") {
+TEST_CASE("SQLRowCount returns HY010 when called without executing statement.", "[e2e][query]") {
   // Given a fresh statement handle on an active connection (no execute yet)
   Connection conn;
   auto stmt = conn.createStatement();
@@ -31,7 +31,7 @@ TEST_CASE("SQLRowCount returns HY010 when called without executing statement.", 
   }
 }
 
-TEST_CASE("SQLRowCount returns HY009 when called with null pointer.", "[query]") {
+TEST_CASE("SQLRowCount returns HY009 when called with null pointer.", "[e2e][query]") {
   // Given Snowflake client is logged in and a statement has been executed
   Connection conn;
   auto stmt = conn.createStatement();
@@ -49,7 +49,7 @@ TEST_CASE("SQLRowCount returns HY009 when called with null pointer.", "[query]")
   }
 }
 
-TEST_CASE("SQLRowCount returns data about number of rows affected.") {
+TEST_CASE("SQLRowCount returns data about number of rows affected.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -64,7 +64,7 @@ TEST_CASE("SQLRowCount returns data about number of rows affected.") {
   REQUIRE(rows_affected == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSERT statement.") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSERT statement.", "[e2e][query]") {
   // Given Snowflake client is logged in
   auto stmt = conn.createStatement();
 
@@ -87,7 +87,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSER
   REQUIRE(rows_affected == 3);
 }
 
-TEST_CASE("SQLRowCount returns correct count for SELECT with many rows.") {
+TEST_CASE("SQLRowCount returns correct count for SELECT with many rows.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -106,7 +106,7 @@ TEST_CASE("SQLRowCount returns correct count for SELECT with many rows.") {
   REQUIRE(rows_affected == 10);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns 0 for DDL statements.") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns 0 for DDL statements.", "[e2e][query]") {
   // Given Snowflake client is logged in
   const auto stmt = conn.createStatement();
 
@@ -124,7 +124,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns 0 for DDL statements.")
   REQUIRE(rows_affected == -1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns -1 for ALTER TABLE DDL statement.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns -1 for ALTER TABLE DDL statement.", "[e2e][query]") {
   // Given Snowflake client is logged in
   auto stmt = conn.createStatement();
 
@@ -144,7 +144,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns -1 for ALTER TABLE DDL 
   REQUIRE(rows_affected == -1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns -1 for DROP TABLE DDL statement.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns -1 for DROP TABLE DDL statement.", "[e2e][query]") {
   // Given Snowflake client is logged in
   auto stmt = conn.createStatement();
 
@@ -167,7 +167,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns -1 for DROP TABLE DDL s
 // MERGE statement
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for MERGE statement.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for MERGE statement.", "[e2e][query]") {
   // Doc: "SQLRowCount returns the number of rows affected by an UPDATE, INSERT,
   //       or DELETE statement."  MERGE combines these operations.
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlrowcount-function#summary
@@ -202,7 +202,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for MERGE
   REQUIRE(rows_affected == 2);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for MERGE with DELETE clause.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for MERGE with DELETE clause.", "[e2e][query]") {
   // Doc: MERGE can combine INSERT, UPDATE, and DELETE operations.
   //      SQLRowCount should return the total rows affected across all clauses.
 
@@ -247,7 +247,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for MERGE
   REQUIRE(rows_affected == 3);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for UPDATE statement.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for UPDATE statement.", "[e2e][query]") {
   // Doc: "SQLRowCount returns the number of rows affected by an UPDATE, INSERT,
   //       or DELETE statement."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlrowcount-function#summary
@@ -276,7 +276,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for UPDAT
   REQUIRE(rows_affected == 2);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for UPDATE with JOIN.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for UPDATE with JOIN.", "[e2e][query]") {
   // Doc: Validates calculate_rows_affected() for multi-joined updates.
 
   // Given Snowflake client is logged in
@@ -313,7 +313,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for UPDAT
   REQUIRE(rows_affected == 2);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for DELETE statement.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for DELETE statement.", "[e2e][query]") {
   // Doc: "SQLRowCount returns the number of rows affected by an UPDATE, INSERT,
   //       or DELETE statement."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlrowcount-function#summary
@@ -342,7 +342,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for DELET
   REQUIRE(rows_affected == 2);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns total count for DELETE all rows.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns total count for DELETE all rows.", "[e2e][query]") {
   // Given Snowflake client is logged in
   auto stmt = conn.createStatement();
 
@@ -363,7 +363,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns total count for DELETE 
   REQUIRE(rows_affected == 4);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns total count for UPDATE all rows.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns total count for UPDATE all rows.", "[e2e][query]") {
   // Given Snowflake client is logged in
   auto stmt = conn.createStatement();
 
@@ -386,7 +386,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns total count for UPDATE 
   REQUIRE(rows_affected == 3);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSERT INTO SELECT.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSERT INTO SELECT.", "[e2e][query]") {
   // Given Snowflake client is logged in
   auto stmt = conn.createStatement();
 
@@ -411,7 +411,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSER
   REQUIRE(rows_affected == 3);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSERT from multi-table JOIN.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSERT from multi-table JOIN.",
+                 "[e2e][query]") {
   // Doc: Validates calculate_rows_affected() for multi-table inserts
   //      where the source involves a JOIN across multiple tables.
 
@@ -454,7 +455,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns correct count for INSER
 // Cursor / Statement State
 // =============================================================================
 
-TEST_CASE("SQLRowCount returns HY010 after SQLFreeStmt SQL_CLOSE.", "[query]") {
+TEST_CASE("SQLRowCount returns HY010 after SQLFreeStmt SQL_CLOSE.", "[e2e][query]") {
   // Doc: "The cached row count value is valid until the statement handle is set
   //       back to the prepared or allocated state, the statement is reexecuted,
   //       or SQLCloseCursor is called."
@@ -488,7 +489,7 @@ TEST_CASE("SQLRowCount returns HY010 after SQLFreeStmt SQL_CLOSE.", "[query]") {
   }
 }
 
-TEST_CASE("SQLRowCount returns HY010 after SQLPrepare without execute.", "[query]") {
+TEST_CASE("SQLRowCount returns HY010 after SQLPrepare without execute.", "[e2e][query]") {
   // Doc: Calling SQLRowCount before SQLExecute/SQLExecDirect should return
   //      HY010 (Function sequence error).
 
@@ -522,7 +523,7 @@ TEST_CASE("SQLRowCount returns HY010 after SQLPrepare without execute.", "[query
 // Prepared statement execution
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount works with SQLPrepare and SQLExecute flow.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount works with SQLPrepare and SQLExecute flow.", "[e2e][query]") {
   // Doc: "SQLRowCount returns the number of rows affected by an UPDATE, INSERT,
   //       or DELETE statement" — applies to both SQLExecDirect and SQLExecute.
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlrowcount-function#related-functions
@@ -552,7 +553,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount works with SQLPrepare and SQLEx
 // =============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount updates correctly across different DML types on same statement.",
-                 "[query]") {
+                 "[e2e][query]") {
   // Doc: "When SQLExecute, SQLExecDirect, SQLBulkOperations, SQLSetPos, or
   //       SQLMoreResults is called, the SQL_DIAG_ROW_COUNT field … is set to
   //       the row count, and the row count is cached."
@@ -592,7 +593,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount updates correctly across differ
 // Fetching State
 // =============================================================================
 
-TEST_CASE("SQLRowCount returns cached count after SQLFetch has started.", "[query]") {
+TEST_CASE("SQLRowCount returns cached count after SQLFetch has started.", "[e2e][query]") {
   // Doc: "SQLRowCount returns the cached row count value. The cached row count
   //       value is valid until the statement handle is set back to the prepared
   //       or allocated state, the statement is reexecuted, or SQLCloseCursor
@@ -625,7 +626,7 @@ TEST_CASE("SQLRowCount returns cached count after SQLFetch has started.", "[quer
 // Re-execution
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount updates after re-execution with different INSERT.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount updates after re-execution with different INSERT.", "[e2e][query]") {
   // Doc: "When SQLExecute, SQLExecDirect, SQLBulkOperations, SQLSetPos, or
   //       SQLMoreResults is called, the SQL_DIAG_ROW_COUNT field of the diagnostic
   //       data structure is set to the row count, and the row count is cached in
@@ -660,7 +661,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount updates after re-execution with
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture,
-                 "SQLRowCount returns the file count, not the source row count, after COPY INTO unload.", "[query]") {
+                 "SQLRowCount returns the file count, not the source row count, after COPY INTO unload.",
+                 "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And a temporary stage and a table with 3 rows in partition a and 4 rows in partition b exist
@@ -701,7 +703,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
   CHECK(rows_affected == 2);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns 0 after COPY INTO unload of an empty table.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLRowCount returns 0 after COPY INTO unload of an empty table.", "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And a temporary stage and an empty table exist

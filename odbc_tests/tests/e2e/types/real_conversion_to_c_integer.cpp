@@ -361,7 +361,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL Infinity to integer types returns 2200
   check_numeric_out_of_range<SQL_C_SBIGINT>(conn.execute_fetch("SELECT '-Infinity'::FLOAT"), 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_INTEGER types", "[real][conversion][c_integer][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_INTEGER types",
+                 "[e2e][types][real][conversion][c_integer][null]") {
   // Given A Snowflake connection is established
 
   // When NULL FLOAT values are queried

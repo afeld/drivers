@@ -1,29 +1,14 @@
-# Integration tests - create individual tests for each .cpp file
-
-# Find all .cpp files recursively
-file(GLOB_RECURSE all_sources "*.cpp")
-list(FILTER all_sources EXCLUDE REGEX ".*/cmake-build.*/.*")
-
-# Create a test for each .cpp file
-foreach(source_file ${all_sources})
-  # Get the relative path from current directory
-  file(RELATIVE_PATH rel_path ${CMAKE_CURRENT_SOURCE_DIR} ${source_file})
-  
-  # Get filename without extension for test name
-  get_filename_component(file_name ${rel_path} NAME_WE)
-  
-  # Get the directory name to include in test name
-  get_filename_component(dir_name ${rel_path} DIRECTORY)
-  
-  # Create test name: integration_directory_filename
-  if(dir_name)
-    string(REPLACE "/" "_" dir_clean ${dir_name})
-    set(test_name "integration_${dir_clean}_${file_name}")
-  else()
-    set(test_name "integration_${file_name}")
-  endif()
-  
-  # Create individual test for this file
-  add_odbc_test(${test_name} ${source_file})
-  message(STATUS "Added Integration test: ${test_name} from ${rel_path}")
-endforeach()
+add_odbc_test(integration_authentication_external_browser authentication/external_browser.cpp)
+add_odbc_test(integration_authentication_idp_user_mismatch authentication/idp_user_mismatch.cpp)
+add_odbc_test(integration_authentication_oauth authentication/oauth.cpp)
+add_odbc_test(integration_authentication_parallel_user_prompt_locking authentication/parallel_user_prompt_locking.cpp)
+add_odbc_test(integration_authentication_private_key_auth authentication/private_key_auth.cpp)
+add_odbc_test(integration_authentication_private_key_auth_connect_attr authentication/private_key_auth_connect_attr.cpp)
+add_odbc_test(integration_authentication_user_password_mfa authentication/user_password_mfa.cpp)
+add_odbc_test(integration_authentication_workload_identity authentication/workload_identity.cpp)
+add_odbc_test(integration_connection_put_get_max_attempts connection/put_get_max_attempts.cpp)
+add_odbc_test(integration_lifecycle_env_reinit lifecycle/env_reinit.cpp)
+add_odbc_test(integration_lifecycle_logging_reload lifecycle/logging_reload.cpp)
+add_odbc_test(integration_query_stage_binding_disabled_retries_with_inline_json query/stage_binding_disabled_retries_with_inline_json.cpp)
+add_odbc_test(integration_tls_sf_global_ssl_version tls/sf_global_ssl_version.cpp)
+add_odbc_test(integration_types_timestamp_tz_invalid_offset types/timestamp_tz_invalid_offset.cpp)

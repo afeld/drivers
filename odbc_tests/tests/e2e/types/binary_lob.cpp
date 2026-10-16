@@ -27,7 +27,8 @@ std::vector<SQLCHAR> generate_random_bytes(std::mt19937& gen, size_t length) {
 
 }  // namespace
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle maximum default binary size", "[datatype][binary][lob][flaky]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle maximum default binary size",
+                 "[e2e][types][datatype][binary][lob][flaky]") {
   // Given Snowflake client is logged in
 
   auto seed = static_cast<unsigned int>(std::chrono::steady_clock::now().time_since_epoch().count());
@@ -75,7 +76,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle maximum default binary size",
   REQUIRE(buffer == payload);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle extended maximum binary size", "[datatype][binary][lob][flaky]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle extended maximum binary size",
+                 "[e2e][types][datatype][binary][lob][flaky]") {
   // Given Snowflake client is logged in
 
   auto seed = static_cast<unsigned int>(std::chrono::steady_clock::now().time_since_epoch().count());

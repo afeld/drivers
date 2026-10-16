@@ -37,7 +37,7 @@ StatementHandleWrapper prepare_binary_insert(Connection& conn) {
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding integer C types to SQL_BINARY",
-                 "[c_to_binary][bindparam][incompatible][negative]") {
+                 "[e2e][types][c_to_binary][bindparam][incompatible][negative]") {
   // Given a temporary BINARY column exists and an INSERT statement is prepared
   auto stmt = prepare_binary_insert(conn);
 
@@ -85,7 +85,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding integer C types to SQL_
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding floating-point C types to SQL_VARBINARY",
-                 "[c_to_binary][bindparam][incompatible][negative]") {
+                 "[e2e][types][c_to_binary][bindparam][incompatible][negative]") {
   // Given a temporary BINARY column exists and an INSERT statement is prepared
   auto stmt = prepare_binary_insert(conn);
 
@@ -109,7 +109,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding floating-point C types 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding SQL_C_NUMERIC to SQL_LONGVARBINARY",
-                 "[c_to_binary][bindparam][incompatible][negative]") {
+                 "[e2e][types][c_to_binary][bindparam][incompatible][negative]") {
   // Given a temporary BINARY column exists and an INSERT statement is prepared
   auto stmt = prepare_binary_insert(conn);
 
@@ -130,7 +130,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding SQL_C_NUMERIC to SQL_LO
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding temporal C types to SQL_BINARY",
-                 "[c_to_binary][bindparam][incompatible][negative]") {
+                 "[e2e][types][c_to_binary][bindparam][incompatible][negative]") {
   // Given a temporary BINARY column exists and an INSERT statement is prepared
   auto stmt = prepare_binary_insert(conn);
 
@@ -160,7 +160,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding temporal C types to SQL
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding single-component interval C types to SQL_BINARY",
-                 "[c_to_binary][bindparam][incompatible][negative]") {
+                 "[e2e][types][c_to_binary][bindparam][incompatible][negative]") {
   // Given a temporary BINARY column exists and an INSERT statement is prepared
   auto stmt = prepare_binary_insert(conn);
 
@@ -179,7 +179,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding single-component interv
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding compound interval C types to SQL_VARBINARY",
-                 "[c_to_binary][bindparam][incompatible][negative]") {
+                 "[e2e][types][c_to_binary][bindparam][incompatible][negative]") {
   // Given a temporary BINARY column exists and an INSERT statement is prepared
   auto stmt = prepare_binary_insert(conn);
 
@@ -199,7 +199,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding compound interval C typ
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail binding SQL_C_GUID to SQL_LONGVARBINARY",
-                 "[c_to_binary][bindparam][incompatible][negative]") {
+                 "[e2e][types][c_to_binary][bindparam][incompatible][negative]") {
   // Given a temporary BINARY column exists and an INSERT statement is prepared
   auto stmt = prepare_binary_insert(conn);
 

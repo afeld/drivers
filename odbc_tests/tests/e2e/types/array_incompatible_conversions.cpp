@@ -8,7 +8,7 @@
 #include "compatibility.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("should fail converting ARRAY to numeric C types", "[array][conversion][negative]") {
+TEST_CASE("should fail converting ARRAY to numeric C types", "[e2e][types][array][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -66,7 +66,7 @@ TEST_CASE("should fail converting ARRAY to numeric C types", "[array][conversion
   }
 }
 
-TEST_CASE("should fail converting ARRAY to temporal C types", "[array][conversion][negative]") {
+TEST_CASE("should fail converting ARRAY to temporal C types", "[e2e][types][array][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -88,7 +88,7 @@ TEST_CASE("should fail converting ARRAY to temporal C types", "[array][conversio
   }
 }
 
-TEST_CASE("should fail converting ARRAY to interval C types", "[array][conversion][negative]") {
+TEST_CASE("should fail converting ARRAY to interval C types", "[e2e][types][array][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -112,7 +112,7 @@ TEST_CASE("should fail converting ARRAY to interval C types", "[array][conversio
   check_incompatible_conversion(stmt, 1, SQL_C_INTERVAL_MINUTE_TO_SECOND, &value, sizeof(value), true);
 }
 
-TEST_CASE("should fail converting ARRAY to SQL_C_GUID", "[array][conversion][negative]") {
+TEST_CASE("should fail converting ARRAY to SQL_C_GUID", "[e2e][types][array][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

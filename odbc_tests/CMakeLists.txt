@@ -65,43 +65,32 @@ message(STATUS "ODBC_LIBRARIES: ${ODBC_LIBRARIES}")
 add_subdirectory(common)
 add_subdirectory(tools)
 
+# All add_odbc_test sources build into one executable.
+add_executable(odbc_tests "${PROJECT_SOURCE_DIR}/common/src/schema_cleanup_listener.cpp")
+target_link_libraries(odbc_tests PRIVATE Catch2::Catch2WithMain ODBC::ODBC common Threads::Threads)
+if(NOT WIN32)
+  target_link_libraries(odbc_tests PRIVATE ${CMAKE_DL_LIBS})
+endif()
+target_include_directories(odbc_tests PRIVATE ${picojson_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/../odbc/include)
+if(MSVC)
+  # Power Query replay cases allocate their frame on entry and exceed the
+  # default 1 MB stack under Debug MSVC before the body, including SKIP, runs.
+  target_link_options(odbc_tests PRIVATE "/STACK:8388608")
+endif()
+
+# ADD_TAGS_AS_LABELS stores each Catch2 tag without brackets, so the ctest
+# label is `query`, not `[query]`. -L is an unanchored regex; callers anchor
+# it (`^query$`, `^(e2e|integration)$`).
 function(add_odbc_test name)
-  add_executable(${name} ${ARGN})
-  target_sources(${name} PRIVATE
-      "${PROJECT_SOURCE_DIR}/common/src/schema_cleanup_listener.cpp")
-  target_link_libraries(${name} PRIVATE Catch2::Catch2WithMain ODBC::ODBC common Threads::Threads)
-  if(NOT WIN32)
-    target_link_libraries(${name} PRIVATE ${CMAKE_DL_LIBS})
+  if(ARGC LESS 2)
+    message(FATAL_ERROR "add_odbc_test(${name}) requires at least one source")
   endif()
-  target_include_directories(${name} PRIVATE ${picojson_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/../odbc/include)
-  # Windows: vcpkg z-applocal copies DLLs next to the exe. Isolate each test's
-  # output dir so those copies (and import libs / PDBs) do not share tests/e2e/.
-  # Discovery is PRE_TEST (see CMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE above);
-  # WORKING_DIRECTORY must still be the per-target dir so ctest finds the DLLs.
-  if(WIN32)
-    set(_odbc_test_outdir "${CMAKE_CURRENT_BINARY_DIR}/${name}")
-    set_target_properties(${name} PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY "${_odbc_test_outdir}"
-      RUNTIME_OUTPUT_DIRECTORY_DEBUG "${_odbc_test_outdir}"
-      RUNTIME_OUTPUT_DIRECTORY_RELEASE "${_odbc_test_outdir}"
-      RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${_odbc_test_outdir}"
-      RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${_odbc_test_outdir}"
-      ARCHIVE_OUTPUT_DIRECTORY "${_odbc_test_outdir}"
-      ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_odbc_test_outdir}"
-      ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_odbc_test_outdir}"
-      ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO "${_odbc_test_outdir}"
-      ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL "${_odbc_test_outdir}"
-      PDB_OUTPUT_DIRECTORY "${_odbc_test_outdir}"
-      PDB_OUTPUT_DIRECTORY_DEBUG "${_odbc_test_outdir}"
-      PDB_OUTPUT_DIRECTORY_RELEASE "${_odbc_test_outdir}"
-      PDB_OUTPUT_DIRECTORY_RELWITHDEBINFO "${_odbc_test_outdir}"
-      PDB_OUTPUT_DIRECTORY_MINSIZEREL "${_odbc_test_outdir}")
-    file(MAKE_DIRECTORY "${_odbc_test_outdir}")
-    catch_discover_tests(${name} TEST_PREFIX "${name}: " ADD_TAGS_AS_LABELS
-      WORKING_DIRECTORY "${_odbc_test_outdir}")
-  else()
-    catch_discover_tests(${name} TEST_PREFIX "${name}: " ADD_TAGS_AS_LABELS)
-  endif()
+  foreach(_src IN LISTS ARGN)
+    file(REAL_PATH "${_src}" _src BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_sources(odbc_tests PRIVATE "${_src}")
+  endforeach()
 endfunction()
 
 add_subdirectory(tests)
+
+catch_discover_tests(odbc_tests ADD_TAGS_AS_LABELS)

@@ -7,7 +7,7 @@
 #include "compatibility.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("should return IM001 when SQLBulkOperations is called", "[query][sqlbulkoperations]") {
+TEST_CASE("should return IM001 when SQLBulkOperations is called", "[e2e][query][sqlbulkoperations]") {
   // Given an executed statement positioned on a row (Snowflake's driver does
   //   not implement SQLBulkOperations)
   Connection conn;

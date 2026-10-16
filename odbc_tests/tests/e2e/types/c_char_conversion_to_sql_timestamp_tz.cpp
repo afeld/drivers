@@ -40,7 +40,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR TIMESTAMP_TZ string via SQL_SF_TIMESTAMP_TZ",
-                 "[c_char][conversion][sql_timestamp_tz]") {
+                 "[e2e][types][c_char][conversion][sql_timestamp_tz]") {
   auto [ts_in, scale, fmt, expected] =
       GENERATE(Catch::Generators::table<std::string, SQLSMALLINT, std::string, std::string>({
           // space-separated — already accepted before SNOW-3990013 fix
@@ -85,7 +85,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR TIMESTAMP_TZ string 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR TIMESTAMP_TZ string via SQL_SF_TIMESTAMP_TZ",
-                 "[c_char][conversion][sql_timestamp_tz]") {
+                 "[e2e][types][c_char][conversion][sql_timestamp_tz]") {
   auto [ts_in, expected] = GENERATE(Catch::Generators::table<std::string, std::string>({
       {"2017-11-30 18:17:05.123 +08:00", "2017-11-30 18:17:05.123 +08:00"},
       {"2017-11-30T18:17:05.123+08:00", "2017-11-30 18:17:05.123 +08:00"},

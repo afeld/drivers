@@ -25,7 +25,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to DATE target",
-                 "[c_numeric][incompatible][sql_date]") {
+                 "[e2e][types][c_numeric][incompatible][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -45,7 +45,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to DATE tar
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE bound to DATE target",
-                 "[c_numeric][incompatible][sql_date]") {
+                 "[e2e][types][c_numeric][incompatible][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -65,7 +65,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE bound to DATE ta
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_FLOAT bound to DATE target",
-                 "[c_numeric][incompatible][sql_date]") {
+                 "[e2e][types][c_numeric][incompatible][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -85,7 +85,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_FLOAT bound to DATE tar
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to DATE target",
-                 "[c_numeric][incompatible][sql_date]") {
+                 "[e2e][types][c_numeric][incompatible][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -105,7 +105,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to DATE targe
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC bound to DATE target",
-                 "[c_numeric][incompatible][sql_date]") {
+                 "[e2e][types][c_numeric][incompatible][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -129,7 +129,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC bound to DATE t
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SBIGINT bound to DATE target",
-                 "[c_numeric][incompatible][sql_date]") {
+                 "[e2e][types][c_numeric][incompatible][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 

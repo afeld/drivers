@@ -110,7 +110,8 @@ void block_part_download(const fs::path& download_dir, const std::string& part_f
 
 }  // namespace
 
-TEST_CASE("should fail the statement after attempting every file in a PUT batch (collect-all default)", "[put_get]") {
+TEST_CASE("should fail the statement after attempting every file in a PUT batch (collect-all default)",
+          "[e2e][put_get]") {
   if (!can_run_permission_based_test()) {
     SKIP("Permission-based failure injection requires a non-root Unix user");
   }
@@ -140,7 +141,7 @@ TEST_CASE("should fail the statement after attempting every file in a PUT batch 
                                           OdbcMatchers::HasDiagMessage("fastfail_3_blocked.csv"));
 }
 
-TEST_CASE("should return a mixed rowset when one file in a GET batch cannot be written locally", "[put_get]") {
+TEST_CASE("should return a mixed rowset when one file in a GET batch cannot be written locally", "[e2e][put_get]") {
   SKIP_OLD_DRIVER("BD#104",
                   "Old driver uses a different local-write staging scheme than the new core's `<file>.part` rename, so "
                   "pre-blocking the `.part` placeholder doesn't reproduce a write failure against it");
@@ -186,7 +187,7 @@ TEST_CASE("should return a mixed rowset when one file in a GET batch cannot be w
 }
 
 TEST_CASE("should fail fast instead of collecting errors when PUT_FASTFAIL override is set on a failing PUT batch",
-          "[put_get]") {
+          "[e2e][put_get]") {
   if (!can_run_permission_based_test()) {
     SKIP("Permission-based failure injection requires a non-root Unix user");
   }
@@ -225,7 +226,7 @@ TEST_CASE("should fail fast instead of collecting errors when PUT_FASTFAIL overr
 }
 
 TEST_CASE("should fail fast instead of collecting errors when GET_FASTFAIL override is set on a failing GET batch",
-          "[put_get]") {
+          "[e2e][put_get]") {
   SKIP_OLD_DRIVER("BD#104",
                   "Old driver uses a different local-write staging scheme than the new core's `<file>.part` rename, so "
                   "pre-blocking the `.part` placeholder doesn't reproduce a write failure against it (same root cause "

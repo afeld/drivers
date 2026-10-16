@@ -7,7 +7,8 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("should bind SQL_C_DOUBLE 1.5 to SQL_BIT with 01S07.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should bind SQL_C_DOUBLE 1.5 to SQL_BIT with 01S07.",
+          "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -25,7 +26,7 @@ TEST_CASE("should bind SQL_C_DOUBLE 1.5 to SQL_BIT with 01S07.", "[query][bind_p
   CHECK(get_data<SQL_C_BIT>(stmt, 1) == 1);
 }
 
-TEST_CASE("should bind SQL_C_DOUBLE zero to SQL_BIT.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should bind SQL_C_DOUBLE zero to SQL_BIT.", "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -43,7 +44,8 @@ TEST_CASE("should bind SQL_C_DOUBLE zero to SQL_BIT.", "[query][bind_parameter][
   CHECK(get_data<SQL_C_BIT>(stmt, 1) == 0);
 }
 
-TEST_CASE("should bind SQL_C_FLOAT 0.5 to SQL_BIT with 01S07.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should bind SQL_C_FLOAT 0.5 to SQL_BIT with 01S07.",
+          "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -61,7 +63,8 @@ TEST_CASE("should bind SQL_C_FLOAT 0.5 to SQL_BIT with 01S07.", "[query][bind_pa
   CHECK(get_data<SQL_C_BIT>(stmt, 1) == 0);
 }
 
-TEST_CASE("should reject SQL_C_DOUBLE negative bound to SQL_BIT.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should reject SQL_C_DOUBLE negative bound to SQL_BIT.",
+          "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -76,7 +79,7 @@ TEST_CASE("should reject SQL_C_DOUBLE negative bound to SQL_BIT.", "[query][bind
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("22003"));
 }
 
-TEST_CASE("should bind SQL_C_FLOAT zero to SQL_BIT.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should bind SQL_C_FLOAT zero to SQL_BIT.", "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -94,7 +97,7 @@ TEST_CASE("should bind SQL_C_FLOAT zero to SQL_BIT.", "[query][bind_parameter][c
   CHECK(get_data<SQL_C_BIT>(stmt, 1) == 0);
 }
 
-TEST_CASE("should bind SQL_C_DOUBLE NULL to SQL_BIT.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should bind SQL_C_DOUBLE NULL to SQL_BIT.", "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -111,7 +114,8 @@ TEST_CASE("should bind SQL_C_DOUBLE NULL to SQL_BIT.", "[query][bind_parameter][
   CHECK(get_data_optional<SQL_C_BIT>(stmt, 1) == std::nullopt);
 }
 
-TEST_CASE("should bind SQL_C_DOUBLE NaN to SQL_BIT as true.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should bind SQL_C_DOUBLE NaN to SQL_BIT as true.",
+          "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -129,7 +133,7 @@ TEST_CASE("should bind SQL_C_DOUBLE NaN to SQL_BIT as true.", "[query][bind_para
   CHECK(get_data<SQL_C_BIT>(stmt, 1) == 1);
 }
 
-TEST_CASE("should reject SQL_C_DOUBLE infinity to SQL_BIT.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should reject SQL_C_DOUBLE infinity to SQL_BIT.", "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -144,7 +148,7 @@ TEST_CASE("should reject SQL_C_DOUBLE infinity to SQL_BIT.", "[query][bind_param
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("22003"));
 }
 
-TEST_CASE("should bind SQL_C_FLOAT NaN to SQL_BIT as true.", "[query][bind_parameter][c_real_to_boolean]") {
+TEST_CASE("should bind SQL_C_FLOAT NaN to SQL_BIT as true.", "[e2e][types][query][bind_parameter][c_real_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

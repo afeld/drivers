@@ -14,7 +14,7 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("should select shape geography literal", "[geography]") {
+TEST_CASE("should select shape geography literal", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -40,7 +40,7 @@ TEST_CASE("should select shape geography literal", "[geography]") {
   }
 }
 
-TEST_CASE("should select geography from GeoJSON input", "[geography]") {
+TEST_CASE("should select geography from GeoJSON input", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -51,7 +51,7 @@ TEST_CASE("should select geography from GeoJSON input", "[geography]") {
   require_geojson_shape(fetch_char(stmt, 1), "Point");
 }
 
-TEST_CASE("should cast geography to expected_type for format output format", "[geography]") {
+TEST_CASE("should cast geography to expected_type for format output format", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -83,7 +83,7 @@ TEST_CASE("should cast geography to expected_type for format output format", "[g
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select geography values from table", "[geography]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select geography values from table", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
 
   // And Table with GEOGRAPHY column exists with WKT values
@@ -110,7 +110,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select geography values from table",
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL geography values from table", "[geography]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL geography values from table", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
 
   // And Table with GEOGRAPHY column exists containing NULLs and values
@@ -133,7 +133,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL geography values from ta
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should download geography data in multiple chunks", "[geography]") {
+TEST_CASE("should download geography data in multiple chunks", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -163,7 +163,7 @@ TEST_CASE("should download geography data in multiple chunks", "[geography]") {
   REQUIRE(row_count == 20000);
 }
 
-TEST_CASE("should select geography using parameter binding with input_type value", "[geography]") {
+TEST_CASE("should select geography using parameter binding with input_type value", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -205,7 +205,7 @@ TEST_CASE("should select geography using parameter binding with input_type value
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert geography using parameter binding", "[geography]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert geography using parameter binding", "[e2e][types][geography]") {
   // Given Snowflake client is logged in
 
   // And Table with GEOGRAPHY column exists

@@ -15,6 +15,12 @@
 #include "odbc_matchers.hpp"
 #include "test_setup.hpp"
 
+#if !defined(_WIN32)
+#include <dlfcn.h>
+#else
+#include <Windows.h>
+#endif
+
 // ============================================================================
 // SQLFreeEnv - Basic Functionality (ODBC 2.x; maps to SQLFreeHandle ENV)
 // ============================================================================
@@ -110,8 +116,6 @@ TEST_CASE_METHOD(DbcFixture, "SQLFreeEnv: Complete handle hierarchy cleanup in c
 
 #if !defined(_WIN32)
 
-#include <dlfcn.h>
-
 using SQLAllocHandleFn = SQLRETURN (*)(SQLSMALLINT, SQLHANDLE, SQLHANDLE*);
 using SQLFreeEnvFn = SQLRETURN (*)(SQLHENV);
 using SQLFreeHandleFn = SQLRETURN (*)(SQLSMALLINT, SQLHANDLE);
@@ -169,8 +173,6 @@ TEST_CASE("direct driver: SQLFreeEnv is exported and frees an environment handle
 }
 
 #else
-
-#include <Windows.h>
 
 TEST_CASE("direct driver: SQLFreeEnv is exported", "[odbc-api][freeenv][terminating_connection][direct]") {
   SKIP_OLD_DRIVER("BD#127", "reference driver does not export SQLFreeEnv; DM maps it");

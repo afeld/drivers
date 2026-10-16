@@ -29,7 +29,7 @@ static SQL_NUMERIC_STRUCT make_numeric(SQLCHAR precision, SQLSCHAR scale, SQLCHA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY numeric struct to SQL_DECIMAL and read back",
-                 "[c_binary][conversion][sql_decimal]") {
+                 "[e2e][types][c_binary][conversion][sql_decimal]") {
   SKIP_OLD_DRIVER("BD#46", "Old driver does not support SQL_C_BINARY as source for SQL_DECIMAL");
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(10,2))");
@@ -51,7 +51,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY numeric struct to 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY numeric struct with negative sign to SQL_DECIMAL",
-                 "[c_binary][conversion][sql_decimal]") {
+                 "[e2e][types][c_binary][conversion][sql_decimal]") {
   SKIP_OLD_DRIVER("BD#46", "Old driver does not support SQL_C_BINARY as source for SQL_DECIMAL");
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(10,2))");
@@ -76,7 +76,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY numeric struct wit
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY numeric struct integer to SQL_NUMERIC",
-                 "[c_binary][conversion][sql_decimal]") {
+                 "[e2e][types][c_binary][conversion][sql_decimal]") {
   SKIP_OLD_DRIVER("BD#46", "Old driver does not support SQL_C_BINARY as source for SQL_NUMERIC");
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(10,0))");
@@ -98,7 +98,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY numeric struct int
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size for SQL_DECIMAL",
-                 "[c_binary][conversion][sql_decimal]") {
+                 "[e2e][types][c_binary][conversion][sql_decimal]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(10,2))");
 

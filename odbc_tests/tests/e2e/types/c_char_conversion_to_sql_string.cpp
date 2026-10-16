@@ -10,7 +10,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_VARCHAR and read back",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -31,7 +31,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_VARCHAR and r
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR empty string to SQL_VARCHAR",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -52,7 +52,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR empty string to SQL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR at max length to fixed-size VARCHAR",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(5))");
 
@@ -73,7 +73,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR at max length to fix
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR exceeding fixed-size VARCHAR",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(5))");
 
@@ -103,7 +103,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR exceeding fixed-si
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR to SQL_VARCHAR and read back",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -125,7 +125,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR to SQL_VARCHAR and 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR empty string to SQL_VARCHAR",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR empty string to SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator to SQL_VARCHAR",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -167,7 +167,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR with NULL indicator to SQL_VARCHAR",
-                 "[c_char][conversion][sql_string]") {
+                 "[e2e][types][c_char][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 

@@ -82,7 +82,7 @@ SQLRETURN bind_time_and_try_execute(StatementHandleWrapper& stmt, SQLSMALLINT ta
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIMESTAMP_NTZ with current local date",
-                 "[c_time][conversion][sql_timestamp]") {
+                 "[e2e][types][c_time][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -120,7 +120,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIMESTAMP_NT
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIMESTAMP_LTZ with current local date",
-                 "[c_time][conversion][sql_timestamp]") {
+                 "[e2e][types][c_time][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -150,7 +150,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIMESTAMP_LT
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIMESTAMP_TZ with current local date",
-                 "[c_time][conversion][sql_timestamp]") {
+                 "[e2e][types][c_time][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -180,7 +180,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to TIMESTAMP_TZ
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME with NULL indicator to TIMESTAMP target",
-                 "[c_time][conversion][sql_timestamp]") {
+                 "[e2e][types][c_time][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -211,7 +211,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME with NULL indic
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_TIME with hour=24 bound to TIMESTAMP target",
-                 "[c_time][conversion][sql_timestamp][invalid]") {
+                 "[e2e][types][c_time][conversion][sql_timestamp][invalid]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -231,7 +231,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_TIME with hour=24 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_TYPE_TIME with minute=60 bound to TIMESTAMP target",
-                 "[c_time][conversion][sql_timestamp][invalid]") {
+                 "[e2e][types][c_time][conversion][sql_timestamp][invalid]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 

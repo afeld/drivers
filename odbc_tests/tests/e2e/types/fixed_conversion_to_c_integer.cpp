@@ -34,7 +34,8 @@ void test_at_limits(Connection& conn) {
         std::numeric_limits<typename MetaOfSqlCType<SQL_C_TYPE>::type>::min());
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to integer conversion", "[fixed][conversion][c_integer]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to integer conversion",
+                 "[e2e][types][fixed][conversion][c_integer]") {
   // Given A Snowflake connection is established
 
   // When A table with various DECIMAL/NUMBER/INT columns is queried
@@ -63,7 +64,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to integer conversion", "[fixe
   check_integer_columns<SQL_C_UBIGINT>(stmt, exact_cols, truncated_cols, expected);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "Test integer at limits", "[fixed][conversion][c_integer][limits]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "Test integer at limits", "[e2e][types][fixed][conversion][c_integer][limits]") {
   // Given A Snowflake connection is established
 
   // When Max and min values for each integer C type are queried
@@ -84,7 +85,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "Test integer at limits", "[fixed][conversio
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL explicit integer conversions truncate",
-                 "[fixed][conversion][c_integer][truncation]") {
+                 "[e2e][types][fixed][conversion][c_integer][truncation]") {
   // Given A Snowflake connection is established
 
   // When A fractional DECIMAL value 123.789 is fetched as each integer C type
@@ -104,7 +105,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL explicit integer conversions tr
   CHECK(check_fractional_truncation<SQL_C_UBIGINT>(conn.execute_fetch(query), 1) == 123);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL truncation and scale", "[fixed][conversion][c_integer][truncation]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL truncation and scale",
+                 "[e2e][types][fixed][conversion][c_integer][truncation]") {
   // Given A Snowflake connection is established
 
   // When NUMBER values with various scales are fetched as SQL_C_LONG
@@ -164,7 +166,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL truncation and scale", "[fixed]
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER scale=0 - INT and INTEGER types",
-                 "[fixed][conversion][c_integer][scale0]") {
+                 "[e2e][types][fixed][conversion][c_integer][scale0]") {
   // Given A Snowflake connection is established
 
   // When A table with INT/INTEGER/BIGINT/SMALLINT/TINYINT columns is queried
@@ -188,7 +190,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER scale=0 - INT and INTEGER types",
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL fractional truncation returns 01S07",
-                 "[fixed][conversion][c_integer][01S07]") {
+                 "[e2e][types][fixed][conversion][c_integer][01S07]") {
   // Given A Snowflake connection is established
 
   // When Fractional DECIMAL values are fetched as integer C types
@@ -230,7 +232,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL fractional truncation returns 0
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL overflow returns 22003", "[fixed][conversion][c_integer][22003]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL overflow returns 22003",
+                 "[e2e][types][fixed][conversion][c_integer][22003]") {
   // Given A Snowflake connection is established
 
   // When Out-of-range NUMBER values are fetched as narrow integer C types
@@ -312,7 +315,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL overflow returns 22003", "[fixe
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_INTEGER types", "[fixed][conversion][c_integer][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_INTEGER types",
+                 "[e2e][types][fixed][conversion][c_integer][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL NUMBER value is queried
@@ -331,7 +335,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_INTEGER types", "[fixe
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL mixed with non-NULL in multiple rows",
-                 "[fixed][conversion][c_integer][null]") {
+                 "[e2e][types][fixed][conversion][c_integer][null]") {
   // Given A Snowflake connection is established
 
   // When A table with mixed NULL and non-NULL rows is queried
@@ -361,7 +365,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL mixed with non-NULL in multiple
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL SQLGetData NULL without indicator returns 22002",
-                 "[fixed][conversion][c_integer][null][22002]") {
+                 "[e2e][types][fixed][conversion][c_integer][null][22002]") {
   // Given A Snowflake connection is established
 
   // When A NULL value is fetched without providing an indicator pointer

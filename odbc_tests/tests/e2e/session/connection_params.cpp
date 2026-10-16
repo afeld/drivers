@@ -24,7 +24,7 @@ static std::string get_connection_string_without_account() {
   return ss.str();
 }
 
-TEST_CASE("Connect with SERVER only, no ACCOUNT parameter", "[session][account]") {
+TEST_CASE("Connect with SERVER only, no ACCOUNT parameter", "[e2e][session][account]") {
   // Given a connection string with SERVER but no ACCOUNT
   auto conn_str = get_connection_string_without_account();
 
@@ -37,7 +37,7 @@ TEST_CASE("Connect with SERVER only, no ACCOUNT parameter", "[session][account]"
   CHECK(value == "1");
 }
 
-TEST_CASE("Connect with SERVER only derives correct account", "[session][account]") {
+TEST_CASE("Connect with SERVER only derives correct account", "[e2e][session][account]") {
   // Given a connection string with SERVER but no ACCOUNT
   auto conn_str = get_connection_string_without_account();
 

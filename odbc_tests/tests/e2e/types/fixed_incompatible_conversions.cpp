@@ -19,7 +19,7 @@
 // INCOMPATIBLE CONVERSIONS - Number to Temporal C Types
 // ============================================================================
 
-TEST_CASE("should fail converting number to temporal C types", "[datatype][number][conversion][negative]") {
+TEST_CASE("should fail converting number to temporal C types", "[e2e][types][datatype][number][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -49,7 +49,7 @@ TEST_CASE("should fail converting number to temporal C types", "[datatype][numbe
 // INCOMPATIBLE CONVERSIONS - Number to GUID C Type
 // ============================================================================
 
-TEST_CASE("should fail converting number to SQL_C_GUID", "[datatype][number][conversion][negative]") {
+TEST_CASE("should fail converting number to SQL_C_GUID", "[e2e][types][datatype][number][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

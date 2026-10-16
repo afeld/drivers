@@ -47,7 +47,7 @@ SQL_NUMERIC_STRUCT make_numeric(SQLCHAR precision, SQLSCHAR scale, SQLCHAR sign,
 }  // namespace
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTERVAL_YEAR",
-                 "[c_numeric][conversion][sql_interval]") {
+                 "[e2e][types][c_numeric][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -73,7 +73,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTERVAL_Y
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTERVAL_MONTH",
-                 "[c_numeric][conversion][sql_interval]") {
+                 "[e2e][types][c_numeric][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -99,7 +99,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTERVAL_M
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTERVAL_SECOND",
-                 "[c_numeric][conversion][sql_interval]") {
+                 "[e2e][types][c_numeric][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -125,7 +125,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTERVAL_S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind fractional SQL_C_NUMERIC (scale>0) to SQL_INTERVAL_YEAR",
-                 "[c_numeric][conversion][sql_interval]") {
+                 "[e2e][types][c_numeric][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -153,7 +153,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind fractional SQL_C_NUMERIC (scale
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC with NULL indicator to SQL_INTERVAL_YEAR",
-                 "[c_numeric][conversion][sql_interval]") {
+                 "[e2e][types][c_numeric][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");

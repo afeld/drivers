@@ -12,7 +12,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR", "[timestamp_ltz][conversion][c_wchar]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR", "[e2e][types][timestamp_ltz][conversion][c_wchar]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -45,7 +45,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR", "[timestamp_ltz][conversion][c_wchar]"
   }
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR buffer too small", "[timestamp_ltz][conversion][c_wchar][22003]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR buffer too small", "[e2e][types][timestamp_ltz][conversion][c_wchar][22003]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -63,7 +63,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR buffer too small", "[timestamp_ltz][conv
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR truncation", "[timestamp_ltz][conversion][c_wchar][01004]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR truncation", "[e2e][types][timestamp_ltz][conversion][c_wchar][01004]") {
   // Physical buffer is oversized (64 units) so the test runs to completion; BufferLength=21 is the truncation point
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
@@ -90,7 +90,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_WCHAR truncation", "[timestamp_ltz][conversion
   }
 }
 
-TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_WCHAR", "[timestamp_ltz][conversion][c_wchar][null]") {
+TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_WCHAR", "[e2e][types][timestamp_ltz][conversion][c_wchar][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

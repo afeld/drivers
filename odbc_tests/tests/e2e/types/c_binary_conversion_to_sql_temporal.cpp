@@ -23,7 +23,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY date struct to a DATE target and read back",
-                 "[c_binary][conversion][sql_temporal]") {
+                 "[e2e][types][c_binary][conversion][sql_temporal]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -47,7 +47,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY date struct to a D
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size for a DATE target",
-                 "[c_binary][conversion][sql_temporal]") {
+                 "[e2e][types][c_binary][conversion][sql_temporal]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -73,7 +73,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY time struct to a TIME target and read back",
-                 "[c_binary][conversion][sql_temporal]") {
+                 "[e2e][types][c_binary][conversion][sql_temporal]") {
   SKIP_OLD_DRIVER("BD#46", "Old driver does not support SQL_C_BINARY as source for SQL_TYPE_TIME");
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
@@ -98,7 +98,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY time struct to a T
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size for a TIME target",
-                 "[c_binary][conversion][sql_temporal]") {
+                 "[e2e][types][c_binary][conversion][sql_temporal]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIME, SQL_TYPE_TIME);
   CAPTURE(sql_type);
 
@@ -124,7 +124,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY timestamp struct to a TIMESTAMP target and read back",
-                 "[c_binary][conversion][sql_temporal]") {
+                 "[e2e][types][c_binary][conversion][sql_temporal]") {
   SKIP_OLD_DRIVER("BD#46", "Old driver does not support SQL_C_BINARY as source for SQL_TYPE_TIMESTAMP");
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
@@ -156,7 +156,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY timestamp struct t
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY timestamp with fractional seconds",
-                 "[c_binary][conversion][sql_temporal]") {
+                 "[e2e][types][c_binary][conversion][sql_temporal]") {
   SKIP_OLD_DRIVER("BD#46", "Old driver does not support SQL_C_BINARY as source for SQL_TYPE_TIMESTAMP");
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
@@ -188,7 +188,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY timestamp with fra
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size for a TIMESTAMP target",
-                 "[c_binary][conversion][sql_temporal]") {
+                 "[e2e][types][c_binary][conversion][sql_temporal]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 

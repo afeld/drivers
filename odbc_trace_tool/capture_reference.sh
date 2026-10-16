@@ -126,6 +126,7 @@ rm -rf "$BUILD_DIR"
 echo "Generating capture harness from $IR ..."
 cargo run -p odbc_trace_tool -- generate \
   --emit-capture-harness \
+  -t capture \
   -i "$IR" \
   -o "$CAPTURE_CPP"
 
@@ -164,7 +165,7 @@ docker run --rm \
       -D CMAKE_C_COMPILER_LAUNCHER=ccache \\
       .
     cmake --build cmake-build-capture --target capture_harness -- -j \$(nproc)
-    ctest -C Debug --test-dir cmake-build-capture -R capture_harness --output-on-failure
+    ctest -C Debug --test-dir cmake-build-capture -L '^capture$' --output-on-failure --no-tests=error
   "
 CTEST_EXIT=$?
 set -e

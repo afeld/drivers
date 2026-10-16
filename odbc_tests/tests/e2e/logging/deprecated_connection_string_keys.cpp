@@ -38,7 +38,7 @@ std::string joined_text_for_state(const std::vector<DiagRec>& records, const std
 }  // namespace
 
 TEST_CASE("should warn on deprecated connection-string logging keys only in the new driver",
-          "[logging][connection][BD#154]") {
+          "[e2e][logging][connection][BD#154]") {
   // Given a live connection string plus leftover 3.x logging keys. The new driver
   //   ignores both key and value; LogLevel=OFF leaves the old driver's file logger
   //   off during reference runs.

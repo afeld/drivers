@@ -7,7 +7,7 @@
 #include "compatibility.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("should return IM001 when SQLSetPos is called", "[query][sqlsetpos]") {
+TEST_CASE("should return IM001 when SQLSetPos is called", "[e2e][query][sqlsetpos]") {
   // Given an executed statement positioned on a row
   Connection conn;
   auto stmt = conn.execute_fetch("SELECT 42 AS value");

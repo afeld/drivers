@@ -194,7 +194,7 @@ public class DecfloatTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldHandleNULLValuesFromLiterals() throws Exception {
+  public void shouldHandleNULLValuesFromLiteralsForDecfloat() throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 
@@ -211,7 +211,8 @@ public class DecfloatTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldDownloadLargeResultSetWithMultipleChunksFromGenerator() throws Exception {
+  public void shouldDownloadLargeResultSetWithMultipleChunksFromGeneratorForDecfloat()
+      throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 
@@ -341,7 +342,7 @@ public class DecfloatTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldHandleNULLValuesFromTable() throws Exception {
+  public void shouldHandleNULLValuesFromTableForDecfloat() throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 
@@ -365,7 +366,8 @@ public class DecfloatTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldDownloadLargeResultSetWithMultipleChunksFromTable() throws Exception {
+  public void shouldDownloadLargeResultSetWithMultipleChunksFromTableForDecfloat()
+      throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 

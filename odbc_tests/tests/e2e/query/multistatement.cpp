@@ -17,7 +17,7 @@
 // Tests for multi-statement query execution via SQLMoreResults
 // =============================================================================
 
-TEST_CASE("should execute multiple SELECT statements", "[query]") {
+TEST_CASE("should execute multiple SELECT statements", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -65,7 +65,7 @@ TEST_CASE("should execute multiple SELECT statements", "[query]") {
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should execute multiple DML statements", "[query][multistatement]") {
+TEST_CASE("should execute multiple DML statements", "[e2e][query][multistatement]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -104,7 +104,7 @@ TEST_CASE("should execute multiple DML statements", "[query][multistatement]") {
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should execute mixed statement types", "[query][multistatement]") {
+TEST_CASE("should execute mixed statement types", "[e2e][query][multistatement]") {
   // iODBC's DM tracks cursor state across SQLMoreResults: after stepping through
   // a DDL + DML + DDL prefix (ALTER, CREATE, INSERT here) and landing on the
   // SELECT result set via SQLMoreResults, iODBC's DM rejects the follow-up
@@ -155,7 +155,7 @@ TEST_CASE("should execute mixed statement types", "[query][multistatement]") {
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should fail when multistatement SQL is sent without multi_statement_count", "[query][multistatement]") {
+TEST_CASE("should fail when multistatement SQL is sent without multi_statement_count", "[e2e][query][multistatement]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -167,7 +167,8 @@ TEST_CASE("should fail when multistatement SQL is sent without multi_statement_c
   CHECK(ret == SQL_ERROR);
 }
 
-TEST_CASE("should fail when multi_statement_count does not match actual statement count", "[query][multistatement]") {
+TEST_CASE("should fail when multi_statement_count does not match actual statement count",
+          "[e2e][query][multistatement]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -197,7 +198,7 @@ TEST_CASE("should fail when multi_statement_count does not match actual statemen
 // Multi-statement queries with positional parameter bindings
 // =============================================================================
 
-TEST_CASE("should execute multistatement DML with positional parameters", "[query][multistatement][parameters]") {
+TEST_CASE("should execute multistatement DML with positional parameters", "[e2e][query][multistatement][parameters]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -271,7 +272,8 @@ TEST_CASE("should execute multistatement DML with positional parameters", "[quer
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should execute multistatement SELECT with positional parameters", "[query][multistatement][parameters]") {
+TEST_CASE("should execute multistatement SELECT with positional parameters",
+          "[e2e][query][multistatement][parameters]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -331,7 +333,7 @@ TEST_CASE("should execute multistatement SELECT with positional parameters", "[q
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should fail when multistatement query has too few parameters", "[query][multistatement][parameters]") {
+TEST_CASE("should fail when multistatement query has too few parameters", "[e2e][query][multistatement][parameters]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -361,7 +363,7 @@ TEST_CASE("should fail when multistatement query has too few parameters", "[quer
 }
 
 TEST_CASE("should fail when NULL positional parameters are used in multistatement query",
-          "[query][multistatement][parameters]") {
+          "[e2e][query][multistatement][parameters]") {
   // Snowflake's SYSTEM$MULTISTMT server-side dispatcher rejects NULL bindings
   // with "Bind variable ? not set" — confirmed against legacy snowflake-jdbc
   // and legacy snowflake-odbc; the universal-driver inherits the same behavior.

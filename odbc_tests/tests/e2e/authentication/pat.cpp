@@ -114,7 +114,7 @@ void verify_pat_simple_query_execution(ConnectionHandleWrapper& dbc) {
   REQUIRE(result == 1);
 }
 
-TEST_CASE("should authenticate using PAT as password", "[pat]") {
+TEST_CASE("should authenticate using PAT as password", "[e2e][authentication][pat]") {
   // Given Authentication is set to password and valid PAT token is provided
   auto params = get_test_parameters("testconnection");
   std::string pat_secret = params.at("SNOWFLAKE_TEST_PAT").get<std::string>();
@@ -136,7 +136,7 @@ TEST_CASE("should authenticate using PAT as password", "[pat]") {
   REQUIRE((disconnect_ret == SQL_SUCCESS || disconnect_ret == SQL_SUCCESS_WITH_INFO));
 }
 
-TEST_CASE("should authenticate using PAT as token", "[pat]") {
+TEST_CASE("should authenticate using PAT as token", "[e2e][authentication][pat]") {
   // Given Authentication is set to Programmatic Access Token and valid PAT token is provided
   auto params = get_test_parameters("testconnection");
   std::string pat_secret = params.at("SNOWFLAKE_TEST_PAT").get<std::string>();
@@ -157,7 +157,7 @@ TEST_CASE("should authenticate using PAT as token", "[pat]") {
   REQUIRE((disconnect_ret == SQL_SUCCESS || disconnect_ret == SQL_SUCCESS_WITH_INFO));
 }
 
-TEST_CASE("should authenticate using PAT token from token_file_path", "[pat]") {
+TEST_CASE("should authenticate using PAT token from token_file_path", "[e2e][authentication][pat]") {
   SKIP_OLD_DRIVER("", "old driver does not support TOKEN_FILE_PATH");
   // Given Authentication is set to Programmatic Access Token and a valid PAT token is stored in a
   // file
@@ -180,7 +180,7 @@ TEST_CASE("should authenticate using PAT token from token_file_path", "[pat]") {
   REQUIRE((disconnect_ret == SQL_SUCCESS || disconnect_ret == SQL_SUCCESS_WITH_INFO));
 }
 
-TEST_CASE("should authenticate using PAT as token with lowercase authenticator", "[pat]") {
+TEST_CASE("should authenticate using PAT as token with lowercase authenticator", "[e2e][authentication][pat]") {
   // Given Authentication is set to lowercase programmatic_access_token and valid PAT token is provided
   auto params = get_test_parameters("testconnection");
   std::string pat_secret = params.at("SNOWFLAKE_TEST_PAT").get<std::string>();
@@ -206,7 +206,7 @@ TEST_CASE("should authenticate using PAT as token with lowercase authenticator",
   REQUIRE((disconnect_ret == SQL_SUCCESS || disconnect_ret == SQL_SUCCESS_WITH_INFO));
 }
 
-TEST_CASE("should fail PAT authentication when invalid token provided", "[pat]") {
+TEST_CASE("should fail PAT authentication when invalid token provided", "[e2e][authentication][pat]") {
   // Given Authentication is set to Programmatic Access Token and invalid PAT token is provided
   std::string connection_string = get_pat_as_token_connection_string("invalid_token_12345");
 
@@ -221,7 +221,7 @@ TEST_CASE("should fail PAT authentication when invalid token provided", "[pat]")
 }
 
 TEST_CASE("should handle ALTER USER PAT result set: new driver returns token, old driver returns cursor state error",
-          "[pat]") {
+          "[e2e][authentication][pat]") {
   // Given ALTER USER ADD PROGRAMMATIC ACCESS TOKEN is executed
   Connection conn;
   auto params = get_test_parameters("testconnection");

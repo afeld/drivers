@@ -35,7 +35,8 @@ static void check_json_equals(const std::string& actual_json_text, const std::st
 // TYPE CASTING (shared)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should cast semi-structured values to appropriate type", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should cast semi-structured values to appropriate type",
+                 "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -62,7 +63,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should cast semi-structured values to appro
 // SELECT WITH LITERALS (shared)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select semi-structured literals", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select semi-structured literals", "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -79,7 +80,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select semi-structured literals", "[
   check_json_equals(get_data<SQL_C_CHAR>(stmt, 3), R"({"a":1,"b":2})");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select deeply nested semi-structured literals", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select deeply nested semi-structured literals",
+                 "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -94,7 +96,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select deeply nested semi-structured
 // NULL HANDLING (shared)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL semi-structured values from literals", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL semi-structured values from literals",
+                 "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -111,7 +114,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL semi-structured values f
 // TABLE OPERATIONS (shared)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select semi-structured values from table", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select semi-structured values from table",
+                 "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
 
   // And Table with VARIANT, OBJECT, and ARRAY columns exists with JSON values
@@ -150,7 +154,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select semi-structured values from t
   check_json_equals(get_data<SQL_C_CHAR>(stmt, 3), R"(["a","b"])");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL semi-structured values from table", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL semi-structured values from table",
+                 "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
 
   // And Table with VARIANT column exists containing NULLs and values
@@ -185,7 +190,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL semi-structured values f
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should download semi-structured data in multiple chunks",
-                 "[semi_structured][large_result_set]") {
+                 "[e2e][types][semi_structured][large_result_set]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -219,7 +224,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should download semi-structured data in mul
 // PARAMETER BINDING (shared)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select variant using parameter binding", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select variant using parameter binding", "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -243,7 +248,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select variant using parameter bindi
   check_json_equals(get_data<SQL_C_CHAR>(stmt, 1), R"({"bound":true})");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select NULL variant using parameter binding", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select NULL variant using parameter binding",
+                 "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -266,7 +272,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select NULL variant using parameter 
   CHECK(!get_data_optional<SQL_C_CHAR>(stmt, 1).has_value());
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert variant using parameter binding", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert variant using parameter binding", "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
 
   // And Table with VARIANT column exists
@@ -311,7 +317,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert variant using parameter bindi
 // EMPTY JSON CONTAINERS (shared)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle empty JSON containers", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle empty JSON containers", "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -324,7 +330,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle empty JSON containers", "[sem
   check_json_equals(get_data<SQL_C_CHAR>(stmt, 3), R"({})");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle empty JSON array literal", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle empty JSON array literal", "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -335,7 +341,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle empty JSON array literal", "[
   check_json_equals(get_data<SQL_C_CHAR>(stmt, 1), R"([])");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should round-trip empty JSON containers through a table", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should round-trip empty JSON containers through a table",
+                 "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
 
   // And Table with VARIANT, OBJECT, and ARRAY columns exists with empty containers
@@ -363,7 +370,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should round-trip empty JSON containers thr
 // JSON WITH UNICODE CONTENT (shared)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle JSON with unicode content", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle JSON with unicode content", "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -384,7 +391,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle JSON with unicode content", "
   CHECK(cjk_it->second.get<std::string>() == "\xe9\x9b\xaa\xe8\x8a\xb1");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle JSON with unicode in keys", "[semi_structured]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle JSON with unicode in keys", "[e2e][types][semi_structured]") {
   // Given Snowflake client is logged in
   Connection conn;
 

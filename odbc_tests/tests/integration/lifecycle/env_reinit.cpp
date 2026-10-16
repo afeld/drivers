@@ -35,7 +35,7 @@ static void do_connect_cycle(const std::string& conn_str, const std::string& lab
   CHECK(ret == SQL_SUCCESS);
 }
 
-TEST_CASE("Environment re-init: alloc-free-alloc cycle does not crash", "[lifecycle][reinit]") {
+TEST_CASE("Environment re-init: alloc-free-alloc cycle does not crash", "[integration][lifecycle][reinit]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -54,7 +54,7 @@ TEST_CASE("Environment re-init: alloc-free-alloc cycle does not crash", "[lifecy
   do_connect_cycle(conn_str, "second (re-init)");
 }
 
-TEST_CASE("Environment re-init: three consecutive cycles", "[lifecycle][reinit]") {
+TEST_CASE("Environment re-init: three consecutive cycles", "[integration][lifecycle][reinit]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif

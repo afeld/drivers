@@ -16,7 +16,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("DATE to SQL_C_CHAR ignores DATE_OUTPUT_FORMAT", "[date][conversion][c_char][output_format]") {
+TEST_CASE("DATE to SQL_C_CHAR ignores DATE_OUTPUT_FORMAT", "[e2e][types][date][conversion][c_char][output_format]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -39,7 +39,7 @@ TEST_CASE("DATE to SQL_C_CHAR ignores DATE_OUTPUT_FORMAT", "[date][conversion][c
 }
 
 TEST_CASE("DATE to SQL_C_CHAR ignores DATE_OUTPUT_FORMAT across boundary dates",
-          "[date][conversion][c_char][output_format]") {
+          "[e2e][types][date][conversion][c_char][output_format]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -66,7 +66,7 @@ TEST_CASE("DATE to SQL_C_CHAR ignores DATE_OUTPUT_FORMAT across boundary dates",
   }
 }
 
-TEST_CASE("DATE to SQL_C_WCHAR ignores DATE_OUTPUT_FORMAT", "[date][conversion][c_wchar][output_format]") {
+TEST_CASE("DATE to SQL_C_WCHAR ignores DATE_OUTPUT_FORMAT", "[e2e][types][date][conversion][c_wchar][output_format]") {
   // Given Snowflake client is logged in
   Connection conn;
 

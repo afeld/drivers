@@ -20,7 +20,7 @@
 // SQLPrepare Basic Functionality
 // =============================================================================
 
-TEST_CASE("SQLPrepare + SQLExecute retrieves result from simple SELECT.", "[query][prepare]") {
+TEST_CASE("SQLPrepare + SQLExecute retrieves result from simple SELECT.", "[e2e][query][prepare]") {
   // Doc: "SQLPrepare prepares an SQL string for execution."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#summary
 
@@ -46,7 +46,7 @@ TEST_CASE("SQLPrepare + SQLExecute retrieves result from simple SELECT.", "[quer
   CHECK(value == 42);
 }
 
-TEST_CASE("SQLPrepare + SQLExecute retrieves result with multiple columns.", "[query][prepare]") {
+TEST_CASE("SQLPrepare + SQLExecute retrieves result with multiple columns.", "[e2e][query][prepare]") {
   // Doc: "SQLPrepare prepares an SQL string for execution."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#summary
 
@@ -70,7 +70,8 @@ TEST_CASE("SQLPrepare + SQLExecute retrieves result with multiple columns.", "[q
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "3.14");
 }
 
-TEST_CASE("SQLPrepare + SQLExecute can be executed multiple times with SQLCloseCursor between.", "[query][prepare]") {
+TEST_CASE("SQLPrepare + SQLExecute can be executed multiple times with SQLCloseCursor between.",
+          "[e2e][query][prepare]") {
   // Doc: "Once a statement is prepared, the application can request that the Driver
   //       Manager or driver include information about the result set. ... The application
   //       can reuse the SQL statement by calling SQLExecute with new parameter values."
@@ -115,7 +116,7 @@ TEST_CASE("SQLPrepare + SQLExecute can be executed multiple times with SQLCloseC
   CHECK(value == 100);
 }
 
-TEST_CASE("Re-prepare replaces previous statement on same handle.", "[query][prepare]") {
+TEST_CASE("Re-prepare replaces previous statement on same handle.", "[e2e][query][prepare]") {
   // Doc: "If the statement handle previously contained an SQL statement, the driver
   //       discards the previous statement and compiles the new one."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#comments
@@ -145,7 +146,7 @@ TEST_CASE("Re-prepare replaces previous statement on same handle.", "[query][pre
   CHECK(value == 999);
 }
 
-TEST_CASE("SQLPrepare with explicit text length (not SQL_NTS).", "[query][prepare]") {
+TEST_CASE("SQLPrepare with explicit text length (not SQL_NTS).", "[e2e][query][prepare]") {
   // Doc: "TextLength [Input] Length of *StatementText in characters."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#arguments
 
@@ -172,7 +173,7 @@ TEST_CASE("SQLPrepare with explicit text length (not SQL_NTS).", "[query][prepar
   CHECK(value == 77);
 }
 
-TEST_CASE("SQLPrepare with explicit length shorter than string uses partial SQL.", "[query][prepare]") {
+TEST_CASE("SQLPrepare with explicit length shorter than string uses partial SQL.", "[e2e][query][prepare]") {
   // Doc: "TextLength [Input] Length of *StatementText in characters."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#arguments
 
@@ -195,7 +196,7 @@ TEST_CASE("SQLPrepare with explicit length shorter than string uses partial SQL.
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 55);
 }
 
-TEST_CASE("SQLNumResultCols available after SQLPrepare without execute.", "[query][prepare]") {
+TEST_CASE("SQLNumResultCols available after SQLPrepare without execute.", "[e2e][query][prepare]") {
   // Doc: "SQLNumResultCols can be called successfully only when the statement is
   //       in the prepared, executed, or positioned state."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#comments
@@ -215,7 +216,7 @@ TEST_CASE("SQLNumResultCols available after SQLPrepare without execute.", "[quer
   CHECK(num_cols == 3);
 }
 
-TEST_CASE("SQLDescribeCol available after SQLPrepare without execute.", "[query][prepare]") {
+TEST_CASE("SQLDescribeCol available after SQLPrepare without execute.", "[e2e][query][prepare]") {
   // Doc: "An application typically calls SQLDescribeCol after a call to SQLPrepare
   //       and before or after the associated call to SQLExecute."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqldescribecol-function#comments
@@ -245,7 +246,7 @@ TEST_CASE("SQLDescribeCol available after SQLPrepare without execute.", "[query]
 // SQLPrepareW (wide variant)
 // =============================================================================
 
-TEST_CASE("SQLPrepareW + SQLExecute basic flow.", "[query][prepare]") {
+TEST_CASE("SQLPrepareW + SQLExecute basic flow.", "[e2e][query][prepare]") {
   // Doc: "SQLPrepareW is the Unicode version of SQLPrepare."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function
 
@@ -274,7 +275,7 @@ TEST_CASE("SQLPrepareW + SQLExecute basic flow.", "[query][prepare]") {
   CHECK(value == 88);
 }
 
-TEST_CASE("SQLPrepareW with Unicode content in query.", "[query][prepare]") {
+TEST_CASE("SQLPrepareW with Unicode content in query.", "[e2e][query][prepare]") {
   SKIP_WINDOWS_STRING_ENCODING();
   // Doc: "SQLPrepareW is the Unicode version of SQLPrepare."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function
@@ -304,7 +305,7 @@ TEST_CASE("SQLPrepareW with Unicode content in query.", "[query][prepare]") {
 // SQLExecute Behavior
 // =============================================================================
 
-TEST_CASE("SQLExecute without prior SQLPrepare returns HY010.", "[query][prepare][error]") {
+TEST_CASE("SQLExecute without prior SQLPrepare returns HY010.", "[e2e][query][prepare][error]") {
   // Doc: "HY010 - Function sequence error: ... The StatementHandle was not prepared."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlexecute-function#diagnostics
 
@@ -329,7 +330,7 @@ TEST_CASE("SQLExecute without prior SQLPrepare returns HY010.", "[query][prepare
   }
 }
 
-TEST_CASE("SQLExecute with bound parameters via SQLBindParameter.", "[query][prepare]") {
+TEST_CASE("SQLExecute with bound parameters via SQLBindParameter.", "[e2e][query][prepare]") {
   // Doc: "If the statement contains parameter markers, the application calls
   //       SQLBindParameter to bind each parameter to an application variable."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#comments
@@ -358,7 +359,7 @@ TEST_CASE("SQLExecute with bound parameters via SQLBindParameter.", "[query][pre
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "bound_value");
 }
 
-TEST_CASE("SQLExecute with different parameter values on re-execution.", "[query][prepare]") {
+TEST_CASE("SQLExecute with different parameter values on re-execution.", "[e2e][query][prepare]") {
   // Doc: "The application can reuse the SQL statement by calling SQLExecute
   //       with new parameter values."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#comments
@@ -403,7 +404,7 @@ TEST_CASE("SQLExecute with different parameter values on re-execution.", "[query
 }
 
 TEST_CASE("SQLExecute returns 24000 when cursor is not closed before re-execute of SELECT.",
-          "[query][prepare][error]") {
+          "[e2e][query][prepare][error]") {
   // Doc: "24000 - Invalid cursor state: A cursor was open on the StatementHandle."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlexecute-function#diagnostics
 
@@ -430,7 +431,7 @@ TEST_CASE("SQLExecute returns 24000 when cursor is not closed before re-execute 
 // SQLExecDirect Enhancements
 // =============================================================================
 
-TEST_CASE("SQLExecDirectW basic flow.", "[query][prepare]") {
+TEST_CASE("SQLExecDirectW basic flow.", "[e2e][query][prepare]") {
   // Doc: "SQLExecDirect submits an SQL statement for one-time execution."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlexecdirect-function#summary
 
@@ -456,7 +457,7 @@ TEST_CASE("SQLExecDirectW basic flow.", "[query][prepare]") {
   CHECK(value == 123);
 }
 
-TEST_CASE("SQLExecDirect with bound parameters via SQLBindParameter.", "[query][prepare]") {
+TEST_CASE("SQLExecDirect with bound parameters via SQLBindParameter.", "[e2e][query][prepare]") {
   // Doc: "If the statement contains parameter markers, the application uses
   //       SQLBindParameter to bind each parameter to an application variable.
   //       These steps must be done before passing the SQL statement to SQLExecDirect."
@@ -487,7 +488,7 @@ TEST_CASE("SQLExecDirect with bound parameters via SQLBindParameter.", "[query][
 // SQLPrepare Error Cases
 // =============================================================================
 
-TEST_CASE("SQLPrepare with null statement handle returns SQL_INVALID_HANDLE.", "[query][prepare][error]") {
+TEST_CASE("SQLPrepare with null statement handle returns SQL_INVALID_HANDLE.", "[e2e][query][prepare][error]") {
   // Doc: "SQL_INVALID_HANDLE - The StatementHandle was not a valid statement handle."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#returns
 
@@ -498,7 +499,7 @@ TEST_CASE("SQLPrepare with null statement handle returns SQL_INVALID_HANDLE.", "
   REQUIRE(ret == SQL_INVALID_HANDLE);
 }
 
-TEST_CASE("SQLPrepare with null SQL text pointer returns HY009.", "[query][prepare][error]") {
+TEST_CASE("SQLPrepare with null SQL text pointer returns HY009.", "[e2e][query][prepare][error]") {
   // Doc: "HY009 - Invalid use of null pointer: The argument StatementText was a null pointer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#diagnostics
 
@@ -514,7 +515,7 @@ TEST_CASE("SQLPrepare with null SQL text pointer returns HY009.", "[query][prepa
   CHECK(get_sqlstate(stmt) == "HY009");
 }
 
-TEST_CASE("SQLPrepare with negative TextLength returns HY090.", "[query][prepare][error]") {
+TEST_CASE("SQLPrepare with negative TextLength returns HY090.", "[e2e][query][prepare][error]") {
   // Doc: "HY090 - Invalid string or buffer length: The argument TextLength was
   //       less than or equal to 0 but not equal to SQL_NTS."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#diagnostics
@@ -540,7 +541,7 @@ TEST_CASE("SQLPrepare with negative TextLength returns HY090.", "[query][prepare
   }
 }
 
-TEST_CASE("SQLPrepare with zero TextLength returns HY090.", "[query][prepare][error]") {
+TEST_CASE("SQLPrepare with zero TextLength returns HY090.", "[e2e][query][prepare][error]") {
   // Doc: "HY090 - Invalid string or buffer length: The argument TextLength was
   //       less than or equal to 0 but not equal to SQL_NTS."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#diagnostics
@@ -563,7 +564,7 @@ TEST_CASE("SQLPrepare with zero TextLength returns HY090.", "[query][prepare][er
   }
 }
 
-TEST_CASE("SQLPrepare with empty SQL string returns HY090.", "[query][prepare][error]") {
+TEST_CASE("SQLPrepare with empty SQL string returns HY090.", "[e2e][query][prepare][error]") {
   // Doc: "HY090 - Invalid string or buffer length"
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#diagnostics
 
@@ -593,7 +594,7 @@ TEST_CASE("SQLPrepare with empty SQL string returns HY090.", "[query][prepare][e
   }
 }
 
-TEST_CASE("SQLPrepare with invalid SQL syntax returns 42000.", "[query][prepare][error]") {
+TEST_CASE("SQLPrepare with invalid SQL syntax returns 42000.", "[e2e][query][prepare][error]") {
   // Doc: "42000 - Syntax error or access violation: The SQL statement contained
   //       in *StatementText was not valid."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#diagnostics
@@ -610,7 +611,7 @@ TEST_CASE("SQLPrepare with invalid SQL syntax returns 42000.", "[query][prepare]
   CHECK(get_sqlstate(stmt) == "42000");
 }
 
-TEST_CASE("SQLPrepare with cursor already open returns 24000.", "[query][prepare][error]") {
+TEST_CASE("SQLPrepare with cursor already open returns 24000.", "[e2e][query][prepare][error]") {
   // Doc: "24000 - Invalid cursor state: A cursor was open on the StatementHandle."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#diagnostics
 
@@ -634,7 +635,7 @@ TEST_CASE("SQLPrepare with cursor already open returns 24000.", "[query][prepare
 // DDL / DML Edge Cases
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "DDL via SQLPrepare + SQLExecute.", "[query][prepare]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "DDL via SQLPrepare + SQLExecute.", "[e2e][query][prepare]") {
   // Doc: "SQLPrepare prepares an SQL string for execution."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#summary
 
@@ -661,7 +662,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "DDL via SQLPrepare + SQLExecute.", "[query]
   CHECK(count == 0);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "DML returning SQL_NO_DATA via SQLPrepare + SQLExecute.", "[query][prepare]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "DML returning SQL_NO_DATA via SQLPrepare + SQLExecute.", "[e2e][query][prepare]") {
   // Doc: "SQL_NO_DATA is returned if the SQL statement was an UPDATE, INSERT,
   //       or DELETE statement that did not affect any rows."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlexecute-function#returns
@@ -680,7 +681,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "DML returning SQL_NO_DATA via SQLPrepare + 
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "INSERT via SQLPrepare + SQLExecute with verify.", "[query][prepare]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "INSERT via SQLPrepare + SQLExecute with verify.", "[e2e][query][prepare]") {
   // Doc: "SQLPrepare prepares an SQL string for execution."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlprepare-function#summary
 

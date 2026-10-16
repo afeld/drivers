@@ -114,9 +114,9 @@ public class DecfloatTest : IClassFixture<ITFixture>
         Assert.False(reader.Read(), "Expected exactly one row");
     }
 
-    // Scenario: should handle NULL values from literals
+    // Scenario: should handle NULL values from literals for decfloat
     [SnowflakeFact]
-    public void ShouldHandleNullValuesFromLiterals()
+    public void ShouldHandleNullValuesFromLiteralsForDecfloat()
     {
         Skip.FutureMilestone();
 
@@ -137,9 +137,9 @@ public class DecfloatTest : IClassFixture<ITFixture>
         Assert.False(reader.Read(), "Expected exactly one row");
     }
 
-    // Scenario: should download large result set with multiple chunks from GENERATOR
+    // Scenario: should download large result set with multiple chunks from GENERATOR for decfloat
     [SnowflakeFact]
-    public void ShouldDownloadLargeResultSetWithMultipleChunksFromGenerator()
+    public void ShouldDownloadLargeResultSetWithMultipleChunksFromGeneratorForDecfloat()
     {
         Skip.FutureMilestone();
 
@@ -278,9 +278,9 @@ public class DecfloatTest : IClassFixture<ITFixture>
         Assert.Contains("1e16384", results);
     }
 
-    // Scenario: should handle NULL values from table
+    // Scenario: should handle NULL values from table for decfloat
     [SnowflakeFact]
-    public void ShouldHandleNullValuesFromTable()
+    public void ShouldHandleNullValuesFromTableForDecfloat()
     {
         Skip.FutureMilestone();
 
@@ -315,9 +315,9 @@ public class DecfloatTest : IClassFixture<ITFixture>
         Assert.False(reader.Read(), "Expected exactly 4 rows");
     }
 
-    // Scenario: should download large result set with multiple chunks from table
+    // Scenario: should download large result set with multiple chunks from table for decfloat
     [SnowflakeFact]
-    public void ShouldDownloadLargeResultSetWithMultipleChunksFromTable()
+    public void ShouldDownloadLargeResultSetWithMultipleChunksFromTableForDecfloat()
     {
         Skip.FutureMilestone();
 

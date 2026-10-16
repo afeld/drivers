@@ -14,7 +14,7 @@
 // SQL_C_DOUBLE
 // ============================================================================
 
-TEST_CASE("DECFLOAT to SQL_C_DOUBLE", "[decfloat][conversion][c_float]") {
+TEST_CASE("DECFLOAT to SQL_C_DOUBLE", "[e2e][types][decfloat][conversion][c_float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -42,7 +42,7 @@ TEST_CASE("DECFLOAT to SQL_C_DOUBLE", "[decfloat][conversion][c_float]") {
 // SQL_C_FLOAT
 // ============================================================================
 
-TEST_CASE("DECFLOAT to SQL_C_FLOAT", "[decfloat][conversion][c_float]") {
+TEST_CASE("DECFLOAT to SQL_C_FLOAT", "[e2e][types][decfloat][conversion][c_float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -65,7 +65,7 @@ TEST_CASE("DECFLOAT to SQL_C_FLOAT", "[decfloat][conversion][c_float]") {
 // PRECISION LOSS
 // ============================================================================
 
-TEST_CASE("DECFLOAT precision loss to SQL_C_DOUBLE", "[decfloat][conversion][c_float][precision]") {
+TEST_CASE("DECFLOAT precision loss to SQL_C_DOUBLE", "[e2e][types][decfloat][conversion][c_float][precision]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -81,7 +81,7 @@ TEST_CASE("DECFLOAT precision loss to SQL_C_DOUBLE", "[decfloat][conversion][c_f
 // OVERFLOW
 // ============================================================================
 
-TEST_CASE("DECFLOAT SQL_C_FLOAT overflow", "[decfloat][conversion][c_float][22003]") {
+TEST_CASE("DECFLOAT SQL_C_FLOAT overflow", "[e2e][types][decfloat][conversion][c_float][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -91,7 +91,7 @@ TEST_CASE("DECFLOAT SQL_C_FLOAT overflow", "[decfloat][conversion][c_float][2200
   check_numeric_out_of_range<SQL_C_FLOAT>(conn.execute_fetch("SELECT '3.5E38'::DECFLOAT"), 1);
 }
 
-TEST_CASE("DECFLOAT SQL_C_DOUBLE overflow", "[decfloat][conversion][c_float][22003]") {
+TEST_CASE("DECFLOAT SQL_C_DOUBLE overflow", "[e2e][types][decfloat][conversion][c_float][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -105,7 +105,7 @@ TEST_CASE("DECFLOAT SQL_C_DOUBLE overflow", "[decfloat][conversion][c_float][220
 // SQLBindCol
 // ============================================================================
 
-TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_DOUBLE", "[decfloat][conversion][c_float][bindcol]") {
+TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_DOUBLE", "[e2e][types][decfloat][conversion][c_float][bindcol]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -135,7 +135,7 @@ TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_DOUBLE", "[decfloat][conversion][
 // NULL handling
 // ============================================================================
 
-TEST_CASE("DECFLOAT NULL to floating-point C types", "[decfloat][conversion][c_float][null]") {
+TEST_CASE("DECFLOAT NULL to floating-point C types", "[e2e][types][decfloat][conversion][c_float][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

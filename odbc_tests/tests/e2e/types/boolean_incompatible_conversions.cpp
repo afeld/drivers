@@ -20,7 +20,8 @@
 // INCOMPATIBLE CONVERSIONS - Boolean to Temporal C Types
 // ============================================================================
 
-TEST_CASE("should fail converting boolean to temporal C types", "[datatype][boolean][conversion][negative]") {
+TEST_CASE("should fail converting boolean to temporal C types",
+          "[e2e][types][datatype][boolean][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -50,7 +51,7 @@ TEST_CASE("should fail converting boolean to temporal C types", "[datatype][bool
 // INCOMPATIBLE CONVERSIONS - Boolean to GUID C Type
 // ============================================================================
 
-TEST_CASE("should fail converting boolean to SQL_C_GUID", "[datatype][boolean][conversion][negative]") {
+TEST_CASE("should fail converting boolean to SQL_C_GUID", "[e2e][types][datatype][boolean][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

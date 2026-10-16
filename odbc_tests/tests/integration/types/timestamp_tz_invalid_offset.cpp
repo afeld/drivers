@@ -15,7 +15,8 @@
 #include "odbc_matchers.hpp"
 #include "test_setup.hpp"
 
-TEST_CASE("should reject an invalid TIMESTAMP_TZ biased offset", "[datatype][timestamp_tz][conversion][char]") {
+TEST_CASE("should reject an invalid TIMESTAMP_TZ biased offset",
+          "[integration][types][datatype][timestamp_tz][conversion][char]") {
   // Given the server returns a TIMESTAMP_TZ Arrow value whose biased offset is below zero
   WiremockClient wm;
   wm.add_mapping_file("auth/login_success_any.json");

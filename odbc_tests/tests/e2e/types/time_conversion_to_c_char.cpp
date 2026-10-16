@@ -16,7 +16,7 @@
 // SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("TIME to SQL_C_CHAR", "[time][conversion][c_char]") {
+TEST_CASE("TIME to SQL_C_CHAR", "[e2e][types][time][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -50,7 +50,7 @@ TEST_CASE("TIME to SQL_C_CHAR", "[time][conversion][c_char]") {
   }
 }
 
-TEST_CASE("TIME to SQL_C_CHAR exact buffer fit", "[time][conversion][c_char]") {
+TEST_CASE("TIME to SQL_C_CHAR exact buffer fit", "[e2e][types][time][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -66,7 +66,7 @@ TEST_CASE("TIME to SQL_C_CHAR exact buffer fit", "[time][conversion][c_char]") {
   CHECK(std::string(buffer) == "14:30:45");
 }
 
-TEST_CASE("TIME to SQL_C_CHAR chunked retrieval", "[time][conversion][c_char]") {
+TEST_CASE("TIME to SQL_C_CHAR chunked retrieval", "[e2e][types][time][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -98,7 +98,7 @@ TEST_CASE("TIME to SQL_C_CHAR chunked retrieval", "[time][conversion][c_char]") 
   }
 }
 
-TEST_CASE("TIME to SQL_C_CHAR fractional truncation", "[time][conversion][c_char][01004]") {
+TEST_CASE("TIME to SQL_C_CHAR fractional truncation", "[e2e][types][time][conversion][c_char][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -125,7 +125,7 @@ TEST_CASE("TIME to SQL_C_CHAR fractional truncation", "[time][conversion][c_char
   }
 }
 
-TEST_CASE("TIME to SQL_C_CHAR buffer too small", "[time][conversion][c_char][22003]") {
+TEST_CASE("TIME to SQL_C_CHAR buffer too small", "[e2e][types][time][conversion][c_char][22003]") {
   SKIP_OLD_DRIVER("BD#38", "old driver has undefined behavior on undersized CHAR buffers (SIGABRT)");
   // Given Snowflake client is logged in
   Connection conn;
@@ -143,7 +143,7 @@ TEST_CASE("TIME to SQL_C_CHAR buffer too small", "[time][conversion][c_char][220
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("TIME NULL to SQL_C_CHAR", "[time][conversion][c_char][null]") {
+TEST_CASE("TIME NULL to SQL_C_CHAR", "[e2e][types][time][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -158,7 +158,7 @@ TEST_CASE("TIME NULL to SQL_C_CHAR", "[time][conversion][c_char][null]") {
 // SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("TIME to SQL_C_WCHAR", "[time][conversion][c_wchar]") {
+TEST_CASE("TIME to SQL_C_WCHAR", "[e2e][types][time][conversion][c_wchar]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -187,7 +187,7 @@ TEST_CASE("TIME to SQL_C_WCHAR", "[time][conversion][c_wchar]") {
   }
 }
 
-TEST_CASE("TIME to SQL_C_WCHAR exact buffer fit", "[time][conversion][c_wchar]") {
+TEST_CASE("TIME to SQL_C_WCHAR exact buffer fit", "[e2e][types][time][conversion][c_wchar]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -202,7 +202,7 @@ TEST_CASE("TIME to SQL_C_WCHAR exact buffer fit", "[time][conversion][c_wchar]")
   CHECK(sf::wide::decode_wide_cstr(buffer) == U"14:30:45");
 }
 
-TEST_CASE("TIME to SQL_C_WCHAR fractional truncation", "[time][conversion][c_wchar][01004]") {
+TEST_CASE("TIME to SQL_C_WCHAR fractional truncation", "[e2e][types][time][conversion][c_wchar][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -228,7 +228,7 @@ TEST_CASE("TIME to SQL_C_WCHAR fractional truncation", "[time][conversion][c_wch
   }
 }
 
-TEST_CASE("TIME to SQL_C_WCHAR buffer too small", "[time][conversion][c_wchar][22003]") {
+TEST_CASE("TIME to SQL_C_WCHAR buffer too small", "[e2e][types][time][conversion][c_wchar][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -248,7 +248,7 @@ TEST_CASE("TIME to SQL_C_WCHAR buffer too small", "[time][conversion][c_wchar][2
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("TIME NULL to SQL_C_WCHAR", "[time][conversion][c_wchar][null]") {
+TEST_CASE("TIME NULL to SQL_C_WCHAR", "[e2e][types][time][conversion][c_wchar][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

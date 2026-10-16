@@ -165,7 +165,7 @@ std::string joined_text_for_state(const std::vector<DiagRec>& records, const std
 }  // namespace
 
 TEST_CASE("should report session-max sizes when DEFAULT_VARCHAR_SIZE and DEFAULT_BINARY_SIZE are unset",
-          "[datatype][string][binary][default_varchar_binary_size]") {
+          "[e2e][types][datatype][string][binary][default_varchar_binary_size]") {
   // Given a connection with both keys unset
   SizedConn sized("");
   create_size_table(sized.conn);
@@ -188,7 +188,7 @@ TEST_CASE("should report session-max sizes when DEFAULT_VARCHAR_SIZE and DEFAULT
 }
 
 TEST_CASE("should rewrite max-length VARCHAR and BINARY metadata with DEFAULT_VARCHAR_SIZE and DEFAULT_BINARY_SIZE",
-          "[datatype][string][binary][default_varchar_binary_size]") {
+          "[e2e][types][datatype][string][binary][default_varchar_binary_size]") {
   // Given DEFAULT_VARCHAR_SIZE=2000 and DEFAULT_BINARY_SIZE=1000
   SizedConn sized("DEFAULT_VARCHAR_SIZE=2000;DEFAULT_BINARY_SIZE=1000;");
   create_size_table(sized.conn);
@@ -220,7 +220,7 @@ TEST_CASE("should rewrite max-length VARCHAR and BINARY metadata with DEFAULT_VA
 }
 
 TEST_CASE("should apply swapped DEFAULT_VARCHAR_SIZE and DEFAULT_BINARY_SIZE to SQLColumns sizes",
-          "[datatype][string][binary][default_varchar_binary_size]") {
+          "[e2e][types][datatype][string][binary][default_varchar_binary_size]") {
   // Given swapped sizes, DEFAULT_BINARY_SIZE=2000 and DEFAULT_VARCHAR_SIZE=1000
   SizedConn sized("DEFAULT_BINARY_SIZE=2000;DEFAULT_VARCHAR_SIZE=1000;");
   create_size_table(sized.conn);
@@ -247,7 +247,7 @@ TEST_CASE("should apply swapped DEFAULT_VARCHAR_SIZE and DEFAULT_BINARY_SIZE to 
 }
 
 TEST_CASE("should report the same DEFAULT_VARCHAR_SIZE and DEFAULT_BINARY_SIZE on SQLColumns as SQLDescribeCol",
-          "[datatype][string][binary][default_varchar_binary_size]") {
+          "[e2e][types][datatype][string][binary][default_varchar_binary_size]") {
   // Given DEFAULT_VARCHAR_SIZE=2000 and DEFAULT_BINARY_SIZE=1000
   SizedConn sized("DEFAULT_VARCHAR_SIZE=2000;DEFAULT_BINARY_SIZE=1000;");
   create_size_table(sized.conn);
@@ -269,7 +269,7 @@ TEST_CASE("should report the same DEFAULT_VARCHAR_SIZE and DEFAULT_BINARY_SIZE o
 }
 
 TEST_CASE("should accept DEFAULT_VARCHAR_SIZE and DEFAULT_BINARY_SIZE and report only unrecognized keys as 01S00",
-          "[datatype][string][binary][default_varchar_binary_size]") {
+          "[e2e][types][datatype][string][binary][default_varchar_binary_size]") {
   // Given a connection string that pairs both keys with a key neither driver accepts
   const std::string conn_str =
       get_connection_string() + "DEFAULT_VARCHAR_SIZE=2000;DEFAULT_BINARY_SIZE=1000;INVALIDKEY=abc;";

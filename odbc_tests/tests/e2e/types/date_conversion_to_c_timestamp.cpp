@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP", "[date][conversion][c_timestamp]") {
+TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP", "[e2e][types][date][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -24,7 +24,7 @@ TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP", "[date][conversion][c_timestamp]") {
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP boundary values", "[date][conversion][c_timestamp]") {
+TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP boundary values", "[e2e][types][date][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -94,7 +94,7 @@ TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP boundary values", "[date][conversion][c_
   }
 }
 
-TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP far future", "[date][conversion][c_timestamp][edge]") {
+TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP far future", "[e2e][types][date][conversion][c_timestamp][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -111,7 +111,7 @@ TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP far future", "[date][conversion][c_times
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP far past", "[date][conversion][c_timestamp][edge]") {
+TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP far past", "[e2e][types][date][conversion][c_timestamp][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -128,7 +128,7 @@ TEST_CASE("DATE to SQL_C_TYPE_TIMESTAMP far past", "[date][conversion][c_timesta
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("DATE NULL to SQL_C_TYPE_TIMESTAMP", "[date][conversion][c_timestamp][null]") {
+TEST_CASE("DATE NULL to SQL_C_TYPE_TIMESTAMP", "[e2e][types][date][conversion][c_timestamp][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

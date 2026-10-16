@@ -8,7 +8,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("TIME to SQL_C_TYPE_TIME", "[time][conversion][c_time]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIME", "[e2e][types][time][conversion][c_time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -21,7 +21,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIME", "[time][conversion][c_time]") {
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIME midnight", "[time][conversion][c_time]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIME midnight", "[e2e][types][time][conversion][c_time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -34,7 +34,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIME midnight", "[time][conversion][c_time]") {
   CHECK(time.second == 0);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIME end of day", "[time][conversion][c_time]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIME end of day", "[e2e][types][time][conversion][c_time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -47,7 +47,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIME end of day", "[time][conversion][c_time]") {
   CHECK(time.second == 59);
 }
 
-TEST_CASE("TIME to SQL_C_TYPE_TIME with fractional truncation", "[time][conversion][c_time][truncation]") {
+TEST_CASE("TIME to SQL_C_TYPE_TIME with fractional truncation", "[e2e][types][time][conversion][c_time][truncation]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -62,7 +62,7 @@ TEST_CASE("TIME to SQL_C_TYPE_TIME with fractional truncation", "[time][conversi
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIME NULL to SQL_C_TYPE_TIME", "[time][conversion][c_time][null]") {
+TEST_CASE("TIME NULL to SQL_C_TYPE_TIME", "[e2e][types][time][conversion][c_time][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -77,7 +77,7 @@ TEST_CASE("TIME NULL to SQL_C_TYPE_TIME", "[time][conversion][c_time][null]") {
 // SQL_C_DEFAULT
 // ============================================================================
 
-TEST_CASE("TIME to SQL_C_DEFAULT", "[time][conversion][c_default]") {
+TEST_CASE("TIME to SQL_C_DEFAULT", "[e2e][types][time][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -95,7 +95,7 @@ TEST_CASE("TIME to SQL_C_DEFAULT", "[time][conversion][c_default]") {
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIME to SQL_C_DEFAULT with fractional truncation", "[time][conversion][c_default][truncation]") {
+TEST_CASE("TIME to SQL_C_DEFAULT with fractional truncation", "[e2e][types][time][conversion][c_default][truncation]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -116,7 +116,7 @@ TEST_CASE("TIME to SQL_C_DEFAULT with fractional truncation", "[time][conversion
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIME NULL to SQL_C_DEFAULT", "[time][conversion][c_default][null]") {
+TEST_CASE("TIME NULL to SQL_C_DEFAULT", "[e2e][types][time][conversion][c_default][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -23,7 +23,7 @@
 // stage-binding error exists, so the retry match never runs and
 // `complete_async_poll` surfaces the failure with no JSON fallback.
 TEST_CASE("should retry with inline JSON bindings when the SYSTEM$BIND stage is disabled",
-          "[query][bindings][stage_binding_retry]") {
+          "[integration][query][bindings][stage_binding_retry]") {
   SKIP_OLD_DRIVER("BD#78", "Stage-binding-disabled retry is universal-driver-only");
 
   // Given CLIENT_STAGE_ARRAY_BINDING_THRESHOLD is 1, so a 2-row array bind selects

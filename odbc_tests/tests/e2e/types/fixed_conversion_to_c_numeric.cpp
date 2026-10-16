@@ -11,7 +11,7 @@
 #include "get_diag_rec.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_NUMERIC", "[fixed][conversion][c_numeric]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_NUMERIC", "[e2e][types][fixed][conversion][c_numeric]") {
   // Given A Snowflake connection is established
 
   // When NUMBER/DECIMAL values are fetched as SQL_C_NUMERIC
@@ -48,7 +48,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_NUMERIC", "[fixed][con
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_NUMERIC with SQL_DESC_PRECISION and SQL_DESC_SCALE",
-                 "[fixed][conversion][c_numeric][descriptor]") {
+                 "[e2e][types][fixed][conversion][c_numeric][descriptor]") {
   // Given A Snowflake connection is established
   // BD#13: old driver ignores SQL_DESC_PRECISION and SQL_DESC_SCALE, always using precision=38 scale=0.
   // New driver honours the descriptor settings.
@@ -262,7 +262,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_NUMERIC with SQL_DESC_
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_NUMERIC", "[fixed][conversion][c_numeric][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_NUMERIC",
+                 "[e2e][types][fixed][conversion][c_numeric][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL NUMBER value is queried

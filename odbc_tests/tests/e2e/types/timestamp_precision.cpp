@@ -9,7 +9,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_NTZ precision 0 truncates fractional seconds", "[timestamp][precision][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ precision 0 truncates fractional seconds", "[e2e][types][timestamp][precision][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -24,7 +24,7 @@ TEST_CASE("TIMESTAMP_NTZ precision 0 truncates fractional seconds", "[timestamp]
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIMESTAMP_NTZ precision 3 keeps milliseconds", "[timestamp][precision][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ precision 3 keeps milliseconds", "[e2e][types][timestamp][precision][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -37,7 +37,7 @@ TEST_CASE("TIMESTAMP_NTZ precision 3 keeps milliseconds", "[timestamp][precision
   CHECK(ts.fraction == 987000000);
 }
 
-TEST_CASE("TIMESTAMP_NTZ precision 6 keeps microseconds", "[timestamp][precision][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ precision 6 keeps microseconds", "[e2e][types][timestamp][precision][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -50,7 +50,7 @@ TEST_CASE("TIMESTAMP_NTZ precision 6 keeps microseconds", "[timestamp][precision
   CHECK(ts.fraction == 987654000);
 }
 
-TEST_CASE("TIMESTAMP_NTZ precision 9 keeps nanoseconds", "[timestamp][precision][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ precision 9 keeps nanoseconds", "[e2e][types][timestamp][precision][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -63,7 +63,7 @@ TEST_CASE("TIMESTAMP_NTZ precision 9 keeps nanoseconds", "[timestamp][precision]
   CHECK(ts.fraction == 987654321);
 }
 
-TEST_CASE("TIMESTAMP_LTZ precision variants", "[timestamp][precision][ltz]") {
+TEST_CASE("TIMESTAMP_LTZ precision variants", "[e2e][types][timestamp][precision][ltz]") {
   // Given Snowflake client is logged in with UTC timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -104,7 +104,7 @@ TEST_CASE("TIMESTAMP_LTZ precision variants", "[timestamp][precision][ltz]") {
   }
 }
 
-TEST_CASE("TIMESTAMP_TZ precision variants", "[timestamp][precision][tz]") {
+TEST_CASE("TIMESTAMP_TZ precision variants", "[e2e][types][timestamp][precision][tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -144,7 +144,7 @@ TEST_CASE("TIMESTAMP_TZ precision variants", "[timestamp][precision][tz]") {
   }
 }
 
-TEST_CASE("TIMESTAMP_NTZ precision affects SQL_C_CHAR output", "[timestamp][precision][c_char]") {
+TEST_CASE("TIMESTAMP_NTZ precision affects SQL_C_CHAR output", "[e2e][types][timestamp][precision][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 

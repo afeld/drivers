@@ -52,7 +52,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL SQL_C_BINARY buffer too small returns 
   CHECK(std::memcmp(tiny_buffer, "\xFF\xFF\xFF\xFF", sizeof(tiny_buffer)) == 0);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_BINARY", "[real][conversion][c_binary][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_BINARY", "[e2e][types][real][conversion][c_binary][null]") {
   // Given A Snowflake connection is established
   // When A NULL FLOAT value is queried
   auto stmt = conn.execute_fetch("SELECT NULL::FLOAT");

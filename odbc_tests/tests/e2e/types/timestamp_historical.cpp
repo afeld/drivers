@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_NTZ historical era year 1600", "[timestamp][historical][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ historical era year 1600", "[e2e][types][timestamp][historical][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -24,7 +24,7 @@ TEST_CASE("TIMESTAMP_NTZ historical era year 1600", "[timestamp][historical][ntz
   CHECK(ts.second == 0);
 }
 
-TEST_CASE("TIMESTAMP_NTZ far future year 3017", "[timestamp][historical][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ far future year 3017", "[e2e][types][timestamp][historical][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -41,7 +41,7 @@ TEST_CASE("TIMESTAMP_NTZ far future year 3017", "[timestamp][historical][ntz]") 
   CHECK(ts.second == 45);
 }
 
-TEST_CASE("TIMESTAMP_NTZ year 0001 minimum representable date", "[timestamp][historical][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ year 0001 minimum representable date", "[e2e][types][timestamp][historical][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -55,7 +55,7 @@ TEST_CASE("TIMESTAMP_NTZ year 0001 minimum representable date", "[timestamp][his
   CHECK(ts.day == 1);
 }
 
-TEST_CASE("TIMESTAMP_NTZ year 9999 maximum representable date", "[timestamp][historical][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ year 9999 maximum representable date", "[e2e][types][timestamp][historical][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -73,7 +73,7 @@ TEST_CASE("TIMESTAMP_NTZ year 9999 maximum representable date", "[timestamp][his
   CHECK(ts.fraction == 999999999);
 }
 
-TEST_CASE("TIMESTAMP_LTZ historical era year 1600", "[timestamp][historical][ltz]") {
+TEST_CASE("TIMESTAMP_LTZ historical era year 1600", "[e2e][types][timestamp][historical][ltz]") {
   // Given Snowflake client is logged in with UTC timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -88,7 +88,7 @@ TEST_CASE("TIMESTAMP_LTZ historical era year 1600", "[timestamp][historical][ltz
   CHECK(ts.day == 1);
 }
 
-TEST_CASE("TIMESTAMP_LTZ far future year 3017", "[timestamp][historical][ltz]") {
+TEST_CASE("TIMESTAMP_LTZ far future year 3017", "[e2e][types][timestamp][historical][ltz]") {
   // Given Snowflake client is logged in with UTC timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -103,7 +103,8 @@ TEST_CASE("TIMESTAMP_LTZ far future year 3017", "[timestamp][historical][ltz]") 
   CHECK(ts.day == 15);
 }
 
-TEST_CASE("TIMESTAMP_TZ historical era year 1600 with offset crossing date boundary", "[timestamp][historical][tz]") {
+TEST_CASE("TIMESTAMP_TZ historical era year 1600 with offset crossing date boundary",
+          "[e2e][types][timestamp][historical][tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -120,7 +121,7 @@ TEST_CASE("TIMESTAMP_TZ historical era year 1600 with offset crossing date bound
   CHECK(ts.second == 0);
 }
 
-TEST_CASE("TIMESTAMP_TZ far future year 3017", "[timestamp][historical][tz]") {
+TEST_CASE("TIMESTAMP_TZ far future year 3017", "[e2e][types][timestamp][historical][tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -137,7 +138,7 @@ TEST_CASE("TIMESTAMP_TZ far future year 3017", "[timestamp][historical][tz]") {
   CHECK(ts.second == 45);
 }
 
-TEST_CASE("TIMESTAMP_TZ year 0001 with positive offset", "[timestamp][historical][tz]") {
+TEST_CASE("TIMESTAMP_TZ year 0001 with positive offset", "[e2e][types][timestamp][historical][tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -160,7 +161,7 @@ TEST_CASE("TIMESTAMP_TZ year 0001 with positive offset", "[timestamp][historical
 // + 999_999_999ns, not 1970-01-01 00:00:00 + 999_999_999ns. A regression dropped the sign and
 // skipped the borrow on the JSON path; Arrow-format results were always correct. The two scales
 // per type cover both builders: scale 9 (struct epoch+fraction[+tz]) and scale 3 (combined Int64).
-TEST_CASE("TIMESTAMP_NTZ one nanosecond before epoch", "[timestamp][historical][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ one nanosecond before epoch", "[e2e][types][timestamp][historical][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -178,7 +179,7 @@ TEST_CASE("TIMESTAMP_NTZ one nanosecond before epoch", "[timestamp][historical][
   CHECK(ts.fraction == 999999999);
 }
 
-TEST_CASE("TIMESTAMP_NTZ half second before epoch at scale 3", "[timestamp][historical][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ half second before epoch at scale 3", "[e2e][types][timestamp][historical][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -196,7 +197,7 @@ TEST_CASE("TIMESTAMP_NTZ half second before epoch at scale 3", "[timestamp][hist
   CHECK(ts.fraction == 500000000);
 }
 
-TEST_CASE("TIMESTAMP_TZ one nanosecond before epoch", "[timestamp][historical][tz]") {
+TEST_CASE("TIMESTAMP_TZ one nanosecond before epoch", "[e2e][types][timestamp][historical][tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -214,7 +215,7 @@ TEST_CASE("TIMESTAMP_TZ one nanosecond before epoch", "[timestamp][historical][t
   CHECK(ts.fraction == 999999999);
 }
 
-TEST_CASE("TIMESTAMP_TZ half second before epoch at scale 3", "[timestamp][historical][tz]") {
+TEST_CASE("TIMESTAMP_TZ half second before epoch at scale 3", "[e2e][types][timestamp][historical][tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -232,7 +233,7 @@ TEST_CASE("TIMESTAMP_TZ half second before epoch at scale 3", "[timestamp][histo
   CHECK(ts.fraction == 500000000);
 }
 
-TEST_CASE("TIMESTAMP_LTZ one nanosecond before epoch", "[timestamp][historical][ltz]") {
+TEST_CASE("TIMESTAMP_LTZ one nanosecond before epoch", "[e2e][types][timestamp][historical][ltz]") {
   // Given Snowflake client is logged in with UTC timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -251,7 +252,7 @@ TEST_CASE("TIMESTAMP_LTZ one nanosecond before epoch", "[timestamp][historical][
   CHECK(ts.fraction == 999999999);
 }
 
-TEST_CASE("TIMESTAMP_LTZ half second before epoch at scale 3", "[timestamp][historical][ltz]") {
+TEST_CASE("TIMESTAMP_LTZ half second before epoch at scale 3", "[e2e][types][timestamp][historical][ltz]") {
   // Given Snowflake client is logged in with UTC timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -270,7 +271,7 @@ TEST_CASE("TIMESTAMP_LTZ half second before epoch at scale 3", "[timestamp][hist
   CHECK(ts.fraction == 500000000);
 }
 
-TEST_CASE("TIMESTAMP_NTZ historical dates as SQL_C_CHAR", "[timestamp][historical][c_char]") {
+TEST_CASE("TIMESTAMP_NTZ historical dates as SQL_C_CHAR", "[e2e][types][timestamp][historical][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 

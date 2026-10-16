@@ -16,7 +16,7 @@ static picojson::value parse_json(const std::string& text) {
   return v;
 }
 
-TEST_CASE("VARIANT to SQL_C_BINARY", "[variant][conversion][c_binary]") {
+TEST_CASE("VARIANT to SQL_C_BINARY", "[e2e][types][variant][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -33,7 +33,7 @@ TEST_CASE("VARIANT to SQL_C_BINARY", "[variant][conversion][c_binary]") {
   CHECK(json.is<picojson::object>());
 }
 
-TEST_CASE("VARIANT to SQL_C_BINARY array value", "[variant][conversion][c_binary]") {
+TEST_CASE("VARIANT to SQL_C_BINARY array value", "[e2e][types][variant][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -50,7 +50,7 @@ TEST_CASE("VARIANT to SQL_C_BINARY array value", "[variant][conversion][c_binary
   CHECK(json.is<picojson::array>());
 }
 
-TEST_CASE("VARIANT to SQL_C_BINARY empty object", "[variant][conversion][c_binary]") {
+TEST_CASE("VARIANT to SQL_C_BINARY empty object", "[e2e][types][variant][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -68,7 +68,7 @@ TEST_CASE("VARIANT to SQL_C_BINARY empty object", "[variant][conversion][c_binar
   CHECK(json.get<picojson::object>().empty());
 }
 
-TEST_CASE("VARIANT to SQL_C_BINARY nested value", "[variant][conversion][c_binary]") {
+TEST_CASE("VARIANT to SQL_C_BINARY nested value", "[e2e][types][variant][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -85,7 +85,7 @@ TEST_CASE("VARIANT to SQL_C_BINARY nested value", "[variant][conversion][c_binar
   CHECK(json.is<picojson::object>());
 }
 
-TEST_CASE("VARIANT NULL to SQL_C_BINARY", "[variant][conversion][c_binary][null]") {
+TEST_CASE("VARIANT NULL to SQL_C_BINARY", "[e2e][types][variant][conversion][c_binary][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

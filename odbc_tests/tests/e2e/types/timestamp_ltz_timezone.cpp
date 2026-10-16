@@ -9,7 +9,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_LTZ with America/New_York timezone", "[timestamp_ltz][conversion][timezone]") {
+TEST_CASE("TIMESTAMP_LTZ with America/New_York timezone", "[e2e][types][timestamp_ltz][conversion][timezone]") {
   // Given Snowflake client is logged in with America/New_York timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'America/New_York'");
@@ -42,7 +42,7 @@ TEST_CASE("TIMESTAMP_LTZ with America/New_York timezone", "[timestamp_ltz][conve
   }
 }
 
-TEST_CASE("TIMESTAMP_LTZ with Asia/Kolkata timezone", "[timestamp_ltz][conversion][timezone]") {
+TEST_CASE("TIMESTAMP_LTZ with Asia/Kolkata timezone", "[e2e][types][timestamp_ltz][conversion][timezone]") {
   // Given Snowflake client is logged in with Asia/Kolkata timezone (UTC+5:30)
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'Asia/Kolkata'");
@@ -60,7 +60,7 @@ TEST_CASE("TIMESTAMP_LTZ with Asia/Kolkata timezone", "[timestamp_ltz][conversio
   CHECK(ts.second == 0);
 }
 
-TEST_CASE("TIMESTAMP_LTZ with Pacific/Auckland timezone", "[timestamp_ltz][conversion][timezone]") {
+TEST_CASE("TIMESTAMP_LTZ with Pacific/Auckland timezone", "[e2e][types][timestamp_ltz][conversion][timezone]") {
   // Given Snowflake client is logged in with Pacific/Auckland timezone (UTC+12 or +13 DST)
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'Pacific/Auckland'");
@@ -79,7 +79,7 @@ TEST_CASE("TIMESTAMP_LTZ with Pacific/Auckland timezone", "[timestamp_ltz][conve
 }
 
 TEST_CASE("TIMESTAMP_LTZ timezone does not affect SQL_C_TYPE_TIMESTAMP struct",
-          "[timestamp_ltz][conversion][timezone]") {
+          "[e2e][types][timestamp_ltz][conversion][timezone]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -113,7 +113,8 @@ TEST_CASE("TIMESTAMP_LTZ timezone does not affect SQL_C_TYPE_TIMESTAMP struct",
   CHECK(ts_utc.second == ts_ist.second);
 }
 
-TEST_CASE("TIMESTAMP_LTZ timezone does not affect SQL_C_CHAR output", "[timestamp_ltz][conversion][timezone][c_char]") {
+TEST_CASE("TIMESTAMP_LTZ timezone does not affect SQL_C_CHAR output",
+          "[e2e][types][timestamp_ltz][conversion][timezone][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -129,7 +130,8 @@ TEST_CASE("TIMESTAMP_LTZ timezone does not affect SQL_C_CHAR output", "[timestam
   CHECK(str_utc == str_ny);
 }
 
-TEST_CASE("TIMESTAMP_LTZ implicit timezone from literal without offset", "[timestamp_ltz][conversion][timezone]") {
+TEST_CASE("TIMESTAMP_LTZ implicit timezone from literal without offset",
+          "[e2e][types][timestamp_ltz][conversion][timezone]") {
   // Given Snowflake client is logged in with two different timezones
   Connection conn;
 

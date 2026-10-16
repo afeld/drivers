@@ -11,7 +11,7 @@
 #include "get_data.hpp"
 #include "test_setup.hpp"
 
-TEST_CASE("should forward unrecognized connection option as session parameter", "[session]") {
+TEST_CASE("should forward unrecognized connection option as session parameter", "[e2e][session]") {
   // Given Snowflake client is logged in with connection option TIMEZONE set to
   // "Europe/Warsaw"
   auto conn_str = get_connection_string() + "TIMEZONE=Europe/Warsaw;";
@@ -25,7 +25,7 @@ TEST_CASE("should forward unrecognized connection option as session parameter", 
   CHECK(value == "Europe/Warsaw");
 }
 
-TEST_CASE("should enable session keep-alive via connection string", "[session]") {
+TEST_CASE("should enable session keep-alive via connection string", "[e2e][session]") {
   // Given Snowflake client is logged in with connection option CLIENT_SESSION_KEEP_ALIVE set to "true"
   auto conn_str = get_connection_string() + "CLIENT_SESSION_KEEP_ALIVE=true;";
   Connection conn(conn_str);
@@ -38,7 +38,7 @@ TEST_CASE("should enable session keep-alive via connection string", "[session]")
   CHECK(value == "true");
 }
 
-TEST_CASE("should set heartbeat frequency via connection string", "[session]") {
+TEST_CASE("should set heartbeat frequency via connection string", "[e2e][session]") {
   // Given Snowflake client is logged in with CLIENT_SESSION_KEEP_ALIVE=true and
   // CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY=1800
   auto conn_str = get_connection_string() +
@@ -55,7 +55,7 @@ TEST_CASE("should set heartbeat frequency via connection string", "[session]") {
   OLD_DRIVER_ONLY("BD#57") { CHECK(value == "3600"); }
 }
 
-TEST_CASE("should set CLIENT_PREFETCH_THREADS via connection string", "[session]") {
+TEST_CASE("should set CLIENT_PREFETCH_THREADS via connection string", "[e2e][session]") {
   // Given Snowflake client is logged in with connection option CLIENT_PREFETCH_THREADS set to 5
   auto conn_str = get_connection_string() + "CLIENT_PREFETCH_THREADS=5;";
   Connection conn(conn_str);
@@ -68,7 +68,7 @@ TEST_CASE("should set CLIENT_PREFETCH_THREADS via connection string", "[session]
   CHECK(value == "5");
 }
 
-TEST_CASE("should set CLIENT_PREFETCH_THREADS via ALTER SESSION", "[session]") {
+TEST_CASE("should set CLIENT_PREFETCH_THREADS via ALTER SESSION", "[e2e][session]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -81,7 +81,7 @@ TEST_CASE("should set CLIENT_PREFETCH_THREADS via ALTER SESSION", "[session]") {
   CHECK(value == "7");
 }
 
-TEST_CASE("should report canonical AUTOCOMMIT values through SQLGetConnectAttr", "[session][autocommit]") {
+TEST_CASE("should report canonical AUTOCOMMIT values through SQLGetConnectAttr", "[e2e][session][autocommit]") {
   struct TestCase {
     const char* value;
     SQLULEN expected;
@@ -111,7 +111,7 @@ TEST_CASE("should report canonical AUTOCOMMIT values through SQLGetConnectAttr",
   }
 }
 
-TEST_CASE("should reject non-boolean session parameter values", "[session][boolean-parameters]") {
+TEST_CASE("should reject non-boolean session parameter values", "[e2e][session][boolean-parameters]") {
   struct TestCase {
     const char* parameter;
     const char* value;

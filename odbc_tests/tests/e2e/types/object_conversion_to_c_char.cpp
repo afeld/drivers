@@ -28,7 +28,7 @@ static void check_json_eq(const std::string& actual, const std::string& expected
 // SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("OBJECT to SQL_C_CHAR", "[object][conversion][c_char]") {
+TEST_CASE("OBJECT to SQL_C_CHAR", "[e2e][types][object][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -48,7 +48,7 @@ TEST_CASE("OBJECT to SQL_C_CHAR", "[object][conversion][c_char]") {
   CHECK(json.get<picojson::object>().size() == 3);
 }
 
-TEST_CASE("OBJECT to SQL_C_CHAR nested", "[object][conversion][c_char]") {
+TEST_CASE("OBJECT to SQL_C_CHAR nested", "[e2e][types][object][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -65,7 +65,7 @@ TEST_CASE("OBJECT to SQL_C_CHAR nested", "[object][conversion][c_char]") {
   check_json_eq(deep, R"({"a":{"b":{"c":1}}})");
 }
 
-TEST_CASE("OBJECT to SQL_C_CHAR truncation", "[object][conversion][c_char][01004]") {
+TEST_CASE("OBJECT to SQL_C_CHAR truncation", "[e2e][types][object][conversion][c_char][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -82,7 +82,7 @@ TEST_CASE("OBJECT to SQL_C_CHAR truncation", "[object][conversion][c_char][01004
   CHECK(records[0].sqlState == "01004");
 }
 
-TEST_CASE("OBJECT NULL to SQL_C_CHAR", "[object][conversion][c_char][null]") {
+TEST_CASE("OBJECT NULL to SQL_C_CHAR", "[e2e][types][object][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -93,7 +93,7 @@ TEST_CASE("OBJECT NULL to SQL_C_CHAR", "[object][conversion][c_char][null]") {
   check_null_via_get_data(stmt, 1, SQL_C_CHAR);
 }
 
-TEST_CASE("OBJECT to SQL_C_CHAR null key omission", "[object][conversion][c_char]") {
+TEST_CASE("OBJECT to SQL_C_CHAR null key omission", "[e2e][types][object][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -109,7 +109,7 @@ TEST_CASE("OBJECT to SQL_C_CHAR null key omission", "[object][conversion][c_char
   CHECK(obj.find("c") == obj.end());
 }
 
-TEST_CASE("OBJECT to SQL_C_CHAR keep null", "[object][conversion][c_char]") {
+TEST_CASE("OBJECT to SQL_C_CHAR keep null", "[e2e][types][object][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -128,7 +128,7 @@ TEST_CASE("OBJECT to SQL_C_CHAR keep null", "[object][conversion][c_char]") {
   CHECK(c_it->second.is<picojson::null>());
 }
 
-TEST_CASE("OBJECT to SQL_C_CHAR parse_json NULL semantics", "[object][conversion][c_char]") {
+TEST_CASE("OBJECT to SQL_C_CHAR parse_json NULL semantics", "[e2e][types][object][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -157,7 +157,7 @@ TEST_CASE("OBJECT to SQL_C_CHAR parse_json NULL semantics", "[object][conversion
 // SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("OBJECT to SQL_C_WCHAR", "[object][conversion][c_char]") {
+TEST_CASE("OBJECT to SQL_C_WCHAR", "[e2e][types][object][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -170,7 +170,7 @@ TEST_CASE("OBJECT to SQL_C_WCHAR", "[object][conversion][c_char]") {
   check_json_eq(sf::wide::utf32_to_utf8(empty), "{}");
 }
 
-TEST_CASE("OBJECT to SQL_C_WCHAR truncation", "[object][conversion][c_char][01004]") {
+TEST_CASE("OBJECT to SQL_C_WCHAR truncation", "[e2e][types][object][conversion][c_char][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -187,7 +187,7 @@ TEST_CASE("OBJECT to SQL_C_WCHAR truncation", "[object][conversion][c_char][0100
   CHECK(records[0].sqlState == "01004");
 }
 
-TEST_CASE("OBJECT NULL to SQL_C_WCHAR", "[object][conversion][c_char][null]") {
+TEST_CASE("OBJECT NULL to SQL_C_WCHAR", "[e2e][types][object][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

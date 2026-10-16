@@ -174,7 +174,7 @@ SINGLE_GROUPS = ("unit", "integ", "e2e")
 # How to join multiple filters for each driver's test runner:
 #   rust:   "|" (pipe) — cargo test uses substring matching, so the pipeline
 #           splits on "|" and runs cargo test once per filter
-#   odbc:   "|" (regex OR) — ctest uses regex natively
+#   odbc:   "|" (regex OR) — ctest -L matches the regex against each label; anchor every alternative
 #   python: " " (space) — pytest takes space-separated paths
 #   java:   "|" (pipe) — pipeline splits into multiple --tests args
 DRIVER_SEPARATOR = {

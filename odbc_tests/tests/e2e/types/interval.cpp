@@ -31,7 +31,8 @@ void check_interval_char(const StatementHandleWrapper& stmt, SQLUSMALLINT col, c
 // TYPE CASTING
 // ============================================================================
 
-TEST_CASE("should cast INTERVAL values to appropriate type for YEAR TO MONTH and DAY TO SECOND", "[interval]") {
+TEST_CASE("should cast INTERVAL values to appropriate type for YEAR TO MONTH and DAY TO SECOND",
+          "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -68,7 +69,7 @@ TEST_CASE("should cast INTERVAL values to appropriate type for YEAR TO MONTH and
 // SELECT LITERALS
 // ============================================================================
 
-TEST_CASE("should select INTERVAL YEAR TO MONTH literals", "[interval]") {
+TEST_CASE("should select INTERVAL YEAR TO MONTH literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -88,7 +89,7 @@ TEST_CASE("should select INTERVAL YEAR TO MONTH literals", "[interval]") {
   check_interval_char(stmt, 5, "-11999999999", "-999999999-11");
 }
 
-TEST_CASE("should select INTERVAL DAY TO SECOND literals", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO SECOND literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -108,7 +109,7 @@ TEST_CASE("should select INTERVAL DAY TO SECOND literals", "[interval]") {
   check_interval_char(stmt, 5, "-8639999999999999.000", "-99999 23:59:59.999999000");
 }
 
-TEST_CASE("should select INTERVAL YEAR literals", "[interval]") {
+TEST_CASE("should select INTERVAL YEAR literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -126,7 +127,7 @@ TEST_CASE("should select INTERVAL YEAR literals", "[interval]") {
   check_interval_char(stmt, 5, "-1199999998.8", "-999999999-00");
 }
 
-TEST_CASE("should select INTERVAL MONTH literals", "[interval]") {
+TEST_CASE("should select INTERVAL MONTH literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -144,7 +145,7 @@ TEST_CASE("should select INTERVAL MONTH literals", "[interval]") {
   check_interval_char(stmt, 5, "-9999999.99", "-83333333-03");
 }
 
-TEST_CASE("should select INTERVAL DAY literals", "[interval]") {
+TEST_CASE("should select INTERVAL DAY literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -162,7 +163,7 @@ TEST_CASE("should select INTERVAL DAY literals", "[interval]") {
   check_interval_char(stmt, 5, "-86399999913600000.000000", "-999999999 00:00:00");
 }
 
-TEST_CASE("should select INTERVAL HOUR literals", "[interval]") {
+TEST_CASE("should select INTERVAL HOUR literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -180,7 +181,7 @@ TEST_CASE("should select INTERVAL HOUR literals", "[interval]") {
   check_interval_char(stmt, 5, "-3599999996400.000000000", "-41666666 15:00:00");
 }
 
-TEST_CASE("should select INTERVAL MINUTE literals", "[interval]") {
+TEST_CASE("should select INTERVAL MINUTE literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -198,7 +199,7 @@ TEST_CASE("should select INTERVAL MINUTE literals", "[interval]") {
   check_interval_char(stmt, 5, "-599999999.40000000000", "-694444 10:39:00");
 }
 
-TEST_CASE("should select INTERVAL SECOND literals", "[interval]") {
+TEST_CASE("should select INTERVAL SECOND literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -216,7 +217,7 @@ TEST_CASE("should select INTERVAL SECOND literals", "[interval]") {
   check_interval_char(stmt, 5, "-999999.999999999000", "-11574 01:46:39.999999000");
 }
 
-TEST_CASE("should select INTERVAL DAY TO HOUR literals", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO HOUR literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -232,7 +233,7 @@ TEST_CASE("should select INTERVAL DAY TO HOUR literals", "[interval]") {
   check_interval_char(stmt, 3, "-936000000.00000", "-1 02:00:00");
 }
 
-TEST_CASE("should select INTERVAL DAY TO HOUR max literal", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO HOUR max literal", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -243,7 +244,7 @@ TEST_CASE("should select INTERVAL DAY TO HOUR max literal", "[interval]") {
   check_interval_char(stmt, 1, "863999999964000000.00000", "999999999 23:00:00");
 }
 
-TEST_CASE("should select INTERVAL DAY TO HOUR min literal", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO HOUR min literal", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -254,7 +255,7 @@ TEST_CASE("should select INTERVAL DAY TO HOUR min literal", "[interval]") {
   check_interval_char(stmt, 1, "-863999999964000000.00000", "-999999999 23:00:00");
 }
 
-TEST_CASE("should select INTERVAL DAY TO MINUTE literals", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO MINUTE literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -270,7 +271,7 @@ TEST_CASE("should select INTERVAL DAY TO MINUTE literals", "[interval]") {
   check_interval_char(stmt, 3, "-9540000000.0000", "-1 02:30:00");
 }
 
-TEST_CASE("should select INTERVAL DAY TO MINUTE max literal", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO MINUTE max literal", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -281,7 +282,7 @@ TEST_CASE("should select INTERVAL DAY TO MINUTE max literal", "[interval]") {
   check_interval_char(stmt, 1, "8639999999994000000.0000", "999999999 23:59:00");
 }
 
-TEST_CASE("should select INTERVAL DAY TO MINUTE min literal", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO MINUTE min literal", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -292,7 +293,7 @@ TEST_CASE("should select INTERVAL DAY TO MINUTE min literal", "[interval]") {
   check_interval_char(stmt, 1, "-8639999999994000000.0000", "-999999999 23:59:00");
 }
 
-TEST_CASE("should select INTERVAL HOUR TO MINUTE literals", "[interval]") {
+TEST_CASE("should select INTERVAL HOUR TO MINUTE literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -312,7 +313,7 @@ TEST_CASE("should select INTERVAL HOUR TO MINUTE literals", "[interval]") {
   check_interval_char(stmt, 5, "-35999999999400.00000000", "-41666666 15:59:00");
 }
 
-TEST_CASE("should select INTERVAL HOUR TO SECOND literals", "[interval]") {
+TEST_CASE("should select INTERVAL HOUR TO SECOND literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -332,7 +333,7 @@ TEST_CASE("should select INTERVAL HOUR TO SECOND literals", "[interval]") {
   check_interval_char(stmt, 5, "-359999999999999.9999000", "-41666666 15:59:59.999999000");
 }
 
-TEST_CASE("should select INTERVAL MINUTE TO SECOND literals", "[interval]") {
+TEST_CASE("should select INTERVAL MINUTE TO SECOND literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -352,7 +353,7 @@ TEST_CASE("should select INTERVAL MINUTE TO SECOND literals", "[interval]") {
   check_interval_char(stmt, 5, "-5999999999.9999999000", "-694444 10:39:59.999999000");
 }
 
-TEST_CASE("should select NULL INTERVAL literals", "[interval]") {
+TEST_CASE("should select NULL INTERVAL literals", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -369,7 +370,7 @@ TEST_CASE("should select NULL INTERVAL literals", "[interval]") {
   CHECK(get_data_optional<SQL_C_CHAR>(stmt, 4) == std::nullopt);
 }
 
-TEST_CASE("should treat INTERVAL without explicit part as seconds", "[interval]") {
+TEST_CASE("should treat INTERVAL without explicit part as seconds", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER("INTERVAL", "07006: TIMESTAMP + INTERVAL result cannot be read as SQL_C_CHAR");
   // Given Snowflake client is logged in
   Connection conn;
@@ -389,7 +390,7 @@ TEST_CASE("should treat INTERVAL without explicit part as seconds", "[interval]"
 // SELECT FROM TABLE
 // ============================================================================
 
-TEST_CASE("should select INTERVAL YEAR TO MONTH values from table", "[interval]") {
+TEST_CASE("should select INTERVAL YEAR TO MONTH values from table", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -427,7 +428,7 @@ TEST_CASE("should select INTERVAL YEAR TO MONTH values from table", "[interval]"
   CHECK(results[5] == std::nullopt);
 }
 
-TEST_CASE("should select INTERVAL DAY TO SECOND values from table", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO SECOND values from table", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -466,7 +467,7 @@ TEST_CASE("should select INTERVAL DAY TO SECOND values from table", "[interval]"
   CHECK(results[5] == std::nullopt);
 }
 
-TEST_CASE("should select INTERVAL YEAR(2) TO MONTH values from table", "[interval]") {
+TEST_CASE("should select INTERVAL YEAR(2) TO MONTH values from table", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -504,7 +505,7 @@ TEST_CASE("should select INTERVAL YEAR(2) TO MONTH values from table", "[interva
   CHECK(results[5] == std::nullopt);
 }
 
-TEST_CASE("should select INTERVAL YEAR(7) TO MONTH values from table", "[interval]") {
+TEST_CASE("should select INTERVAL YEAR(7) TO MONTH values from table", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -542,7 +543,7 @@ TEST_CASE("should select INTERVAL YEAR(7) TO MONTH values from table", "[interva
   CHECK(results[5] == std::nullopt);
 }
 
-TEST_CASE("should select INTERVAL DAY(3) TO SECOND values from table", "[interval]") {
+TEST_CASE("should select INTERVAL DAY(3) TO SECOND values from table", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -586,7 +587,8 @@ TEST_CASE("should select INTERVAL DAY(3) TO SECOND values from table", "[interva
 // BINDING
 // ============================================================================
 
-TEST_CASE("should insert and select back INTERVAL YEAR TO MONTH values using parameter binding", "[interval]") {
+TEST_CASE("should insert and select back INTERVAL YEAR TO MONTH values using parameter binding",
+          "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -643,7 +645,8 @@ TEST_CASE("should insert and select back INTERVAL YEAR TO MONTH values using par
   CHECK(results[5] == std::nullopt);
 }
 
-TEST_CASE("should insert and select back INTERVAL DAY TO SECOND values using parameter binding", "[interval]") {
+TEST_CASE("should insert and select back INTERVAL DAY TO SECOND values using parameter binding",
+          "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -701,7 +704,7 @@ TEST_CASE("should insert and select back INTERVAL DAY TO SECOND values using par
   CHECK(results[5] == std::nullopt);
 }
 
-TEST_CASE("should select INTERVAL YEAR TO MONTH values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL YEAR TO MONTH values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -738,7 +741,7 @@ TEST_CASE("should select INTERVAL YEAR TO MONTH values using parameter binding",
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "11999999999");
 }
 
-TEST_CASE("should select INTERVAL DAY TO SECOND values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO SECOND values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -776,7 +779,7 @@ TEST_CASE("should select INTERVAL DAY TO SECOND values using parameter binding",
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "8639999999999999.000");
 }
 
-TEST_CASE("should select NULL INTERVAL values using parameter binding", "[interval]") {
+TEST_CASE("should select NULL INTERVAL values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -807,7 +810,7 @@ TEST_CASE("should select NULL INTERVAL values using parameter binding", "[interv
   CHECK(get_data_optional<SQL_C_CHAR>(stmt, 2) == std::nullopt);
 }
 
-TEST_CASE("should select INTERVAL YEAR values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL YEAR values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -843,7 +846,7 @@ TEST_CASE("should select INTERVAL YEAR values using parameter binding", "[interv
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "-1199999998.8");
 }
 
-TEST_CASE("should select INTERVAL MONTH values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL MONTH values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -879,7 +882,7 @@ TEST_CASE("should select INTERVAL MONTH values using parameter binding", "[inter
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "-9999999.99");
 }
 
-TEST_CASE("should select INTERVAL DAY values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -914,7 +917,7 @@ TEST_CASE("should select INTERVAL DAY values using parameter binding", "[interva
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "-86399999913600000.000000");
 }
 
-TEST_CASE("should select INTERVAL HOUR values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL HOUR values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -950,7 +953,7 @@ TEST_CASE("should select INTERVAL HOUR values using parameter binding", "[interv
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "-3599999996400.000000000");
 }
 
-TEST_CASE("should select INTERVAL MINUTE values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL MINUTE values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -986,7 +989,7 @@ TEST_CASE("should select INTERVAL MINUTE values using parameter binding", "[inte
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "-599999999.40000000000");
 }
 
-TEST_CASE("should select INTERVAL SECOND values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL SECOND values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1022,7 +1025,7 @@ TEST_CASE("should select INTERVAL SECOND values using parameter binding", "[inte
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "-999999.999999999000");
 }
 
-TEST_CASE("should select INTERVAL DAY TO HOUR value using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO HOUR value using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1046,7 +1049,7 @@ TEST_CASE("should select INTERVAL DAY TO HOUR value using parameter binding", "[
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "936000000.00000");
 }
 
-TEST_CASE("should select INTERVAL DAY TO HOUR max value using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO HOUR max value using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1070,7 +1073,7 @@ TEST_CASE("should select INTERVAL DAY TO HOUR max value using parameter binding"
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "863999999964000000.00000");
 }
 
-TEST_CASE("should select INTERVAL DAY TO HOUR min value using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO HOUR min value using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1094,7 +1097,7 @@ TEST_CASE("should select INTERVAL DAY TO HOUR min value using parameter binding"
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "-863999999964000000.00000");
 }
 
-TEST_CASE("should select INTERVAL DAY TO MINUTE value using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO MINUTE value using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1118,7 +1121,7 @@ TEST_CASE("should select INTERVAL DAY TO MINUTE value using parameter binding", 
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "9540000000.0000");
 }
 
-TEST_CASE("should select INTERVAL DAY TO MINUTE max value using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO MINUTE max value using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1142,7 +1145,7 @@ TEST_CASE("should select INTERVAL DAY TO MINUTE max value using parameter bindin
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "8639999999994000000.0000");
 }
 
-TEST_CASE("should select INTERVAL DAY TO MINUTE min value using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL DAY TO MINUTE min value using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1166,7 +1169,7 @@ TEST_CASE("should select INTERVAL DAY TO MINUTE min value using parameter bindin
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "-8639999999994000000.0000");
 }
 
-TEST_CASE("should select INTERVAL HOUR TO MINUTE values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL HOUR TO MINUTE values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1197,7 +1200,7 @@ TEST_CASE("should select INTERVAL HOUR TO MINUTE values using parameter binding"
   CHECK(get_data<SQL_C_CHAR>(stmt, 2) == "-35999999999400.00000000");
 }
 
-TEST_CASE("should select INTERVAL HOUR TO SECOND values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL HOUR TO SECOND values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1228,7 +1231,7 @@ TEST_CASE("should select INTERVAL HOUR TO SECOND values using parameter binding"
   CHECK(get_data<SQL_C_CHAR>(stmt, 2) == "-359999999999999.9999000");
 }
 
-TEST_CASE("should select INTERVAL MINUTE TO SECOND values using parameter binding", "[interval]") {
+TEST_CASE("should select INTERVAL MINUTE TO SECOND values using parameter binding", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1263,7 +1266,7 @@ TEST_CASE("should select INTERVAL MINUTE TO SECOND values using parameter bindin
 // MULTIPLE CHUNKS DOWNLOADING
 // ============================================================================
 
-TEST_CASE("should download INTERVAL YEAR TO MONTH data in multiple chunks", "[interval]") {
+TEST_CASE("should download INTERVAL YEAR TO MONTH data in multiple chunks", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1300,7 +1303,7 @@ TEST_CASE("should download INTERVAL YEAR TO MONTH data in multiple chunks", "[in
   REQUIRE(row_count == 50000);
 }
 
-TEST_CASE("should download INTERVAL DAY TO SECOND data in multiple chunks", "[interval]") {
+TEST_CASE("should download INTERVAL DAY TO SECOND data in multiple chunks", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();
   // Given Snowflake client is logged in
   Connection conn;
@@ -1341,7 +1344,7 @@ TEST_CASE("should download INTERVAL DAY TO SECOND data in multiple chunks", "[in
 // INTERVAL ARITHMETIC
 // ============================================================================
 
-TEST_CASE("should respect order of interval components in date arithmetic", "[interval]") {
+TEST_CASE("should respect order of interval components in date arithmetic", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER("INTERVAL", "07006: DATE + INTERVAL result cannot be read as SQL_C_CHAR");
   // Given Snowflake client is logged in
   Connection conn;
@@ -1359,7 +1362,7 @@ TEST_CASE("should respect order of interval components in date arithmetic", "[in
   CHECK(d2 == "2020-02-29");
 }
 
-TEST_CASE("should support complex INTERVAL with mixed units and abbreviations", "[interval]") {
+TEST_CASE("should support complex INTERVAL with mixed units and abbreviations", "[e2e][types][interval]") {
   SKIP_NEW_DRIVER("INTERVAL", "07006: DATE + INTERVAL result cannot be read as SQL_C_CHAR");
   // Given Snowflake client is logged in
   Connection conn;
@@ -1375,7 +1378,7 @@ TEST_CASE("should support complex INTERVAL with mixed units and abbreviations", 
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "2027-03-30 07:31:32.841505498");
 }
 
-TEST_CASE("should add two INTERVAL YEAR TO MONTH values", "[interval]") {
+TEST_CASE("should add two INTERVAL YEAR TO MONTH values", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -1386,7 +1389,7 @@ TEST_CASE("should add two INTERVAL YEAR TO MONTH values", "[interval]") {
   check_interval_char(stmt, 1, "17", "1-05");
 }
 
-TEST_CASE("should add two INTERVAL DAY TO SECOND values", "[interval]") {
+TEST_CASE("should add two INTERVAL DAY TO SECOND values", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -1398,7 +1401,7 @@ TEST_CASE("should add two INTERVAL DAY TO SECOND values", "[interval]") {
   check_interval_char(stmt, 1, "101730500000.000", "1 04:15:30.500000000");
 }
 
-TEST_CASE("should negate an INTERVAL value", "[interval]") {
+TEST_CASE("should negate an INTERVAL value", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -1413,7 +1416,7 @@ TEST_CASE("should negate an INTERVAL value", "[interval]") {
   check_interval_char(stmt, 2, "-302400000000.000", "-3 12:00:00.000000000");
 }
 
-TEST_CASE("should subtract two INTERVAL values", "[interval]") {
+TEST_CASE("should subtract two INTERVAL values", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -1428,7 +1431,7 @@ TEST_CASE("should subtract two INTERVAL values", "[interval]") {
   check_interval_char(stmt, 2, "95400000000.000", "1 02:30:00.000000000");
 }
 
-TEST_CASE("should multiply INTERVAL by a scalar", "[interval]") {
+TEST_CASE("should multiply INTERVAL by a scalar", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -1443,7 +1446,7 @@ TEST_CASE("should multiply INTERVAL by a scalar", "[interval]") {
   check_interval_char(stmt, 2, "172800000000.000", "2 00:00:00.000000000");
 }
 
-TEST_CASE("should divide INTERVAL by a scalar", "[interval]") {
+TEST_CASE("should divide INTERVAL by a scalar", "[e2e][types][interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 

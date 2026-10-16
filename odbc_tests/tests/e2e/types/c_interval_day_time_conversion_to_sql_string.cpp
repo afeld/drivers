@@ -80,7 +80,7 @@ void bind_interval_and_execute(StatementHandleWrapper& stmt, SQLSMALLINT c_type,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -98,7 +98,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY to SQL_VARCH
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -116,7 +116,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR to SQL_VARC
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE to SQL_VA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND with no fraction to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -152,7 +152,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND with no f
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND with microsecond fraction to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -170,7 +170,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND with micr
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND with one-microsecond fraction to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -192,7 +192,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND with one-
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_HOUR to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -210,7 +210,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_HOUR to S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_MINUTE to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -228,7 +228,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_MINUTE to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND with fraction to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -246,7 +246,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND wi
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_SECOND to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -265,7 +265,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_MINUTE to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -283,7 +283,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_MINUTE t
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_SECOND with fraction to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -301,7 +301,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_SECOND w
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE_TO_SECOND with no fraction to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -325,7 +325,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE_TO_SECOND
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -343,7 +343,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY to 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_HOUR to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -361,7 +361,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_HOUR to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_MINUTE to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -379,7 +379,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_MINUTE 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_SECOND to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -397,7 +397,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_SECOND 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_HOUR to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -415,7 +415,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_MINUTE to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -433,7 +433,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_HOUR_TO_MINUTE to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -451,7 +451,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_HOUR_TO
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_HOUR_TO_SECOND to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -469,7 +469,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_HOUR_TO
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_MINUTE_TO_SECOND to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -493,7 +493,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_MINUTE_
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should bind SQL_C_INTERVAL_SECOND with maximum microsecond fraction to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -518,7 +518,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to SQL_CHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a CHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col CHAR(40))");
 
@@ -539,7 +539,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to SQL_WCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a CHAR column (Snowflake routes wide character targets through TEXT)
   conn.execute("CREATE TEMPORARY TABLE t (col CHAR(40))");
 
@@ -560,7 +560,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to SQL_LONGVARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column (Snowflake routes LONGVARCHAR through TEXT)
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -585,7 +585,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND with NULL indicator to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 

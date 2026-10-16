@@ -12,7 +12,7 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("SQLFetch fetches a row from SELECT query", "[query]") {
+TEST_CASE("SQLFetch fetches a row from SELECT query", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -32,7 +32,7 @@ TEST_CASE("SQLFetch fetches a row from SELECT query", "[query]") {
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("SQLFetch returns data about number of rows affected.") {
+TEST_CASE("SQLFetch returns data about number of rows affected.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -51,7 +51,7 @@ TEST_CASE("SQLFetch returns data about number of rows affected.") {
   REQUIRE(rows_fetched == 1);
 }
 
-TEST_CASE("SQLSetStmtAttr sets supported cursor types.") {
+TEST_CASE("SQLSetStmtAttr sets supported cursor types.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -102,7 +102,7 @@ TEST_CASE("SQLSetStmtAttr sets supported cursor types.") {
   REQUIRE(cursor_type == SQL_CURSOR_FORWARD_ONLY);
 }
 
-TEST_CASE("SQLFetch can be mixed with SQLFetchScroll.") {
+TEST_CASE("SQLFetch can be mixed with SQLFetchScroll.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -132,7 +132,7 @@ TEST_CASE("SQLFetch can be mixed with SQLFetchScroll.") {
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("SQLFetch returns multiple rows when SQL_ATTR_ROW_ARRAY_SIZE is set.") {
+TEST_CASE("SQLFetch returns multiple rows when SQL_ATTR_ROW_ARRAY_SIZE is set.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -176,7 +176,7 @@ TEST_CASE("SQLFetch returns multiple rows when SQL_ATTR_ROW_ARRAY_SIZE is set.")
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_SUCCESS for successfully fetched rows.") {
+TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_SUCCESS for successfully fetched rows.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -218,7 +218,7 @@ TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_SUCCESS for successfully fetc
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_SUCCESS_WITH_INFO when data is truncated.") {
+TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_SUCCESS_WITH_INFO when data is truncated.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -258,7 +258,7 @@ TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_SUCCESS_WITH_INFO when data i
   CHECK(get_sqlstate(stmt) == "01004");
 }
 
-TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_ERROR when conversion error occurs.") {
+TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_ERROR when conversion error occurs.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -293,7 +293,7 @@ TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_ERROR when conversion error o
   CHECK(row_status[0] == SQL_ROW_ERROR);
 }
 
-TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_NOROW when rowset overlaps end of result set.") {
+TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_NOROW when rowset overlaps end of result set.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -346,7 +346,7 @@ TEST_CASE("SQL_ATTR_ROW_STATUS_PTR returns SQL_ROW_NOROW when rowset overlaps en
 // Tests for SQLFetch respecting descriptor field values
 // =============================================================================
 
-TEST_CASE("SQLFetch respects SQL_DESC_ARRAY_SIZE set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_ARRAY_SIZE set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -385,7 +385,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_ARRAY_SIZE set on ARD.") {
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_ARRAY_STATUS_PTR set on IRD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_ARRAY_STATUS_PTR set on IRD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -425,7 +425,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_ARRAY_STATUS_PTR set on IRD.") {
   }
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_BIND_OFFSET_PTR set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_BIND_OFFSET_PTR set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -472,7 +472,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_BIND_OFFSET_PTR set on ARD.") {
   CHECK(rows[1].indicator == sizeof(SQLBIGINT));
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_BIND_TYPE set on ARD for row-wise binding.") {
+TEST_CASE("SQLFetch respects SQL_DESC_BIND_TYPE set on ARD for row-wise binding.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -525,7 +525,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_BIND_TYPE set on ARD for row-wise binding.
   }
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_COUNT set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_COUNT set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -568,7 +568,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_COUNT set on ARD.") {
   CHECK(desc_count == 0);
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_DATA_PTR set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_DATA_PTR set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -602,7 +602,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_DATA_PTR set on ARD.") {
   CHECK(value == 123);
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_INDICATOR_PTR set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_INDICATOR_PTR set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -636,7 +636,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_INDICATOR_PTR set on ARD.") {
   CHECK(indicator == SQL_NULL_DATA);
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_OCTET_LENGTH set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_OCTET_LENGTH set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -673,7 +673,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_OCTET_LENGTH set on ARD.") {
   CHECK(std::string((char*)value) == "Hello");  // Truncated to buffer_size - 1 + null
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_OCTET_LENGTH_PTR set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_OCTET_LENGTH_PTR set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -709,7 +709,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_OCTET_LENGTH_PTR set on ARD.") {
   CHECK(octet_length == 4);  // Length of "test"
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_ROWS_PROCESSED_PTR set on IRD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_ROWS_PROCESSED_PTR set on IRD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -746,7 +746,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_ROWS_PROCESSED_PTR set on IRD.") {
   CHECK(rows_processed == 3);  // Only 3 rows available, less than array_size
 }
 
-TEST_CASE("SQLFetch respects SQL_DESC_TYPE set on ARD.") {
+TEST_CASE("SQLFetch respects SQL_DESC_TYPE set on ARD.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -776,7 +776,7 @@ TEST_CASE("SQLFetch respects SQL_DESC_TYPE set on ARD.") {
   CHECK(value == 12345);
 }
 
-TEST_CASE("SQLFetch respects multiple ARD descriptor fields set together.") {
+TEST_CASE("SQLFetch respects multiple ARD descriptor fields set together.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -842,7 +842,7 @@ TEST_CASE("SQLFetch respects multiple ARD descriptor fields set together.") {
   }
 }
 
-TEST_CASE("SQLFetch respects both ARD and IRD descriptor fields.") {
+TEST_CASE("SQLFetch respects both ARD and IRD descriptor fields.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -902,7 +902,7 @@ TEST_CASE("SQLFetch respects both ARD and IRD descriptor fields.") {
 
 // Note: This is old driver behavior - not the specification.
 // Specifically, the specification says that the data should be truncated to the SQL_ATTR_MAX_LENGTH characters
-TEST_CASE("SQLFetch ignores SQL_ATTR_MAX_LENGTH on statement handle.", "[query]") {
+TEST_CASE("SQLFetch ignores SQL_ATTR_MAX_LENGTH on statement handle.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -944,7 +944,7 @@ TEST_CASE("SQLFetch ignores SQL_ATTR_MAX_LENGTH on statement handle.", "[query]"
 // Tests for SQLFetch SQLSTATE error conditions
 // =============================================================================
 
-TEST_CASE("SQLFetch returns 22002 when NULL data fetched without indicator pointer.", "[query]") {
+TEST_CASE("SQLFetch returns 22002 when NULL data fetched without indicator pointer.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -964,7 +964,7 @@ TEST_CASE("SQLFetch returns 22002 when NULL data fetched without indicator point
   CHECK(get_sqlstate(stmt) == "22002");
 }
 
-TEST_CASE("SQLFetch returns 22018 when invalid date string is bound to SQL_C_TYPE_DATE.", "[query]") {
+TEST_CASE("SQLFetch returns 22018 when invalid date string is bound to SQL_C_TYPE_DATE.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -984,7 +984,7 @@ TEST_CASE("SQLFetch returns 22018 when invalid date string is bound to SQL_C_TYP
   REQUIRE(ret == SQL_ERROR);
   CHECK(get_sqlstate(stmt) == "22018");
 }
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLFetch returns 24000 when no result set exists.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLFetch returns 24000 when no result set exists.", "[e2e][query]") {
   // Given Snowflake client is logged in
   auto stmt = conn.createStatement();
 
@@ -999,7 +999,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLFetch returns 24000 when no result set e
   CHECK(get_sqlstate(stmt) == "24000");
 }
 
-TEST_CASE("SQLFetch returns SQL_NO_DATA when result set is empty.", "[query]") {
+TEST_CASE("SQLFetch returns SQL_NO_DATA when result set is empty.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -1013,7 +1013,7 @@ TEST_CASE("SQLFetch returns SQL_NO_DATA when result set is empty.", "[query]") {
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("SQLFetch returns HY010 when called without executing statement.", "[query]") {
+TEST_CASE("SQLFetch returns HY010 when called without executing statement.", "[e2e][query]") {
   // Given a fresh statement handle on an active connection (no execute yet)
   Connection conn;
   auto stmt = conn.createStatement();
@@ -1035,7 +1035,7 @@ TEST_CASE("SQLFetch returns HY010 when called without executing statement.", "[q
   }
 }
 
-TEST_CASE("SQLFetch moves cursor forward when no columns are bound.", "[query]") {
+TEST_CASE("SQLFetch moves cursor forward when no columns are bound.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -1090,7 +1090,7 @@ TEST_CASE("SQLFetch moves cursor forward when no columns are bound.", "[query]")
   CHECK(value == 1);  // Second row should have value 1
 }
 
-TEST_CASE("SQLFetch supports separate length and indicator buffers via descriptor.", "[query]") {
+TEST_CASE("SQLFetch supports separate length and indicator buffers via descriptor.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -1147,7 +1147,7 @@ TEST_CASE("SQLFetch supports separate length and indicator buffers via descripto
   // Note: length buffer behavior for NULL is implementation-defined
 }
 
-TEST_CASE("SQLFetch cannot be called after SQLExtendedFetch without SQLFreeStmt.", "[query]") {
+TEST_CASE("SQLFetch cannot be called after SQLExtendedFetch without SQLFreeStmt.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -1182,7 +1182,7 @@ TEST_CASE("SQLFetch cannot be called after SQLExtendedFetch without SQLFreeStmt.
   REQUIRE(ret == SQL_SUCCESS);
 }
 
-TEST_CASE("SQLGetDiagField returns correct row and column number on fetch error.", "[query]") {
+TEST_CASE("SQLGetDiagField returns correct row and column number on fetch error.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -1241,7 +1241,8 @@ TEST_CASE("SQLGetDiagField returns correct row and column number on fetch error.
   }
 }
 
-TEST_CASE("SQLFetch returns SQL_SUCCESS_WITH_INFO when error occurs on subset of rows in block cursor.", "[query]") {
+TEST_CASE("SQLFetch returns SQL_SUCCESS_WITH_INFO when error occurs on subset of rows in block cursor.",
+          "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -1320,7 +1321,7 @@ TEST_CASE("SQLFetch returns SQL_SUCCESS_WITH_INFO when error occurs on subset of
 // SQLFetchScroll orientation validation on forward-only cursor (HY106)
 // =============================================================================
 
-TEST_CASE("SQLFetchScroll with non-NEXT orientations on forward-only cursor returns HY106.", "[query]") {
+TEST_CASE("SQLFetchScroll with non-NEXT orientations on forward-only cursor returns HY106.", "[e2e][query]") {
   // Doc: "HY106 - Fetch type out of range: The value of the SQL_ATTR_CURSOR_TYPE
   //       statement attribute was SQL_CURSOR_FORWARD_ONLY, and the value of
   //       argument FetchOrientation was not SQL_FETCH_NEXT."
@@ -1362,7 +1363,7 @@ TEST_CASE("SQLFetchScroll with non-NEXT orientations on forward-only cursor retu
 // SQLFetchScroll function sequence errors
 // =============================================================================
 
-TEST_CASE("SQLFetchScroll returns HY010 when called without executing statement.", "[query]") {
+TEST_CASE("SQLFetchScroll returns HY010 when called without executing statement.", "[e2e][query]") {
   // Doc: "HY010 - Function sequence error: (DM) The specified StatementHandle was
   //       not in an executed state. The function was called without first calling
   //       SQLExecDirect, SQLExecute or a catalog function."
@@ -1388,7 +1389,8 @@ TEST_CASE("SQLFetchScroll returns HY010 when called without executing statement.
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLFetchScroll returns 24000 when no result set exists after DDL.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLFetchScroll returns 24000 when no result set exists after DDL.",
+                 "[e2e][query]") {
   // Doc: "24000 - Invalid cursor state: The StatementHandle was in an executed state
   //       but no result set was associated with the StatementHandle."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlfetchscroll-function#diagnostics
@@ -1412,7 +1414,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLFetchScroll returns 24000 when no result
 // Repeated SQL_NO_DATA after end of result set
 // =============================================================================
 
-TEST_CASE("SQLFetch returns SQL_NO_DATA consistently after end of result set.", "[query]") {
+TEST_CASE("SQLFetch returns SQL_NO_DATA consistently after end of result set.", "[e2e][query]") {
   // Doc: "If the first row of the new rowset is after the end of the result set,
   //       SQLFetch returns SQL_NO_DATA."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlfetch-function#positioning-the-cursor
@@ -1433,7 +1435,7 @@ TEST_CASE("SQLFetch returns SQL_NO_DATA consistently after end of result set.", 
   }
 }
 
-TEST_CASE("SQLFetchScroll returns SQL_NO_DATA consistently after end of result set.", "[query]") {
+TEST_CASE("SQLFetchScroll returns SQL_NO_DATA consistently after end of result set.", "[e2e][query]") {
   // Doc: "If the first row of the new rowset is after the end of the result set,
   //       SQLFetchScroll returns SQL_NO_DATA."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlfetchscroll-function#sql_fetch_next
@@ -1454,7 +1456,7 @@ TEST_CASE("SQLFetchScroll returns SQL_NO_DATA consistently after end of result s
   }
 }
 
-TEST_CASE("SQLFetch returns SQL_NO_DATA on empty result set and stays consistent.", "[query]") {
+TEST_CASE("SQLFetch returns SQL_NO_DATA on empty result set and stays consistent.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.execute("SELECT 1 WHERE 1=0");
@@ -1475,7 +1477,7 @@ TEST_CASE("SQLFetch returns SQL_NO_DATA on empty result set and stays consistent
 // SQLFetchScroll with SQL_FETCH_NEXT block cursor validation
 // =============================================================================
 
-TEST_CASE("SQLFetchScroll with SQL_FETCH_NEXT fetches block cursor rows correctly.", "[query]") {
+TEST_CASE("SQLFetchScroll with SQL_FETCH_NEXT fetches block cursor rows correctly.", "[e2e][query]") {
   // Doc: "SQL_FETCH_NEXT - Return the next rowset. This is equivalent to calling SQLFetch."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlfetchscroll-function#sql_fetch_next
 

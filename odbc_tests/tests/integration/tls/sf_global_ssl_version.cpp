@@ -26,7 +26,7 @@ SQLRETURN driver_connect(ConnectionHandleWrapper& dbc, const std::string& conn_s
 
 }  // namespace
 
-TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_3 connects to a TLS 1.3 server", "[tls]") {
+TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_3 connects to a TLS 1.3 server", "[integration][tls]") {
   WiremockClient wm(WiremockClient::Mode::Server, WiremockClient::TlsVersion::Tls13);
   wm.add_mapping_file("auth/login_success_any.json");
   EnvOverride ssl_version("SF_GLOBAL_SSL_VERSION", "TLSv1_3");
@@ -37,7 +37,7 @@ TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_3 connects to a TLS 1.3 server", "[tls]")
   REQUIRE_ODBC(ret, dbc);
 }
 
-TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_2 connects to a TLS 1.2 server", "[tls]") {
+TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_2 connects to a TLS 1.2 server", "[integration][tls]") {
   WiremockClient wm(WiremockClient::Mode::Server, WiremockClient::TlsVersion::Tls12);
   wm.add_mapping_file("auth/login_success_any.json");
   EnvOverride ssl_version("SF_GLOBAL_SSL_VERSION", "TLSv1_2");
@@ -48,7 +48,7 @@ TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_2 connects to a TLS 1.2 server", "[tls]")
   REQUIRE_ODBC(ret, dbc);
 }
 
-TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_3 fails to connect to a TLS 1.2-only server", "[tls]") {
+TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_3 fails to connect to a TLS 1.2-only server", "[integration][tls]") {
   WiremockClient wm(WiremockClient::Mode::Server, WiremockClient::TlsVersion::Tls12);
   EnvOverride ssl_version("SF_GLOBAL_SSL_VERSION", "TLSv1_3");
   auto conn_str = get_wiremock_https_connection_string(wm);
@@ -58,7 +58,7 @@ TEST_CASE("SF_GLOBAL_SSL_VERSION=TLSv1_3 fails to connect to a TLS 1.2-only serv
   REQUIRE(ret == SQL_ERROR);
 }
 
-TEST_CASE("SF_GLOBAL_SSL_VERSION unset does not restrict TLS version negotiation", "[tls]") {
+TEST_CASE("SF_GLOBAL_SSL_VERSION unset does not restrict TLS version negotiation", "[integration][tls]") {
   WiremockClient wm(WiremockClient::Mode::Server, WiremockClient::TlsVersion::Tls12);
   wm.add_mapping_file("auth/login_success_any.json");
   EnvOverride ssl_version("SF_GLOBAL_SSL_VERSION");
@@ -69,7 +69,7 @@ TEST_CASE("SF_GLOBAL_SSL_VERSION unset does not restrict TLS version negotiation
   REQUIRE_ODBC(ret, dbc);
 }
 
-TEST_CASE("SF_GLOBAL_SSL_VERSION with unrecognized value fails with a configuration error", "[tls]") {
+TEST_CASE("SF_GLOBAL_SSL_VERSION with unrecognized value fails with a configuration error", "[integration][tls]") {
   SKIP_OLD_DRIVER("", "New driver only check");
   EnvOverride ssl_version("SF_GLOBAL_SSL_VERSION", "TLSv99");
   std::ostringstream ss;
@@ -85,7 +85,7 @@ TEST_CASE("SF_GLOBAL_SSL_VERSION with unrecognized value fails with a configurat
   CHECK_THAT(records[0].messageText, ContainsSubstring("SF_GLOBAL_SSL_VERSION"));
 }
 
-TEST_CASE("SF_GLOBAL_SSL_VERSION overrides the configured TLS version window", "[tls]") {
+TEST_CASE("SF_GLOBAL_SSL_VERSION overrides the configured TLS version window", "[integration][tls]") {
   SKIP_OLD_DRIVER("", "New driver only check");
   WiremockClient wm(WiremockClient::Mode::Server, WiremockClient::TlsVersion::Tls12);
   wm.add_mapping_file("auth/login_success_any.json");

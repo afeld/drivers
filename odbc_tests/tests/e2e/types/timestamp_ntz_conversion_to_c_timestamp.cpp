@@ -7,7 +7,8 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_NTZ to SQL_C_TYPE_TIMESTAMP basic values", "[timestamp_ntz][conversion][c_timestamp]") {
+TEST_CASE("TIMESTAMP_NTZ to SQL_C_TYPE_TIMESTAMP basic values",
+          "[e2e][types][timestamp_ntz][conversion][c_timestamp]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -114,7 +115,7 @@ TEST_CASE("TIMESTAMP_NTZ to SQL_C_TYPE_TIMESTAMP basic values", "[timestamp_ntz]
   }
 }
 
-TEST_CASE("TIMESTAMP_NTZ NULL to SQL_C_TYPE_TIMESTAMP", "[timestamp_ntz][conversion][c_timestamp][null]") {
+TEST_CASE("TIMESTAMP_NTZ NULL to SQL_C_TYPE_TIMESTAMP", "[e2e][types][timestamp_ntz][conversion][c_timestamp][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

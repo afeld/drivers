@@ -9,7 +9,7 @@
 #include "get_data.hpp"
 #include "odbc_cast.hpp"
 
-TEST_CASE("should bind SQL_C_DOUBLE to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_DOUBLE to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -27,7 +27,7 @@ TEST_CASE("should bind SQL_C_DOUBLE to SQL_VARCHAR.", "[query][bind_parameter][c
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "3.14");
 }
 
-TEST_CASE("should bind SQL_C_FLOAT to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_FLOAT to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -45,7 +45,7 @@ TEST_CASE("should bind SQL_C_FLOAT to SQL_VARCHAR.", "[query][bind_parameter][c_
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "1.5");
 }
 
-TEST_CASE("should bind SQL_C_DOUBLE negative zero to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_DOUBLE negative zero to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -81,7 +81,7 @@ static bool is_negative_infinity_str(const std::string& s) {
   return l == "-inf" || l == "-infinity";
 }
 
-TEST_CASE("should bind SQL_C_DOUBLE NaN to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_DOUBLE NaN to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -99,7 +99,8 @@ TEST_CASE("should bind SQL_C_DOUBLE NaN to SQL_VARCHAR.", "[query][bind_paramete
   CHECK(is_nan_str(get_data<SQL_C_CHAR>(stmt, 1)));
 }
 
-TEST_CASE("should bind SQL_C_DOUBLE positive infinity to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_DOUBLE positive infinity to SQL_VARCHAR.",
+          "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -117,7 +118,8 @@ TEST_CASE("should bind SQL_C_DOUBLE positive infinity to SQL_VARCHAR.", "[query]
   CHECK(is_positive_infinity_str(get_data<SQL_C_CHAR>(stmt, 1)));
 }
 
-TEST_CASE("should bind SQL_C_DOUBLE negative infinity to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_DOUBLE negative infinity to SQL_VARCHAR.",
+          "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -135,7 +137,7 @@ TEST_CASE("should bind SQL_C_DOUBLE negative infinity to SQL_VARCHAR.", "[query]
   CHECK(is_negative_infinity_str(get_data<SQL_C_CHAR>(stmt, 1)));
 }
 
-TEST_CASE("should bind SQL_C_FLOAT NaN to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_FLOAT NaN to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -153,7 +155,8 @@ TEST_CASE("should bind SQL_C_FLOAT NaN to SQL_VARCHAR.", "[query][bind_parameter
   CHECK(is_nan_str(get_data<SQL_C_CHAR>(stmt, 1)));
 }
 
-TEST_CASE("should bind SQL_C_FLOAT positive infinity to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_FLOAT positive infinity to SQL_VARCHAR.",
+          "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -171,7 +174,8 @@ TEST_CASE("should bind SQL_C_FLOAT positive infinity to SQL_VARCHAR.", "[query][
   CHECK(is_positive_infinity_str(get_data<SQL_C_CHAR>(stmt, 1)));
 }
 
-TEST_CASE("should bind SQL_C_FLOAT negative infinity to SQL_VARCHAR.", "[query][bind_parameter][c_real_to_varchar]") {
+TEST_CASE("should bind SQL_C_FLOAT negative infinity to SQL_VARCHAR.",
+          "[e2e][query][bind_parameter][c_real_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

@@ -13,7 +13,7 @@
 // SQL_C_BIT
 // ============================================================================
 
-TEST_CASE("should convert boolean to SQL_C_BIT", "[datatype][boolean][conversion][bit]") {
+TEST_CASE("should convert boolean to SQL_C_BIT", "[e2e][types][datatype][boolean][conversion][bit]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -29,7 +29,7 @@ TEST_CASE("should convert boolean to SQL_C_BIT", "[datatype][boolean][conversion
 // SQL_C_DEFAULT
 // ============================================================================
 
-TEST_CASE("should convert boolean to SQL_C_DEFAULT", "[datatype][boolean][conversion][bit]") {
+TEST_CASE("should convert boolean to SQL_C_DEFAULT", "[e2e][types][datatype][boolean][conversion][bit]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -56,7 +56,7 @@ TEST_CASE("should convert boolean to SQL_C_DEFAULT", "[datatype][boolean][conver
 // NULL handling
 // ============================================================================
 
-TEST_CASE("should handle NULL boolean with SQL_C_BIT", "[datatype][boolean][conversion][bit]") {
+TEST_CASE("should handle NULL boolean with SQL_C_BIT", "[e2e][types][datatype][boolean][conversion][bit]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -75,7 +75,7 @@ TEST_CASE("should handle NULL boolean with SQL_C_BIT", "[datatype][boolean][conv
 // SQLBindCol
 // ============================================================================
 
-TEST_CASE("should convert boolean using SQLBindCol for SQL_C_BIT", "[datatype][boolean][conversion][bit]") {
+TEST_CASE("should convert boolean using SQLBindCol for SQL_C_BIT", "[e2e][types][datatype][boolean][conversion][bit]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -17,7 +17,7 @@
 // SQL_SF_STMT_ATTR_LAST_QUERY_ID
 // ============================================================================
 
-TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns empty string before any execution.") {
+TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns empty string before any execution.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -36,7 +36,7 @@ TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns empty string before any execut
   OLD_DRIVER_ONLY("BD#56") { REQUIRE(ret == SQL_SUCCESS); }
 }
 
-TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID set returns HY092.") {
+TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID set returns HY092.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -54,7 +54,7 @@ TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID set returns HY092.") {
   }
 }
 
-TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns non-empty query ID after SQLExecDirect.") {
+TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns non-empty query ID after SQLExecDirect.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -78,7 +78,8 @@ TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns non-empty query ID after SQLEx
   OLD_DRIVER_ONLY("BD#56") { REQUIRE(ret == SQL_SUCCESS); }
 }
 
-TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns non-empty query ID after SQLPrepare and SQLExecute.") {
+TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns non-empty query ID after SQLPrepare and SQLExecute.",
+          "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -102,7 +103,7 @@ TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID returns non-empty query ID after SQLPr
   }
 }
 
-TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID each execution produces a distinct query ID.") {
+TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID each execution produces a distinct query ID.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -150,7 +151,7 @@ TEST_CASE("SQL_SF_STMT_ATTR_LAST_QUERY_ID each execution produces a distinct que
 // SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT
 // ============================================================================
 
-TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT default value is -1.") {
+TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT default value is -1.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -166,7 +167,7 @@ TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT default value is -1.") {
   }
 }
 
-TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT can be set and retrieved.") {
+TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT can be set and retrieved.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -198,7 +199,7 @@ TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT can be set and retrieved.") {
   }
 }
 
-TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT invalid value less than -1 returns HY024.") {
+TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT invalid value less than -1 returns HY024.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -215,7 +216,8 @@ TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT invalid value less than -1 ret
   }
 }
 
-TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT forwards count to server and executes all statements.") {
+TEST_CASE("SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT forwards count to server and executes all statements.",
+          "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

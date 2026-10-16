@@ -30,7 +30,7 @@ void prepare_and_execute(Connection& conn, const std::string& sql) {
 
 }  // namespace
 
-TEST_CASE("should set a session parameter via SQLPrepare + SQLExecute", "[query][prepare][session]") {
+TEST_CASE("should set a session parameter via SQLPrepare + SQLExecute", "[e2e][query][prepare][session]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -42,7 +42,7 @@ TEST_CASE("should set a session parameter via SQLPrepare + SQLExecute", "[query]
   CHECK(get_data<SQL_C_CHAR>(stmt, 2) == "7");
 }
 
-TEST_CASE("should set dollar-quoted QUERY_TAG via SQLPrepare + SQLExecute", "[query][prepare][session]") {
+TEST_CASE("should set dollar-quoted QUERY_TAG via SQLPrepare + SQLExecute", "[e2e][query][prepare][session]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -55,7 +55,7 @@ TEST_CASE("should set dollar-quoted QUERY_TAG via SQLPrepare + SQLExecute", "[qu
   CHECK(get_data<SQL_C_CHAR>(stmt, 2) == tag);
 }
 
-TEST_CASE("should apply a prepared TIMEZONE change to TIMESTAMP_LTZ rendering", "[query][prepare][session][ltz]") {
+TEST_CASE("should apply a prepared TIMEZONE change to TIMESTAMP_LTZ rendering", "[e2e][query][prepare][session][ltz]") {
   // Given Snowflake client is logged in with the session timezone set to UTC
   Connection conn;
   prepare_and_execute(conn, "ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -72,7 +72,7 @@ TEST_CASE("should apply a prepared TIMEZONE change to TIMESTAMP_LTZ rendering", 
   CHECK(ts_la.hour == 19);
 }
 
-TEST_CASE("should report no result columns for a prepared session statement", "[query][prepare][session]") {
+TEST_CASE("should report no result columns for a prepared session statement", "[e2e][query][prepare][session]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -94,7 +94,7 @@ TEST_CASE("should report no result columns for a prepared session statement", "[
   REQUIRE_ODBC(SQLExecute(stmt.getHandle()), stmt);
 }
 
-TEST_CASE("should commit via SQLPrepare + SQLExecute", "[query][prepare][session]") {
+TEST_CASE("should commit via SQLPrepare + SQLExecute", "[e2e][query][prepare][session]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -6,7 +6,7 @@
 #include "get_data.hpp"
 #include "odbc_cast.hpp"
 
-TEST_CASE("should bind SQL_C_TYPE_TIMESTAMP to SQL_VARCHAR.", "[query][bind_parameter][c_temporal_to_varchar]") {
+TEST_CASE("should bind SQL_C_TYPE_TIMESTAMP to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_temporal_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -32,7 +32,7 @@ TEST_CASE("should bind SQL_C_TYPE_TIMESTAMP to SQL_VARCHAR.", "[query][bind_para
 }
 
 TEST_CASE("should bind SQL_C_TYPE_TIMESTAMP with fraction to SQL_VARCHAR.",
-          "[query][bind_parameter][c_temporal_to_varchar]") {
+          "[e2e][query][bind_parameter][c_temporal_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -57,7 +57,7 @@ TEST_CASE("should bind SQL_C_TYPE_TIMESTAMP with fraction to SQL_VARCHAR.",
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "2024-06-15 12:00:00.123456789");
 }
 
-TEST_CASE("should bind SQL_C_TYPE_DATE to SQL_VARCHAR.", "[query][bind_parameter][c_temporal_to_varchar]") {
+TEST_CASE("should bind SQL_C_TYPE_DATE to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_temporal_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -78,7 +78,7 @@ TEST_CASE("should bind SQL_C_TYPE_DATE to SQL_VARCHAR.", "[query][bind_parameter
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "2024-12-25");
 }
 
-TEST_CASE("should bind SQL_C_TYPE_TIME to SQL_VARCHAR.", "[query][bind_parameter][c_temporal_to_varchar]") {
+TEST_CASE("should bind SQL_C_TYPE_TIME to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_temporal_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

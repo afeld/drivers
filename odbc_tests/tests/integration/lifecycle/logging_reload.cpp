@@ -67,7 +67,7 @@ static ConnectedConnectionWrapper connect_keep_open(const std::string& conn_str,
 }
 
 TEST_CASE("sf.odbc.ini logging reload: editing LogPath takes effect on the next connect",
-          "[lifecycle][logging][reload]") {
+          "[integration][lifecycle][logging][reload]") {
   SKIP_OLD_DRIVER("", "Old driver does not reload sf.odbc.ini logging on connect");
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
@@ -116,7 +116,7 @@ TEST_CASE("sf.odbc.ini logging reload: editing LogPath takes effect on the next 
 }
 
 TEST_CASE("sf.odbc.ini logging reload: an ini created after the first connect installs a sink on the next connect",
-          "[lifecycle][logging][reload]") {
+          "[integration][lifecycle][logging][reload]") {
   SKIP_OLD_DRIVER("", "Old driver does not reload sf.odbc.ini logging on connect");
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
@@ -166,7 +166,7 @@ TEST_CASE("sf.odbc.ini logging reload: an ini created after the first connect in
 }
 
 TEST_CASE("sf.odbc.ini discovery: SF_ODBC_INI pointing at a directory does not error the connect",
-          "[lifecycle][logging][reload]") {
+          "[integration][lifecycle][logging][reload]") {
   SKIP_OLD_DRIVER("", "Old driver does not consult SF_ODBC_INI for logging discovery");
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");

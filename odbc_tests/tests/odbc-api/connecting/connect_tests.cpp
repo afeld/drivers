@@ -330,9 +330,8 @@ TEST_CASE_METHOD(DbcFixture, "SQLConnect: Verify proper cleanup after failed con
 // ============================================================================
 // SQLConnect - DSN-Based Integration Tests
 // ============================================================================
-// These tests require a configured DSN (set up via scripts/setup_test_dsn.sh)
-// Tag with [.integration] to skip by default - run with: ctest -R integration
-// Or set ODBCSYSINI/ODBCINI to enable these tests
+// These tests require a configured DSN (scripts/setup_test_dsn.sh).
+// ctest -L '^integration$' selects them. ODBCSYSINI/ODBCINI enables the DSN.
 
 // This test verifies DSN configuration and acts as a gate for other integration tests
 TEST_CASE("SQLConnect: DSN configuration check", "[odbc-api][connect][dsn][integration][!mayfail]") {

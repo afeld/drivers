@@ -26,7 +26,7 @@ void bind_char(const StatementHandleWrapper& stmt, SQLUSMALLINT param, char* val
 
 }  // namespace
 
-TEST_CASE("should cast timestamp_tz values to appropriate type", "[timestamp_tz]") {
+TEST_CASE("should cast timestamp_tz values to appropriate type", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -41,7 +41,7 @@ TEST_CASE("should cast timestamp_tz values to appropriate type", "[timestamp_tz]
   INFO("SQL_TIMESTAMP_STRUCT cannot carry timezone");
 }
 
-TEST_CASE("should select timestamp_tz values", "[timestamp_tz]") {
+TEST_CASE("should select timestamp_tz values", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -76,7 +76,7 @@ TEST_CASE("should select timestamp_tz values", "[timestamp_tz]") {
   }
 }
 
-TEST_CASE("should select sub-second timestamp_tz values before epoch", "[timestamp_tz]") {
+TEST_CASE("should select sub-second timestamp_tz values before epoch", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -92,7 +92,7 @@ TEST_CASE("should select sub-second timestamp_tz values before epoch", "[timesta
   }
 }
 
-TEST_CASE("should select edge date timestamp_tz values", "[timestamp_tz]") {
+TEST_CASE("should select edge date timestamp_tz values", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -127,7 +127,7 @@ TEST_CASE("should select edge date timestamp_tz values", "[timestamp_tz]") {
   }
 }
 
-TEST_CASE("should handle NULL values for timestamp_tz", "[timestamp_tz]") {
+TEST_CASE("should handle NULL values for timestamp_tz", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -139,7 +139,7 @@ TEST_CASE("should handle NULL values for timestamp_tz", "[timestamp_tz]") {
   REQUIRE(get_data_optional<SQL_C_TYPE_TIMESTAMP>(stmt, 2) == std::nullopt);
 }
 
-TEST_CASE("should download large result set with multiple chunks for timestamp_tz", "[timestamp_tz]") {
+TEST_CASE("should download large result set with multiple chunks for timestamp_tz", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -157,7 +157,7 @@ TEST_CASE("should download large result set with multiple chunks for timestamp_t
   require_sequential_from_2024(stmt, 50000);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for timestamp_tz", "[timestamp_tz]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for timestamp_tz", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
 
   struct Case {
@@ -224,7 +224,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for timesta
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multiple chunks from table for timestamp_tz",
-                 "[timestamp_tz]") {
+                 "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
 
   // And Table with TIMESTAMP_TZ column exists with 50000 sequential timestamp values
@@ -245,7 +245,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multi
   require_sequential_from_2024(stmt, 50000);
 }
 
-TEST_CASE("should select timestamp_tz using parameter binding", "[timestamp_tz]") {
+TEST_CASE("should select timestamp_tz using parameter binding", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -271,7 +271,7 @@ TEST_CASE("should select timestamp_tz using parameter binding", "[timestamp_tz]"
   INFO("SQL_TIMESTAMP_STRUCT cannot carry timezone");
 }
 
-TEST_CASE("should select null timestamp_tz using parameter binding", "[timestamp_tz]") {
+TEST_CASE("should select null timestamp_tz using parameter binding", "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -291,7 +291,8 @@ TEST_CASE("should select null timestamp_tz using parameter binding", "[timestamp
   REQUIRE(get_data_optional<SQL_C_TYPE_TIMESTAMP>(stmt, 1) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert timestamp_tz using parameter binding", "[timestamp_tz]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert timestamp_tz using parameter binding",
+                 "[e2e][types][timestamp_tz]") {
   // Given Snowflake client is logged in
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
 

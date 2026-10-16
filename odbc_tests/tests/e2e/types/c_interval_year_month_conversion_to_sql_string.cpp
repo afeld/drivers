@@ -53,7 +53,7 @@ void bind_interval_and_execute(StatementHandleWrapper& stmt, SQLSMALLINT c_type,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -71,7 +71,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR to SQL_VARC
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -93,7 +93,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR to
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MONTH to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -111,7 +111,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MONTH to SQL_VAR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_MONTH to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -133,7 +133,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_MONTH t
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -152,7 +152,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH with single-digit month to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -170,7 +170,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH wi
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR_TO_MONTH to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -195,7 +195,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR_TO
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to SQL_CHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a CHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col CHAR(20))");
 
@@ -216,7 +216,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to SQL_WCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a CHAR column (Snowflake routes wide character targets through TEXT)
   conn.execute("CREATE TEMPORARY TABLE t (col CHAR(20))");
 
@@ -237,7 +237,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to SQL_LONGVARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column (Snowflake routes LONGVARCHAR through TEXT)
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 
@@ -262,7 +262,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR with NULL indicator to SQL_VARCHAR",
-                 "[c_interval][conversion][sql_string]") {
+                 "[e2e][types][c_interval][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(200))");
 

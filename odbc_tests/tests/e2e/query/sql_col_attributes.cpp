@@ -26,7 +26,7 @@
 // SQL_COLUMN_NAME
 // =============================================================================
 
-TEST_CASE("SQLColAttributes returns correct column name via SQL_COLUMN_NAME.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns correct column name via SQL_COLUMN_NAME.", "[e2e][query][col_attributes]") {
   // Given A query with a named column is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS MY_COLUMN");
@@ -47,7 +47,8 @@ TEST_CASE("SQLColAttributes returns correct column name via SQL_COLUMN_NAME.", "
 // SQL_COLUMN_TYPE
 // =============================================================================
 
-TEST_CASE("SQLColAttributes returns SQL_DECIMAL for numeric literal via SQL_COLUMN_TYPE.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns SQL_DECIMAL for numeric literal via SQL_COLUMN_TYPE.",
+          "[e2e][query][col_attributes]") {
   // Given A query returning a numeric literal is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42");
@@ -61,7 +62,8 @@ TEST_CASE("SQLColAttributes returns SQL_DECIMAL for numeric literal via SQL_COLU
   CHECK(num_attr == SQL_DECIMAL);
 }
 
-TEST_CASE("SQLColAttributes returns SQL_VARCHAR for VARCHAR column via SQL_COLUMN_TYPE.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns SQL_VARCHAR for VARCHAR column via SQL_COLUMN_TYPE.",
+          "[e2e][query][col_attributes]") {
   // Given A table with a VARCHAR column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -77,7 +79,8 @@ TEST_CASE("SQLColAttributes returns SQL_VARCHAR for VARCHAR column via SQL_COLUM
   CHECK(num_attr == SQL_VARCHAR);
 }
 
-TEST_CASE("SQLColAttributes returns SQL_TYPE_DATE for DATE column via SQL_COLUMN_TYPE.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns SQL_TYPE_DATE for DATE column via SQL_COLUMN_TYPE.",
+          "[e2e][query][col_attributes]") {
   // Given A table with a DATE column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -93,7 +96,8 @@ TEST_CASE("SQLColAttributes returns SQL_TYPE_DATE for DATE column via SQL_COLUMN
   CHECK(num_attr == SQL_TYPE_DATE);
 }
 
-TEST_CASE("SQLColAttributes returns SQL_TYPE_TIME for TIME column via SQL_COLUMN_TYPE.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns SQL_TYPE_TIME for TIME column via SQL_COLUMN_TYPE.",
+          "[e2e][query][col_attributes]") {
   // Given A table with a TIME column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -110,7 +114,7 @@ TEST_CASE("SQLColAttributes returns SQL_TYPE_TIME for TIME column via SQL_COLUMN
 }
 
 TEST_CASE("SQLColAttributes returns SQL_TYPE_TIMESTAMP for TIMESTAMP_NTZ column via SQL_COLUMN_TYPE.",
-          "[query][col_attributes]") {
+          "[e2e][query][col_attributes]") {
   // Given A table with a TIMESTAMP_NTZ column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -131,7 +135,7 @@ TEST_CASE("SQLColAttributes returns SQL_TYPE_TIMESTAMP for TIMESTAMP_NTZ column 
 // =============================================================================
 
 TEST_CASE("SQLColAttributes returns transfer octet length for VARCHAR via SQL_COLUMN_LENGTH.",
-          "[query][col_attributes]") {
+          "[e2e][query][col_attributes]") {
   // Given A table with a VARCHAR(100) column is queried
   bool is_ascii = is_ascii_locale();
   Connection conn;
@@ -156,7 +160,7 @@ TEST_CASE("SQLColAttributes returns transfer octet length for VARCHAR via SQL_CO
 }
 
 TEST_CASE("SQLColAttributes returns transfer octet length for NUMBER via SQL_COLUMN_LENGTH.",
-          "[query][col_attributes]") {
+          "[e2e][query][col_attributes]") {
   // Given A table with a NUMBER(10,2) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -176,7 +180,7 @@ TEST_CASE("SQLColAttributes returns transfer octet length for NUMBER via SQL_COL
 // SQL_COLUMN_NULLABLE
 // =============================================================================
 
-TEST_CASE("SQLColAttributes returns SQL_NULLABLE for nullable column.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns SQL_NULLABLE for nullable column.", "[e2e][query][col_attributes]") {
   // Given A table with a nullable column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -192,7 +196,7 @@ TEST_CASE("SQLColAttributes returns SQL_NULLABLE for nullable column.", "[query]
   CHECK(num_attr == SQL_NULLABLE);
 }
 
-TEST_CASE("SQLColAttributes returns SQL_NO_NULLS for NOT NULL column.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns SQL_NO_NULLS for NOT NULL column.", "[e2e][query][col_attributes]") {
   // Given A table with a NOT NULL column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -213,7 +217,7 @@ TEST_CASE("SQLColAttributes returns SQL_NO_NULLS for NOT NULL column.", "[query]
 // =============================================================================
 
 TEST_CASE("SQLColAttributes returns character length for VARCHAR via SQL_COLUMN_PRECISION.",
-          "[query][col_attributes]") {
+          "[e2e][query][col_attributes]") {
   // Given A table with a VARCHAR(200) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -230,7 +234,7 @@ TEST_CASE("SQLColAttributes returns character length for VARCHAR via SQL_COLUMN_
 }
 
 TEST_CASE("SQLColAttributes returns numeric precision for NUMBER via SQL_COLUMN_PRECISION.",
-          "[query][col_attributes]") {
+          "[e2e][query][col_attributes]") {
   // Given A table with a NUMBER(10,2) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -250,7 +254,7 @@ TEST_CASE("SQLColAttributes returns numeric precision for NUMBER via SQL_COLUMN_
 // SQL_COLUMN_SCALE (decimal digits — ODBC 2.x specific)
 // =============================================================================
 
-TEST_CASE("SQLColAttributes returns scale for NUMBER via SQL_COLUMN_SCALE.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns scale for NUMBER via SQL_COLUMN_SCALE.", "[e2e][query][col_attributes]") {
   // Given A table with a NUMBER(10,4) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -266,7 +270,7 @@ TEST_CASE("SQLColAttributes returns scale for NUMBER via SQL_COLUMN_SCALE.", "[q
   CHECK(num_attr == 4);
 }
 
-TEST_CASE("SQLColAttributes returns 0 scale for VARCHAR via SQL_COLUMN_SCALE.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns 0 scale for VARCHAR via SQL_COLUMN_SCALE.", "[e2e][query][col_attributes]") {
   // Given A table with a VARCHAR column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -286,7 +290,7 @@ TEST_CASE("SQLColAttributes returns 0 scale for VARCHAR via SQL_COLUMN_SCALE.", 
 // SQL_COLUMN_COUNT
 // =============================================================================
 
-TEST_CASE("SQLColAttributes returns column count via SQL_COLUMN_COUNT.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns column count via SQL_COLUMN_COUNT.", "[e2e][query][col_attributes]") {
   // Given A multi-column query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 1 AS a, 2 AS b, 3 AS c");
@@ -305,7 +309,7 @@ TEST_CASE("SQLColAttributes returns column count via SQL_COLUMN_COUNT.", "[query
 // =============================================================================
 
 TEST_CASE("SQLColAttributes returns correct metadata for each column in a multi-column result.",
-          "[query][col_attributes]") {
+          "[e2e][query][col_attributes]") {
   // Given A table with VARCHAR, NUMBER, and BOOLEAN columns is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -402,7 +406,7 @@ TEST_CASE("SQLColAttributes returns correct metadata for each column in a multi-
 // Error Cases
 // =============================================================================
 
-TEST_CASE("SQLColAttributes returns 07009 for column number 0 without bookmarks.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns 07009 for column number 0 without bookmarks.", "[e2e][query][col_attributes]") {
   // Given A query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS value");
@@ -415,7 +419,7 @@ TEST_CASE("SQLColAttributes returns 07009 for column number 0 without bookmarks.
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("07009"));
 }
 
-TEST_CASE("SQLColAttributes returns 07009 for out-of-range column number.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns 07009 for out-of-range column number.", "[e2e][query][col_attributes]") {
   // Given A single-column query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS value");
@@ -428,7 +432,7 @@ TEST_CASE("SQLColAttributes returns 07009 for out-of-range column number.", "[qu
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("07009"));
 }
 
-TEST_CASE("SQLColAttributes returns HY010 when called before prepare or execute.", "[query][col_attributes]") {
+TEST_CASE("SQLColAttributes returns HY010 when called before prepare or execute.", "[e2e][query][col_attributes]") {
   // Given A statement handle exists but no query has been prepared or executed
   Connection conn;
   auto stmt = conn.createStatement();

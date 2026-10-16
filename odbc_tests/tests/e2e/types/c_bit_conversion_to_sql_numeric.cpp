@@ -7,7 +7,8 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT true to SQL_INTEGER", "[c_bit][conversion][sql_numeric]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT true to SQL_INTEGER",
+                 "[e2e][types][c_bit][conversion][sql_numeric]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_bit_int (col INT)");
@@ -33,7 +34,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT true to SQL_INTEGER",
   CHECK(get_data<SQL_C_SBIGINT>(sel, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT false to SQL_INTEGER", "[c_bit][conversion][sql_numeric]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT false to SQL_INTEGER",
+                 "[e2e][types][c_bit][conversion][sql_numeric]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_bit_int0 (col INT)");
@@ -59,7 +61,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT false to SQL_INTEGER"
   CHECK(get_data<SQL_C_SBIGINT>(sel, 1) == 0);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_DOUBLE", "[c_bit][conversion][sql_numeric]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_DOUBLE",
+                 "[e2e][types][c_bit][conversion][sql_numeric]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_bit_flt (col FLOAT)");
@@ -85,7 +88,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_DOUBLE", "[c_b
   CHECK(get_data<SQL_C_DOUBLE>(sel, 1) == Catch::Approx(1.0));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_BIT", "[c_bit][conversion][sql_numeric]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_BIT",
+                 "[e2e][types][c_bit][conversion][sql_numeric]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_bit_bool (col BOOLEAN)");
@@ -111,7 +115,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_BIT", "[c_bit]
   CHECK(get_data<SQL_C_BIT>(sel, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT with NULL indicator", "[c_bit][conversion][sql_numeric]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT with NULL indicator",
+                 "[e2e][types][c_bit][conversion][sql_numeric]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_bit_null (col INT)");

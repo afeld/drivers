@@ -18,7 +18,8 @@
 // SQL_C_CHAR — uppercase hex encoding
 // ============================================================================
 
-TEST_CASE("should convert binary to SQL_C_CHAR returning uppercase hex", "[datatype][binary][conversion][char]") {
+TEST_CASE("should convert binary to SQL_C_CHAR returning uppercase hex",
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -34,7 +35,8 @@ TEST_CASE("should convert binary to SQL_C_CHAR returning uppercase hex", "[datat
 // SQL_C_WCHAR — uppercase hex encoding
 // ============================================================================
 
-TEST_CASE("should convert binary to SQL_C_WCHAR returning uppercase hex", "[datatype][binary][conversion][char]") {
+TEST_CASE("should convert binary to SQL_C_WCHAR returning uppercase hex",
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -49,7 +51,7 @@ TEST_CASE("should convert binary to SQL_C_WCHAR returning uppercase hex", "[data
 // SQLBindCol with SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("should retrieve binary via SQLBindCol with SQL_C_CHAR", "[datatype][binary][conversion][char]") {
+TEST_CASE("should retrieve binary via SQLBindCol with SQL_C_CHAR", "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
   const auto stmt = conn.createStatement();
@@ -75,7 +77,8 @@ TEST_CASE("should retrieve binary via SQLBindCol with SQL_C_CHAR", "[datatype][b
 // SQLBindCol with SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("should retrieve binary via SQLBindCol with SQL_C_WCHAR", "[datatype][binary][conversion][char]") {
+TEST_CASE("should retrieve binary via SQLBindCol with SQL_C_WCHAR",
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
   const auto stmt = conn.createStatement();
@@ -108,7 +111,8 @@ TEST_CASE("should retrieve binary via SQLBindCol with SQL_C_WCHAR", "[datatype][
 // Empty binary conversion — SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("should convert empty binary to SQL_C_CHAR returning empty string", "[datatype][binary][conversion][char]") {
+TEST_CASE("should convert empty binary to SQL_C_CHAR returning empty string",
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -129,7 +133,7 @@ TEST_CASE("should convert empty binary to SQL_C_CHAR returning empty string", "[
 // ============================================================================
 
 TEST_CASE("should convert empty binary to SQL_C_WCHAR returning empty wide string",
-          "[datatype][binary][conversion][char]") {
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -149,7 +153,7 @@ TEST_CASE("should convert empty binary to SQL_C_WCHAR returning empty wide strin
 // NULL handling
 // ============================================================================
 
-TEST_CASE("should handle NULL binary with character C types", "[datatype][binary][conversion][char]") {
+TEST_CASE("should handle NULL binary with character C types", "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -175,7 +179,7 @@ TEST_CASE("should handle NULL binary with character C types", "[datatype][binary
 // ============================================================================
 
 TEST_CASE("should convert VARBINARY to SQL_C_CHAR and SQL_C_WCHAR same as BINARY",
-          "[datatype][binary][conversion][char]") {
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -197,7 +201,7 @@ TEST_CASE("should convert VARBINARY to SQL_C_CHAR and SQL_C_WCHAR same as BINARY
 // ============================================================================
 
 TEST_CASE("should retrieve large binary as hex in chunks via SQLGetData with SQL_C_CHAR",
-          "[datatype][binary][conversion][char]") {
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -227,7 +231,7 @@ TEST_CASE("should retrieve large binary as hex in chunks via SQLGetData with SQL
 // ============================================================================
 
 TEST_CASE("should retrieve large binary as hex in chunks via SQLGetData with SQL_C_WCHAR",
-          "[datatype][binary][conversion][char]") {
+          "[e2e][types][datatype][binary][conversion][char]") {
   PinDriverManagerEncoding pin_encoding;
   // Given Snowflake client is logged in
   Connection conn;
@@ -289,7 +293,7 @@ TEST_CASE("should retrieve large binary as hex in chunks via SQLGetData with SQL
 // Exact-fit buffer for SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("should succeed with exact-fit buffer for SQL_C_CHAR", "[datatype][binary][conversion][char]") {
+TEST_CASE("should succeed with exact-fit buffer for SQL_C_CHAR", "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -310,7 +314,7 @@ TEST_CASE("should succeed with exact-fit buffer for SQL_C_CHAR", "[datatype][bin
 // Exact-fit buffer for SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("should succeed with exact-fit buffer for SQL_C_WCHAR", "[datatype][binary][conversion][char]") {
+TEST_CASE("should succeed with exact-fit buffer for SQL_C_WCHAR", "[e2e][types][datatype][binary][conversion][char]") {
   PinDriverManagerEncoding pin_encoding;
   // Given Snowflake client is logged in
   Connection conn;
@@ -337,7 +341,7 @@ TEST_CASE("should succeed with exact-fit buffer for SQL_C_WCHAR", "[datatype][bi
 // ============================================================================
 
 TEST_CASE("should truncate binary hex with one-byte-short buffer for SQL_C_CHAR",
-          "[datatype][binary][conversion][char]") {
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -370,7 +374,8 @@ TEST_CASE("should truncate binary hex with one-byte-short buffer for SQL_C_CHAR"
 // Buffer = 1 for SQL_C_CHAR (only null terminator fits)
 // ============================================================================
 
-TEST_CASE("should handle buffer size 1 for SQL_C_CHAR with binary", "[datatype][binary][conversion][char]") {
+TEST_CASE("should handle buffer size 1 for SQL_C_CHAR with binary",
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -392,7 +397,7 @@ TEST_CASE("should handle buffer size 1 for SQL_C_CHAR with binary", "[datatype][
 // ============================================================================
 
 TEST_CASE("should retrieve binary hex in three chunks via SQLGetData with SQL_C_CHAR",
-          "[datatype][binary][conversion][char]") {
+          "[e2e][types][datatype][binary][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -62,7 +62,7 @@ const char kSurrogateStraddle[] =
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should round-trip ASCII + BMP + supplementary plane "
                  "via SQL_C_WCHAR",
-                 "[c_wchar][unicode][utf32]") {
+                 "[e2e][types][c_wchar][unicode][utf32]") {
   // Given a Unicode literal mixing ASCII, a BMP CJK code point, and a
   // non-BMP code point.
   std::string sql = "SELECT '";
@@ -79,7 +79,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should not split a code point across chunked SQLGetData calls",
-                 "[c_wchar][unicode][utf32][chunked]") {
+                 "[e2e][types][c_wchar][unicode][utf32][chunked]") {
   // Given a string whose middle code point straddles the chunk boundary
   // under UTF-16 (surrogate pair) and lands on it cleanly under UTF-32.
   std::string sql = "SELECT '";
@@ -136,7 +136,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should not split a code point across chunke
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch empty string as SQL_C_WCHAR without error",
-                 "[c_wchar][unicode][utf32][empty]") {
+                 "[e2e][types][c_wchar][unicode][utf32][empty]") {
   // Given a server-side empty string.
   auto stmt = exec_wide_fetch(conn, "SELECT ''");
 
@@ -155,7 +155,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch empty string as SQL_C_WCHAR wi
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should bind SQL_C_WCHAR with supplementary plane "
                  "and read back",
-                 "[c_wchar][unicode][utf32][bind]") {
+                 "[e2e][types][c_wchar][unicode][utf32][bind]") {
   // Given a Unicode source mixing ASCII, BMP, and supplementary plane,
   // and a TEMPORARY table to hold the round-tripped value. The SQL
   // setup uses ASCII only so it can travel through narrow `execute`
@@ -179,7 +179,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind empty SQL_C_WCHAR string with SQL_NTS",
-                 "[c_wchar][unicode][utf32][bind][empty]") {
+                 "[e2e][types][c_wchar][unicode][utf32][bind][empty]") {
   // Given an empty wide string represented as a single NUL terminator.
   // Pre-fix, `read_wide_string_in` rejected a length of `0` even when
   // the buffer was a valid NUL-terminated empty string; this insert

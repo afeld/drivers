@@ -56,7 +56,7 @@ void check_binary_round_trip(Connection& conn, const std::string& column_type, S
 }  // namespace
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY raw bytes to SQL_BINARY and read back",
-                 "[c_binary][conversion][sql_binary]") {
+                 "[e2e][types][c_binary][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   // When the four-byte payload 0xDEADBEEF is bound as SQL_C_BINARY -> SQL_BINARY and executed
   // Then the round-trip via SQLGetData(SQL_C_BINARY) returns the same four bytes
@@ -64,7 +64,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY raw bytes to SQL_B
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY raw bytes to SQL_VARBINARY and read back",
-                 "[c_binary][conversion][sql_binary]") {
+                 "[e2e][types][c_binary][conversion][sql_binary]") {
   // Given a temporary VARBINARY column exists
   // When the four-byte payload 0xDEADBEEF is bound as SQL_C_BINARY -> SQL_VARBINARY and executed
   // Then the round-trip via SQLGetData(SQL_C_BINARY) returns the same four bytes
@@ -72,7 +72,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY raw bytes to SQL_V
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY raw bytes to SQL_LONGVARBINARY and read back",
-                 "[c_binary][conversion][sql_binary]") {
+                 "[e2e][types][c_binary][conversion][sql_binary]") {
   // Given a temporary BINARY column exists (Snowflake exposes BINARY as the
   // single variable-length binary class for which SQL_LONGVARBINARY is the
   // ODBC alias)
@@ -82,7 +82,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY raw bytes to SQL_L
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DEFAULT raw bytes to SQL_BINARY and read back",
-                 "[c_binary][conversion][sql_binary]") {
+                 "[e2e][types][c_binary][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   // When the four-byte payload 0xDEADBEEF is bound as SQL_C_DEFAULT -> SQL_BINARY and executed
   // Then the bind resolves to SQL_C_BINARY per ODBC Appendix D and the round-trip returns the same four bytes
@@ -90,7 +90,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DEFAULT raw bytes to SQL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY zero-length payload to SQL_BINARY and read back empty",
-                 "[c_binary][conversion][sql_binary]") {
+                 "[e2e][types][c_binary][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   conn.execute("CREATE TEMPORARY TABLE t (col BINARY)");
 
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY zero-length payloa
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject oversize SQL_C_BINARY payload against bounded SQL_BINARY column",
-                 "[c_binary][conversion][sql_binary]") {
+                 "[e2e][types][c_binary][conversion][sql_binary]") {
   // Given a temporary BINARY(4) column exists (the driver does not enforce
   // the column size at SQLExecute; the server-side validation is the only
   // gate)

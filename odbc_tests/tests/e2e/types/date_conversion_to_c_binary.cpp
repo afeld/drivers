@@ -10,7 +10,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("DATE to SQL_C_BINARY", "[date][conversion][c_binary]") {
+TEST_CASE("DATE to SQL_C_BINARY", "[e2e][types][date][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -28,7 +28,7 @@ TEST_CASE("DATE to SQL_C_BINARY", "[date][conversion][c_binary]") {
   CHECK(date.day == 15);
 }
 
-TEST_CASE("DATE to SQL_C_BINARY struct field verification", "[date][conversion][c_binary]") {
+TEST_CASE("DATE to SQL_C_BINARY struct field verification", "[e2e][types][date][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -111,7 +111,7 @@ TEST_CASE("DATE to SQL_C_BINARY struct field verification", "[date][conversion][
   }
 }
 
-TEST_CASE("DATE to SQL_C_BINARY exact buffer fit", "[date][conversion][c_binary]") {
+TEST_CASE("DATE to SQL_C_BINARY exact buffer fit", "[e2e][types][date][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -132,7 +132,7 @@ TEST_CASE("DATE to SQL_C_BINARY exact buffer fit", "[date][conversion][c_binary]
   CHECK(date.day == 15);
 }
 
-TEST_CASE("DATE to SQL_C_BINARY buffer too small", "[date][conversion][c_binary][22003]") {
+TEST_CASE("DATE to SQL_C_BINARY buffer too small", "[e2e][types][date][conversion][c_binary][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -150,7 +150,7 @@ TEST_CASE("DATE to SQL_C_BINARY buffer too small", "[date][conversion][c_binary]
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("DATE to SQL_C_BINARY consistent size", "[date][conversion][c_binary]") {
+TEST_CASE("DATE to SQL_C_BINARY consistent size", "[e2e][types][date][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -170,7 +170,7 @@ TEST_CASE("DATE to SQL_C_BINARY consistent size", "[date][conversion][c_binary]"
   CHECK(ind1 == sizeof(SQL_DATE_STRUCT));
 }
 
-TEST_CASE("DATE NULL to SQL_C_BINARY", "[date][conversion][c_binary][null]") {
+TEST_CASE("DATE NULL to SQL_C_BINARY", "[e2e][types][date][conversion][c_binary][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

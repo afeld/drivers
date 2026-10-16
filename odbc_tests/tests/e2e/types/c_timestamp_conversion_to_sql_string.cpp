@@ -60,7 +60,7 @@ void bind_timestamp_and_select(StatementHandleWrapper& stmt, SQLSMALLINT sql_typ
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP without fraction to SQL_VARCHAR",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-03-15 13:45:30 (no fraction) is bound and projected via SELECT ?
@@ -73,7 +73,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP without fr
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should render nanosecond fraction for SQL_C_TYPE_TIMESTAMP to SQL_VARCHAR",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-03-15 13:45:30.123456789 is bound and projected via SELECT ?
@@ -86,7 +86,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should render nanosecond fraction for SQL_C
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad the nanosecond fraction for SQL_C_TYPE_TIMESTAMP",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP with fraction 1000 nanoseconds is bound and projected via SELECT ?
@@ -99,7 +99,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad the nanosecond fraction for
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind midnight SQL_C_TYPE_TIMESTAMP to SQL_VARCHAR",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-01-01 00:00:00 (midnight) is bound and projected via SELECT ?
@@ -112,7 +112,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind midnight SQL_C_TYPE_TIMESTAMP t
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad single-digit fields for SQL_C_TYPE_TIMESTAMP",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-01-05 01:02:03 is bound and projected via SELECT ?
@@ -125,7 +125,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad single-digit fields for SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind maximum-year SQL_C_TYPE_TIMESTAMP to SQL_VARCHAR",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 9999-12-31 23:59:59 is bound and projected via SELECT ?
@@ -142,7 +142,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind maximum-year SQL_C_TYPE_TIMESTA
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_CHAR target",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-03-15 13:45:30 is bound to SQL_CHAR
@@ -155,7 +155,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_CHA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_LONGVARCHAR target",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-03-15 13:45:30 is bound to SQL_LONGVARCHAR
@@ -168,7 +168,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_LON
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_WCHAR target",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-03-15 13:45:30 is bound to SQL_WCHAR
@@ -181,7 +181,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_WCH
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_WVARCHAR target",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-03-15 13:45:30 is bound to SQL_WVARCHAR
@@ -194,7 +194,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_WVA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_WLONGVARCHAR target",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP 2024-03-15 13:45:30 is bound to SQL_WLONGVARCHAR
@@ -211,7 +211,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP to SQL_WLO
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIMESTAMP with NULL indicator to SQL_VARCHAR",
-                 "[c_timestamp][conversion][sql_string]") {
+                 "[e2e][types][c_timestamp][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIMESTAMP is bound with SQL_NULL_DATA and projected via SELECT ?

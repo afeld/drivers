@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE", "[timestamp_tz][conversion][c_date]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE", "[e2e][types][timestamp_tz][conversion][c_date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -21,7 +21,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE", "[timestamp_tz][conversion][c_date]
   CHECK(date.day == 15);
 }
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE boundary values", "[timestamp_tz][conversion][c_date]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE boundary values", "[e2e][types][timestamp_tz][conversion][c_date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -56,7 +56,8 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE boundary values", "[timestamp_tz][con
   }
 }
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE with time truncation", "[timestamp_tz][conversion][c_date][truncation]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE with time truncation",
+          "[e2e][types][timestamp_tz][conversion][c_date][truncation]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -70,7 +71,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_DATE with time truncation", "[timestamp_tz
   CHECK(date.day == 15);
 }
 
-TEST_CASE("TIMESTAMP_TZ NULL to SQL_C_TYPE_DATE", "[timestamp_tz][conversion][c_date][null]") {
+TEST_CASE("TIMESTAMP_TZ NULL to SQL_C_TYPE_DATE", "[e2e][types][timestamp_tz][conversion][c_date][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

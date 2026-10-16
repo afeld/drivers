@@ -7,7 +7,7 @@
 #include "get_data.hpp"
 #include "odbc_cast.hpp"
 
-TEST_CASE("should bind SQL_C_NUMERIC to SQL_VARCHAR.", "[query][bind_parameter][c_numeric_to_varchar]") {
+TEST_CASE("should bind SQL_C_NUMERIC to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_numeric_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -31,7 +31,7 @@ TEST_CASE("should bind SQL_C_NUMERIC to SQL_VARCHAR.", "[query][bind_parameter][
 }
 
 TEST_CASE("should bind negative SQL_C_NUMERIC with scale to SQL_VARCHAR.",
-          "[query][bind_parameter][c_numeric_to_varchar]") {
+          "[e2e][query][bind_parameter][c_numeric_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -59,7 +59,7 @@ TEST_CASE("should bind negative SQL_C_NUMERIC with scale to SQL_VARCHAR.",
 }
 
 TEST_CASE("should bind SQL_C_NUMERIC with negative scale to SQL_VARCHAR.",
-          "[query][bind_parameter][c_numeric_to_varchar]") {
+          "[e2e][query][bind_parameter][c_numeric_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

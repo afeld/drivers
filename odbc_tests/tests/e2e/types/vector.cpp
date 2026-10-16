@@ -26,7 +26,7 @@ static std::string get_data_char_full(const StatementHandleWrapper& stmt, SQLUSM
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should cast vector values to appropriate type",
-                 "[datatype][vector][conversion][c_char]") {
+                 "[e2e][types][datatype][vector][conversion][c_char]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -52,7 +52,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should cast vector values to appropriate ty
 // SELECT WITH LITERALS (shared @odbc_e2e)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select <subtype> vector literal", "[datatype][vector]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select <subtype> vector literal", "[e2e][types][datatype][vector]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -81,7 +81,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select <subtype> vector literal", "[
 // NULL HANDLING (shared @odbc_e2e)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL vector values from literals", "[datatype][vector]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL vector values from literals",
+                 "[e2e][types][datatype][vector]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -102,7 +103,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL vector values from liter
 // BOUNDARY VALUES (shared @odbc_e2e)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select <subtype> vector boundary values", "[datatype][vector]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select <subtype> vector boundary values",
+                 "[e2e][types][datatype][vector]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -132,7 +134,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select <subtype> vector boundary val
   CHECK(std::abs(farr[2].get<double>()) < 1e-10);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should preserve FLOAT smallest-normal", "[datatype][vector]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should preserve FLOAT smallest-normal", "[e2e][types][datatype][vector]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
   SKIP_FOR_JSON_RESULT_SET(
       "Server-side JSON serialization flushes FLOAT32 subnormals to zero; "
@@ -156,7 +158,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should preserve FLOAT smallest-normal", "[d
 // MAX DIMENSION (shared @odbc_e2e)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select max-dimension vector", "[datatype][vector]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select max-dimension vector", "[e2e][types][datatype][vector]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -184,7 +186,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select max-dimension vector", "[data
 // TABLE OPERATIONS (shared @odbc_e2e)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select vector values from table", "[datatype][vector]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select vector values from table", "[e2e][types][datatype][vector]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -227,7 +229,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select vector values from table", "[
   CHECK(fv1.get<picojson::array>().size() == 5);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL vector values from table", "[datatype][vector]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL vector values from table", "[e2e][types][datatype][vector]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -266,7 +268,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL vector values from table
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should download vector data in multiple chunks",
-                 "[datatype][vector][large_result_set]") {
+                 "[e2e][types][datatype][vector][large_result_set]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in

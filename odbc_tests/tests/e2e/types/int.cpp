@@ -9,7 +9,7 @@
 #include "compatibility.hpp"
 #include "get_data.hpp"
 
-TEST_CASE("should cast integer values to appropriate type for int and synonyms", "[int]") {
+TEST_CASE("should cast integer values to appropriate type for int and synonyms", "[e2e][types][int]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -49,7 +49,7 @@ TEST_CASE("should cast integer values to appropriate type for int and synonyms",
   CHECK(get_data<SQL_C_SBIGINT>(stmt, 3) == 9223372036854775807LL);
 }
 
-TEST_CASE("should select integer values for int and synonyms", "[int]") {
+TEST_CASE("should select integer values for int and synonyms", "[e2e][types][int]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -106,7 +106,7 @@ TEST_CASE("should select integer values for int and synonyms", "[int]") {
   }
 }
 
-TEST_CASE("should download large result set with multiple chunks for int and synonyms", "[int]") {
+TEST_CASE("should download large result set with multiple chunks for int and synonyms", "[e2e][types][int]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -139,7 +139,7 @@ TEST_CASE("should download large result set with multiple chunks for int and syn
   REQUIRE(row_count == 50000);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for int and synonyms", "[int]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for int and synonyms", "[e2e][types][int]") {
   // Given Snowflake client is logged in
 
   {
@@ -211,7 +211,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for int and
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture,
-                 "should handle server-side Arrow memory optimization for int columns on multiple chunks", "[int]") {
+                 "should handle server-side Arrow memory optimization for int columns on multiple chunks",
+                 "[e2e][types][int]") {
   constexpr int total_rows = 50000;
   constexpr int64_t expected_col1 = 100;
   constexpr int64_t expected_col2 = 30000;
@@ -272,7 +273,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 // Large integer values (exceed int64 range, fetch as strings)
 // ============================================================================
 
-TEST_CASE("should handle large integer values for int and synonyms", "[int]") {
+TEST_CASE("should handle large integer values for int and synonyms", "[e2e][types][int]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -288,7 +289,7 @@ TEST_CASE("should handle large integer values for int and synonyms", "[int]") {
   CHECK(get_data<SQL_C_CHAR>(stmt, 2) == "99999999999999999999999999999999999999");
 }
 
-TEST_CASE("should handle NULL values for int and synonyms", "[int]") {
+TEST_CASE("should handle NULL values for int and synonyms", "[e2e][types][int]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -305,7 +306,8 @@ TEST_CASE("should handle NULL values for int and synonyms", "[int]") {
 // Table operations - large integers
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select large integer values from table for int and synonyms", "[int]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select large integer values from table for int and synonyms",
+                 "[e2e][types][int]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists with values [-99999999999999999999999999999999999999,
@@ -332,7 +334,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select large integer values from tab
 // Parameter binding
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert integer using parameter binding for int and synonyms", "[int]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert integer using parameter binding for int and synonyms",
+                 "[e2e][types][int]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists
@@ -379,7 +382,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert integer using parameter bindi
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should insert and select integers from table using batch parameter binding for int and synonyms",
-                 "[int]") {
+                 "[e2e][types][int]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists

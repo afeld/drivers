@@ -13,7 +13,7 @@
 // BASIC BINARY CONVERSIONS
 // ============================================================================
 
-TEST_CASE("DECFLOAT to SQL_C_BINARY", "[decfloat][conversion][c_binary]") {
+TEST_CASE("DECFLOAT to SQL_C_BINARY", "[e2e][types][decfloat][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -26,7 +26,7 @@ TEST_CASE("DECFLOAT to SQL_C_BINARY", "[decfloat][conversion][c_binary]") {
   check_numeric_val_zero_from(numeric, 1);
 }
 
-TEST_CASE("DECFLOAT fractional to SQL_C_BINARY", "[decfloat][conversion][c_binary]") {
+TEST_CASE("DECFLOAT fractional to SQL_C_BINARY", "[e2e][types][decfloat][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -38,7 +38,7 @@ TEST_CASE("DECFLOAT fractional to SQL_C_BINARY", "[decfloat][conversion][c_binar
   CHECK(numeric_val_to_ull(numeric) == 123);
 }
 
-TEST_CASE("DECFLOAT negative to SQL_C_BINARY", "[decfloat][conversion][c_binary]") {
+TEST_CASE("DECFLOAT negative to SQL_C_BINARY", "[e2e][types][decfloat][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -51,7 +51,7 @@ TEST_CASE("DECFLOAT negative to SQL_C_BINARY", "[decfloat][conversion][c_binary]
   check_numeric_val_zero_from(numeric, 1);
 }
 
-TEST_CASE("DECFLOAT zero to SQL_C_BINARY", "[decfloat][conversion][c_binary]") {
+TEST_CASE("DECFLOAT zero to SQL_C_BINARY", "[e2e][types][decfloat][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -67,7 +67,7 @@ TEST_CASE("DECFLOAT zero to SQL_C_BINARY", "[decfloat][conversion][c_binary]") {
 // BUFFER TOO SMALL
 // ============================================================================
 
-TEST_CASE("DECFLOAT SQL_C_BINARY buffer too small", "[decfloat][conversion][c_binary][22003]") {
+TEST_CASE("DECFLOAT SQL_C_BINARY buffer too small", "[e2e][types][decfloat][conversion][c_binary][22003]") {
   // BD#12: old driver does not check BufferLength for SQL_NUMERIC_STRUCT output; a physical
   //        allocation smaller than sizeof(SQL_NUMERIC_STRUCT) (19 bytes) has undefined behavior
   SKIP_OLD_DRIVER("BD#12",
@@ -92,7 +92,8 @@ TEST_CASE("DECFLOAT SQL_C_BINARY buffer too small", "[decfloat][conversion][c_bi
 // OVERFLOW (extreme exponent)
 // ============================================================================
 
-TEST_CASE("DECFLOAT extreme exponent to SQL_C_BINARY returns 22003", "[decfloat][conversion][c_binary][22003]") {
+TEST_CASE("DECFLOAT extreme exponent to SQL_C_BINARY returns 22003",
+          "[e2e][types][decfloat][conversion][c_binary][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -130,7 +131,7 @@ TEST_CASE("DECFLOAT extreme exponent to SQL_C_BINARY returns 22003", "[decfloat]
 // NULL handling
 // ============================================================================
 
-TEST_CASE("DECFLOAT NULL to SQL_C_BINARY", "[decfloat][conversion][c_binary][null]") {
+TEST_CASE("DECFLOAT NULL to SQL_C_BINARY", "[e2e][types][decfloat][conversion][c_binary][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -241,7 +241,7 @@ std::string joined_text_for_state(const std::vector<DiagRec>& records, const std
 }  // namespace
 
 TEST_CASE("should report SQL_VARCHAR for every string column when MapToLongVarchar is unset",
-          "[datatype][string][map_to_long_varchar]") {
+          "[e2e][types][datatype][string][map_to_long_varchar]") {
   // Given a connection with MapToLongVarchar unset (3.x default -1)
   MappedConn mapped("");
   create_string_table(mapped.conn);
@@ -258,7 +258,7 @@ TEST_CASE("should report SQL_VARCHAR for every string column when MapToLongVarch
 }
 
 TEST_CASE("should remap VARCHAR columns above MapToLongVarchar=8000 to SQL_LONGVARCHAR",
-          "[datatype][string][map_to_long_varchar]") {
+          "[e2e][types][datatype][string][map_to_long_varchar]") {
   // Given a connection with threshold 8000 and a row of VARCHAR values
   MappedConn mapped("MapToLongVarchar=8000;");
   create_string_table(mapped.conn);
@@ -293,7 +293,7 @@ TEST_CASE("should remap VARCHAR columns above MapToLongVarchar=8000 to SQL_LONGV
 }
 
 TEST_CASE("should remap SQLColumns DATA_TYPE and SQL_DATA_TYPE with the same MapToLongVarchar threshold",
-          "[datatype][string][map_to_long_varchar]") {
+          "[e2e][types][datatype][string][map_to_long_varchar]") {
   // Given a connection with threshold 8000
   MappedConn mapped("MapToLongVarchar=8000;");
   create_string_table(mapped.conn);
@@ -322,7 +322,7 @@ TEST_CASE("should remap SQLColumns DATA_TYPE and SQL_DATA_TYPE with the same Map
 }
 
 TEST_CASE("should apply DEFAULT_VARCHAR_SIZE before the MapToLongVarchar threshold",
-          "[datatype][string][map_to_long_varchar]") {
+          "[e2e][types][datatype][string][map_to_long_varchar]") {
   // Given both keys, with DEFAULT_VARCHAR_SIZE equal to the remap threshold
   MappedConn mapped("MapToLongVarchar=8000;DEFAULT_VARCHAR_SIZE=8000;");
   create_string_table(mapped.conn);
@@ -340,7 +340,7 @@ TEST_CASE("should apply DEFAULT_VARCHAR_SIZE before the MapToLongVarchar thresho
 }
 
 TEST_CASE("should accept MapToLongVarchar and report only unrecognized keys as 01S00",
-          "[datatype][string][map_to_long_varchar]") {
+          "[e2e][types][datatype][string][map_to_long_varchar]") {
   // Given a connection string that pairs MapToLongVarchar with a key neither driver accepts
   const std::string conn_str = get_connection_string() + "MapToLongVarchar=8000;INVALIDKEY=abc;";
 

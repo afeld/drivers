@@ -23,7 +23,7 @@
 #include "sf_odbc.h"
 
 TEST_CASE("SQL_SF_TIMESTAMP_NTZ binds SQL_C_TYPE_TIMESTAMP into a TIMESTAMP_NTZ column",
-          "[timestamp_ntz][bind_fetch][vendor_codes]") {
+          "[e2e][types][timestamp_ntz][bind_fetch][vendor_codes]") {
   // Given Snowflake client is logged in and a temporary table with a TIMESTAMP_NTZ column
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -72,7 +72,7 @@ TEST_CASE("SQL_SF_TIMESTAMP_NTZ binds SQL_C_TYPE_TIMESTAMP into a TIMESTAMP_NTZ 
 }
 
 TEST_CASE("SQL_SF_TIMESTAMP_LTZ binds SQL_C_TYPE_TIMESTAMP into a TIMESTAMP_LTZ column",
-          "[timestamp_ltz][bind_fetch][vendor_codes]") {
+          "[e2e][types][timestamp_ltz][bind_fetch][vendor_codes]") {
   // With session TZ == UTC, the bound wall-clock and the displayed
   // wall-clock collapse to the same instant: the driver emits a bare
   // `"YYYY-MM-DD HH:MM:SS.fff"` string with `type=TEXT`, the server
@@ -129,7 +129,7 @@ TEST_CASE("SQL_SF_TIMESTAMP_LTZ binds SQL_C_TYPE_TIMESTAMP into a TIMESTAMP_LTZ 
 }
 
 TEST_CASE("SQL_SF_TIMESTAMP_LTZ wall-clock is interpreted in the session timezone on bind",
-          "[timestamp_ltz][bind_fetch][vendor_codes][session_tz]") {
+          "[e2e][types][timestamp_ltz][bind_fetch][vendor_codes][session_tz]") {
   // The load-bearing claim of TIMESTAMP_LTZ on the bind side is that the
   // driver emits a **bare** wall-clock string (`"YYYY-MM-DD HH:MM:SS.FFFFFFFFF"`)
   // tagged as `type=TEXT` on the wire, matching the legacy 3.16.0 driver's
@@ -192,7 +192,7 @@ TEST_CASE("SQL_SF_TIMESTAMP_LTZ wall-clock is interpreted in the session timezon
 }
 
 TEST_CASE("SQL_SF_TIMESTAMP_TZ binds SQL_C_TYPE_TIMESTAMP into a TIMESTAMP_TZ column as UTC",
-          "[timestamp_tz][bind_fetch][vendor_codes]") {
+          "[e2e][types][timestamp_tz][bind_fetch][vendor_codes]") {
   // SQL_TIMESTAMP_STRUCT has no offset field, so binding it to a TIMESTAMP_TZ
   // column treats the wall-clock as UTC (offset = 0 on the wire). This matches
   // the legacy Python connector's behavior for naive `datetime` values bound
@@ -251,7 +251,7 @@ TEST_CASE("SQL_SF_TIMESTAMP_TZ binds SQL_C_TYPE_TIMESTAMP into a TIMESTAMP_TZ co
 }
 
 TEST_CASE("SQL_SF_TIMESTAMP_TZ binds SQL_C_CHAR with offset suffix and round-trips the offset",
-          "[timestamp_tz][bind_fetch][vendor_codes]") {
+          "[e2e][types][timestamp_tz][bind_fetch][vendor_codes]") {
   // Spec-correct path for binding a TIMESTAMP_TZ value with a non-UTC offset:
   // SQL_C_CHAR with a `+/-HH:MM` suffix. The driver parses the offset, emits
   // the legacy `<epoch_ns> <offset_minutes_plus_1440>` two-token wire format,
@@ -318,7 +318,8 @@ TEST_CASE("SQL_SF_TIMESTAMP_TZ binds SQL_C_CHAR with offset suffix and round-tri
   CHECK(get_data<SQL_C_CHAR>(str_stmt, 1) == "2024-03-15 14:30:45 +05:30");
 }
 
-TEST_CASE("SQLDescribeParam returns bound vendor TIMESTAMP codes", "[timestamp_vendor_codes][describe_param]") {
+TEST_CASE("SQLDescribeParam returns bound vendor TIMESTAMP codes",
+          "[e2e][types][timestamp_vendor_codes][describe_param]") {
   // Given Snowflake client is logged in and a prepared two-parameter INSERT
   Connection conn;
   Schema::use_temp_session_schema(conn);

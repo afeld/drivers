@@ -324,7 +324,7 @@ static void check_all_null_row(Connection& conn, const std::string& table) {
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should stage-bind at the default threshold and reuse SYSTEM$BIND across consecutive bulk inserts",
-                 "[query][large_bindings]") {
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists
@@ -375,7 +375,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should round-trip all bindable types via stage binding",
-                 "[query][large_bindings]") {
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
   auto session_stmt = conn.createStatement();
   SessionParameterOverride timezone_override(session_stmt.getHandle(), "TIMEZONE", "'UTC'");
@@ -415,7 +415,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should round-trip all bindable types via st
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should preserve CSV escaping hazards via stage binding",
-                 "[query][large_bindings]") {
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, txt VARCHAR) exists
@@ -486,7 +486,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should preserve CSV escaping hazards via st
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should not stage-bind scalar or non-INSERT queries even when threshold is crossed",
-                 "[query][large_bindings]") {
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
 
   // And CLIENT_STAGE_ARRAY_BINDING_THRESHOLD session parameter is set to 1
@@ -520,7 +520,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should not stage-bind scalar or non-INSERT 
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should use inline JSON when row count is below CLIENT_STAGE_ARRAY_BINDING_THRESHOLD",
-                 "[query][large_bindings]") {
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists
@@ -551,7 +551,8 @@ TEST_CASE_METHOD(ConnSchemaFixture,
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should use stage binding at exact threshold boundary", "[query][large_bindings]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should use stage binding at exact threshold boundary",
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists
@@ -587,7 +588,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should use stage binding at exact threshold
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should keep an all-NULL row on the inline JSON path when stage binding is disabled",
-                 "[query][large_bindings]") {
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id INTEGER, colA DOUBLE, colB FLOAT, colC VARCHAR, colD NUMBER, colE INTEGER)
@@ -612,7 +613,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should stage-bind an all-NULL row when the bound cell count meets the threshold",
-                 "[query][large_bindings]") {
+                 "[e2e][query][large_bindings]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id INTEGER, colA DOUBLE, colB FLOAT, colC VARCHAR, colD NUMBER, colE INTEGER)
@@ -641,7 +642,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should stage-bind an all-NULL row when the 
 // SQL_PARAM_IGNORE are skipped during array execution and reported as
 // SQL_PARAM_UNUSED, while still counting toward SQL_ATTR_PARAMS_PROCESSED_PTR.
 TEST_CASE_METHOD(ConnSchemaFixture, "should skip SQL_PARAM_IGNORE sets during array execution",
-                 "[query][large_bindings][param_operation_ptr]") {
+                 "[e2e][query][large_bindings][param_operation_ptr]") {
   // Given Snowflake client is logged in
   // And A temporary table with an id column exists
   ScopedTable table(conn, "lb_param_ignore", "id BIGINT");
@@ -706,7 +707,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should skip SQL_PARAM_IGNORE sets during ar
 // the effective-APD routing fix it was written to the inactive implicit APD, so
 // the ignore array was dropped and every set (including 20/40) was inserted.
 TEST_CASE_METHOD(ConnSchemaFixture, "should skip SQL_PARAM_IGNORE sets with an explicit APP_PARAM_DESC",
-                 "[query][large_bindings][param_operation_ptr]") {
+                 "[e2e][query][large_bindings][param_operation_ptr]") {
   // Given Snowflake client is logged in
   // And A temporary table with an id column exists
   ScopedTable table(conn, "lb_param_ignore_explicit", "id BIGINT");

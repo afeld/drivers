@@ -20,7 +20,7 @@
 // Error Codes — Diagnostics table
 // =============================================================================
 
-TEST_CASE("should return SQL_INVALID_HANDLE for null statement handle.", "[query][bind_parameter][error]") {
+TEST_CASE("should return SQL_INVALID_HANDLE for null statement handle.", "[e2e][query][bind_parameter][error]") {
   // Given No statement handle exists
   SQLINTEGER param = 1;
   SQLLEN indicator = 0;
@@ -33,7 +33,7 @@ TEST_CASE("should return SQL_INVALID_HANDLE for null statement handle.", "[query
   REQUIRE(ret == SQL_INVALID_HANDLE);
 }
 
-TEST_CASE("should return 07009 when ParameterNumber is zero.", "[query][bind_parameter][error]") {
+TEST_CASE("should return 07009 when ParameterNumber is zero.", "[e2e][query][bind_parameter][error]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -57,7 +57,7 @@ TEST_CASE("should return 07009 when ParameterNumber is zero.", "[query][bind_par
   }
 }
 
-TEST_CASE("should return HY003 for invalid C data type.", "[query][bind_parameter][error]") {
+TEST_CASE("should return HY003 for invalid C data type.", "[e2e][query][bind_parameter][error]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -81,7 +81,7 @@ TEST_CASE("should return HY003 for invalid C data type.", "[query][bind_paramete
   }
 }
 
-TEST_CASE("should return HY004 for invalid SQL data type.", "[query][bind_parameter][error]") {
+TEST_CASE("should return HY004 for invalid SQL data type.", "[e2e][query][bind_parameter][error]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -96,7 +96,7 @@ TEST_CASE("should return HY004 for invalid SQL data type.", "[query][bind_parame
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("HY004"));
 }
 
-TEST_CASE("should return HY105 for invalid InputOutputType.", "[query][bind_parameter][error]") {
+TEST_CASE("should return HY105 for invalid InputOutputType.", "[e2e][query][bind_parameter][error]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -119,7 +119,8 @@ TEST_CASE("should return HY105 for invalid InputOutputType.", "[query][bind_para
   }
 }
 
-TEST_CASE("should return HY009 when both value and indicator pointers are null.", "[query][bind_parameter][error]") {
+TEST_CASE("should return HY009 when both value and indicator pointers are null.",
+          "[e2e][query][bind_parameter][error]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -132,7 +133,7 @@ TEST_CASE("should return HY009 when both value and indicator pointers are null."
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("HY009"));
 }
 
-TEST_CASE("should return HY090 for negative BufferLength.", "[query][bind_parameter][error]") {
+TEST_CASE("should return HY090 for negative BufferLength.", "[e2e][query][bind_parameter][error]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -173,7 +174,7 @@ TEST_CASE("should return HY090 for negative BufferLength.", "[query][bind_parame
   }
 }
 
-TEST_CASE("should return HY104 for invalid precision or scale.", "[query][bind_parameter][error]") {
+TEST_CASE("should return HY104 for invalid precision or scale.", "[e2e][query][bind_parameter][error]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -198,7 +199,7 @@ TEST_CASE("should return HY104 for invalid precision or scale.", "[query][bind_p
 // API Behavior — Binding lifecycle
 // =============================================================================
 
-TEST_CASE("should execute via SQLExecDirect with pre-bound parameter.", "[query][bind_parameter]") {
+TEST_CASE("should execute via SQLExecDirect with pre-bound parameter.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -220,7 +221,7 @@ TEST_CASE("should execute via SQLExecDirect with pre-bound parameter.", "[query]
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 77);
 }
 
-TEST_CASE("should replace binding when same ParameterNumber is rebound.", "[query][bind_parameter]") {
+TEST_CASE("should replace binding when same ParameterNumber is rebound.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -249,7 +250,7 @@ TEST_CASE("should replace binding when same ParameterNumber is rebound.", "[quer
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 222);
 }
 
-TEST_CASE("should fail with 07002 after SQL_RESET_PARAMS clears bindings.", "[query][bind_parameter]") {
+TEST_CASE("should fail with 07002 after SQL_RESET_PARAMS clears bindings.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -275,7 +276,7 @@ TEST_CASE("should fail with 07002 after SQL_RESET_PARAMS clears bindings.", "[qu
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("07002"));
 }
 
-TEST_CASE("should succeed after SQL_RESET_PARAMS clears a spurious extra binding.", "[query][bind_parameter]") {
+TEST_CASE("should succeed after SQL_RESET_PARAMS clears a spurious extra binding.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -305,7 +306,7 @@ TEST_CASE("should succeed after SQL_RESET_PARAMS clears a spurious extra binding
   REQUIRE_ODBC(ret, stmt);
 }
 
-TEST_CASE("should fail with 07002 when parameter bindings have a gap.", "[query][bind_parameter]") {
+TEST_CASE("should fail with 07002 when parameter bindings have a gap.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -327,7 +328,7 @@ TEST_CASE("should fail with 07002 when parameter bindings have a gap.", "[query]
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("07002"));
 }
 
-TEST_CASE("should reflect changed bound variable on re-execution.", "[query][bind_parameter]") {
+TEST_CASE("should reflect changed bound variable on re-execution.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -360,7 +361,7 @@ TEST_CASE("should reflect changed bound variable on re-execution.", "[query][bin
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 20);
 }
 
-TEST_CASE("should bind multiple parameters to a single statement.", "[query][bind_parameter]") {
+TEST_CASE("should bind multiple parameters to a single statement.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -389,7 +390,7 @@ TEST_CASE("should bind multiple parameters to a single statement.", "[query][bin
   CHECK(get_data<SQL_C_CHAR>(stmt, 2) == "hello");
 }
 
-TEST_CASE("should rebind parameter to different type without SQL_RESET_PARAMS.", "[query][bind_parameter]") {
+TEST_CASE("should rebind parameter to different type without SQL_RESET_PARAMS.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -426,7 +427,7 @@ TEST_CASE("should rebind parameter to different type without SQL_RESET_PARAMS.",
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "rebound");
 }
 
-TEST_CASE("should bind NULL via SQL_NULL_DATA indicator.", "[query][bind_parameter]") {
+TEST_CASE("should bind NULL via SQL_NULL_DATA indicator.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -448,7 +449,7 @@ TEST_CASE("should bind NULL via SQL_NULL_DATA indicator.", "[query][bind_paramet
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should alternate NULL and non-NULL across sequential executions.",
-                 "[query][bind_parameter]") {
+                 "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE bind_null_seq (val INTEGER)");
   auto stmt = conn.createStatement();
@@ -496,7 +497,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should alternate NULL and non-NULL across s
   CHECK(get_data<SQL_C_LONG>(select_stmt, 1) == 200);
 }
 
-TEST_CASE("should allow rebinding after SQL_RESET_PARAMS.", "[query][bind_parameter]") {
+TEST_CASE("should allow rebinding after SQL_RESET_PARAMS.", "[e2e][query][bind_parameter]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -539,7 +540,7 @@ TEST_CASE("should allow rebinding after SQL_RESET_PARAMS.", "[query][bind_parame
 // APD/IPD Descriptor Integration
 // =============================================================================
 
-TEST_CASE("should populate APD descriptor fields after SQLBindParameter.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should populate APD descriptor fields after SQLBindParameter.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -588,7 +589,7 @@ TEST_CASE("should populate APD descriptor fields after SQLBindParameter.", "[que
   CHECK(count == 1);
 }
 
-TEST_CASE("should populate IPD descriptor fields after SQLBindParameter.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should populate IPD descriptor fields after SQLBindParameter.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -637,7 +638,7 @@ TEST_CASE("should populate IPD descriptor fields after SQLBindParameter.", "[que
   CHECK(count == 1);
 }
 
-TEST_CASE("should report parameter count via SQLNumParams after binding.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should report parameter count via SQLNumParams after binding.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -659,7 +660,7 @@ TEST_CASE("should report parameter count via SQLNumParams after binding.", "[que
   CHECK(num_params == 2);
 }
 
-TEST_CASE("should describe bound parameter via SQLDescribeParam.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should describe bound parameter via SQLDescribeParam.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -686,7 +687,7 @@ TEST_CASE("should describe bound parameter via SQLDescribeParam.", "[query][bind
 // Descriptor Error Scenarios
 // =============================================================================
 
-TEST_CASE("should return SQL_NO_DATA for unbound APD record.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should return SQL_NO_DATA for unbound APD record.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -703,7 +704,7 @@ TEST_CASE("should return SQL_NO_DATA for unbound APD record.", "[query][bind_par
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should return SQL_NO_DATA for unbound IPD record.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should return SQL_NO_DATA for unbound IPD record.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -721,7 +722,7 @@ TEST_CASE("should return SQL_NO_DATA for unbound IPD record.", "[query][bind_par
   OLD_DRIVER_ONLY("BD#28") { CHECK(ret == SQL_ERROR); }
 }
 
-TEST_CASE("should return error for negative descriptor record number.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should return error for negative descriptor record number.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -738,7 +739,7 @@ TEST_CASE("should return error for negative descriptor record number.", "[query]
   CHECK(ret == SQL_ERROR);
 }
 
-TEST_CASE("should return error for unknown descriptor field identifier.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should return error for unknown descriptor field identifier.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in and a parameter is bound
   Connection conn;
   auto stmt = conn.createStatement();
@@ -761,7 +762,7 @@ TEST_CASE("should return error for unknown descriptor field identifier.", "[quer
 }
 
 TEST_CASE("should return error for header-only field on record index greater than zero.",
-          "[query][bind_parameter][descriptor]") {
+          "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in and a parameter is bound
   Connection conn;
   auto stmt = conn.createStatement();
@@ -784,7 +785,8 @@ TEST_CASE("should return error for header-only field on record index greater tha
   CHECK(array_size == 1);
 }
 
-TEST_CASE("should report correct APD and IPD count for multiple parameters.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should report correct APD and IPD count for multiple parameters.",
+          "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -817,7 +819,7 @@ TEST_CASE("should report correct APD and IPD count for multiple parameters.", "[
   CHECK(ipd_count == 3);
 }
 
-TEST_CASE("should reset APD count to zero after SQL_RESET_PARAMS.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should reset APD count to zero after SQL_RESET_PARAMS.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -841,7 +843,7 @@ TEST_CASE("should reset APD count to zero after SQL_RESET_PARAMS.", "[query][bin
   CHECK(count == 0);
 }
 
-TEST_CASE("should report APD count zero when no parameters are bound.", "[query][bind_parameter][descriptor]") {
+TEST_CASE("should report APD count zero when no parameters are bound.", "[e2e][query][bind_parameter][descriptor]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

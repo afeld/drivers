@@ -40,7 +40,7 @@ void execute_marker(SQLHSTMT stmt, int marker, MarkerResult& out) {
 }
 
 TEST_CASE("should return independent correct results for overlapping queries on one connection",
-          "[query][concurrent_execution]") {
+          "[e2e][query][concurrent_execution]") {
   // Given Snowflake client is logged in
   Connection conn;
   std::vector<StatementHandleWrapper> stmts;
@@ -70,7 +70,7 @@ TEST_CASE("should return independent correct results for overlapping queries on 
 }
 
 TEST_CASE("should return independent correct results for overlapping queries on distinct connections",
-          "[query][concurrent_execution]") {
+          "[e2e][query][concurrent_execution]") {
   // Given 8 Snowflake clients are logged in
   std::vector<std::unique_ptr<Connection>> conns;
   conns.reserve(kConcurrency);

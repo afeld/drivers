@@ -19,7 +19,7 @@
 // INCOMPATIBLE CONVERSIONS - Binary to Integer C Types
 // ============================================================================
 
-TEST_CASE("should fail converting binary to integer C types", "[datatype][binary][conversion][negative]") {
+TEST_CASE("should fail converting binary to integer C types", "[e2e][types][datatype][binary][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -103,7 +103,8 @@ TEST_CASE("should fail converting binary to integer C types", "[datatype][binary
 // INCOMPATIBLE CONVERSIONS - Binary to Floating-Point C Types
 // ============================================================================
 
-TEST_CASE("should fail converting binary to floating-point C types", "[datatype][binary][conversion][negative]") {
+TEST_CASE("should fail converting binary to floating-point C types",
+          "[e2e][types][datatype][binary][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -127,7 +128,7 @@ TEST_CASE("should fail converting binary to floating-point C types", "[datatype]
 // INCOMPATIBLE CONVERSIONS - Binary to SQL_C_NUMERIC
 // ============================================================================
 
-TEST_CASE("should fail converting binary to SQL_C_NUMERIC", "[datatype][binary][conversion][negative]") {
+TEST_CASE("should fail converting binary to SQL_C_NUMERIC", "[e2e][types][datatype][binary][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -145,7 +146,7 @@ TEST_CASE("should fail converting binary to SQL_C_NUMERIC", "[datatype][binary][
 // INCOMPATIBLE CONVERSIONS - Binary to Temporal C Types
 // ============================================================================
 
-TEST_CASE("should fail converting binary to temporal C types", "[datatype][binary][conversion][negative]") {
+TEST_CASE("should fail converting binary to temporal C types", "[e2e][types][datatype][binary][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -176,7 +177,7 @@ TEST_CASE("should fail converting binary to temporal C types", "[datatype][binar
 // ============================================================================
 
 TEST_CASE("should fail converting binary to single-component interval C types",
-          "[datatype][binary][conversion][negative]") {
+          "[e2e][types][datatype][binary][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -224,7 +225,8 @@ TEST_CASE("should fail converting binary to single-component interval C types",
 // INCOMPATIBLE CONVERSIONS - Binary to Compound Interval C Types
 // ============================================================================
 
-TEST_CASE("should fail converting binary to compound interval C types", "[datatype][binary][conversion][negative]") {
+TEST_CASE("should fail converting binary to compound interval C types",
+          "[e2e][types][datatype][binary][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -278,7 +280,7 @@ TEST_CASE("should fail converting binary to compound interval C types", "[dataty
 // INCOMPATIBLE CONVERSIONS - Binary to GUID C Type
 // ============================================================================
 
-TEST_CASE("should fail converting binary to SQL_C_GUID", "[datatype][binary][conversion][negative]") {
+TEST_CASE("should fail converting binary to SQL_C_GUID", "[e2e][types][datatype][binary][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

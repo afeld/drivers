@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("DATE to SQL_C_TYPE_DATE", "[date][conversion][c_date]") {
+TEST_CASE("DATE to SQL_C_TYPE_DATE", "[e2e][types][date][conversion][c_date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -20,7 +20,7 @@ TEST_CASE("DATE to SQL_C_TYPE_DATE", "[date][conversion][c_date]") {
   CHECK(date.day == 15);
 }
 
-TEST_CASE("DATE to SQL_C_TYPE_DATE boundary values", "[date][conversion][c_date]") {
+TEST_CASE("DATE to SQL_C_TYPE_DATE boundary values", "[e2e][types][date][conversion][c_date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -65,7 +65,7 @@ TEST_CASE("DATE to SQL_C_TYPE_DATE boundary values", "[date][conversion][c_date]
   }
 }
 
-TEST_CASE("DATE NULL to SQL_C_TYPE_DATE", "[date][conversion][c_date][null]") {
+TEST_CASE("DATE NULL to SQL_C_TYPE_DATE", "[e2e][types][date][conversion][c_date][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -80,7 +80,7 @@ TEST_CASE("DATE NULL to SQL_C_TYPE_DATE", "[date][conversion][c_date][null]") {
 // SQL_C_DEFAULT
 // ============================================================================
 
-TEST_CASE("DATE to SQL_C_DEFAULT", "[date][conversion][c_default]") {
+TEST_CASE("DATE to SQL_C_DEFAULT", "[e2e][types][date][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -98,7 +98,7 @@ TEST_CASE("DATE to SQL_C_DEFAULT", "[date][conversion][c_default]") {
   CHECK(date.day == 15);
 }
 
-TEST_CASE("DATE NULL to SQL_C_DEFAULT", "[date][conversion][c_default][null]") {
+TEST_CASE("DATE NULL to SQL_C_DEFAULT", "[e2e][types][date][conversion][c_default][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

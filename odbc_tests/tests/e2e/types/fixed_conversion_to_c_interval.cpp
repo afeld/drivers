@@ -15,7 +15,8 @@
 // SUCCESSFUL CONVERSIONS - Single-component interval types
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to single-field interval types", "[datatype][number][interval]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to single-field interval types",
+                 "[e2e][types][datatype][number][interval]") {
   // Given Snowflake client is logged in
 
   // When Positive, negative, and zero NUMBER values are fetched as SQL_C_INTERVAL_YEAR
@@ -110,7 +111,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to single-field interval types", "[d
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - fractional truncation returns 01S07",
-                 "[datatype][number][interval][01S07]") {
+                 "[e2e][types][datatype][number][interval][01S07]") {
   // Given Snowflake client is logged in
 
   // When DECIMAL value with fractional part is fetched as SQL_C_INTERVAL_YEAR
@@ -161,7 +162,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - fractional truncation 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - sub-microsecond truncation returns 01S07",
-                 "[datatype][number][interval][01S07]") {
+                 "[e2e][types][datatype][number][interval][01S07]") {
   // Given Snowflake client is logged in
 
   // When DECIMAL with 9-digit fractional part is fetched as SQL_C_INTERVAL_SECOND
@@ -189,7 +190,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - sub-microsecond trunca
 // EDGE CASES - Negative zero handling
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - no negative zero", "[datatype][number][interval][edge]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - no negative zero",
+                 "[e2e][types][datatype][number][interval][edge]") {
   // Given Snowflake client is logged in
 
   // When Negative fractional DECIMAL values truncate to zero for non-second intervals
@@ -236,7 +238,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - no negative zero", "[d
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to multi-field interval returns 22015",
-                 "[datatype][number][interval][22015]") {
+                 "[e2e][types][datatype][number][interval][22015]") {
   // Given Snowflake client is logged in
 
   // When Query "SELECT 42::NUMBER(10,0)" is executed and fetched as SQL_C_INTERVAL_YEAR_TO_MONTH
@@ -269,7 +271,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to multi-field interval returns 2201
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - NULL returns SQL_NULL_DATA",
-                 "[datatype][number][interval][null]") {
+                 "[e2e][types][datatype][number][interval][null]") {
   // Given Snowflake client is logged in
 
   // When Query "SELECT NULL::NUMBER(10,0)" is executed and fetched as SQL_C_INTERVAL_YEAR
@@ -299,7 +301,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - NULL returns SQL_NULL_
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - default precision rejects values >= 100",
-                 "[datatype][number][interval][precision]") {
+                 "[e2e][types][datatype][number][interval][precision]") {
   SKIP_OLD_DRIVER("BD#18", "Old driver does not enforce interval leading precision");
   // Given Snowflake client is logged in
 
@@ -337,7 +339,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - default precision reje
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - custom precision via SQLSetDescField",
-                 "[datatype][number][interval][precision][descriptor]") {
+                 "[e2e][types][datatype][number][interval][precision][descriptor]") {
   SKIP_OLD_DRIVER("BD#18", "Old driver does not support SQL_DESC_DATETIME_INTERVAL_PRECISION");
   // Given Snowflake client is logged in
 
@@ -406,7 +408,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER to interval - custom precision via S
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_INTERVAL types", "[fixed][conversion][c_interval][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_INTERVAL types",
+                 "[e2e][types][fixed][conversion][c_interval][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL NUMBER value is queried

@@ -11,7 +11,7 @@
 #include "get_diag_rec.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_BINARY", "[fixed][conversion][c_binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_BINARY", "[e2e][types][fixed][conversion][c_binary]") {
   // Given A Snowflake connection is established
 
   {
@@ -45,7 +45,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_BINARY", "[fixed][conv
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL SQL_C_BINARY buffer too small",
-                 "[fixed][conversion][c_binary][22003]") {
+                 "[e2e][types][fixed][conversion][c_binary][22003]") {
   // BD#12: old driver does not check BufferLength for SQL_NUMERIC_STRUCT output; a physical
   //        allocation smaller than sizeof(SQL_NUMERIC_STRUCT) (19 bytes) has undefined behavior
   SKIP_OLD_DRIVER("BD#12",
@@ -65,7 +65,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL SQL_C_BINARY buffer too small",
   CHECK(get_sqlstate(stmt) == "22003");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_BINARY", "[fixed][conversion][c_binary][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_BINARY", "[e2e][types][fixed][conversion][c_binary][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL NUMBER value is queried

@@ -10,35 +10,8 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG to SQL_VARCHAR and read back",
-                 "[c_numeric_types][conversion][sql_string]") {
-  // Given Snowflake client is logged in
-
-  conn.execute("CREATE TEMPORARY TABLE t_vc_long (col VARCHAR(100))");
-
-  SQLINTEGER val = 42;
-  SQLLEN ind = 0;
-
-  // When SQL_C_SLONG 42 is bound to SQL_VARCHAR and inserted
-  auto stmt = conn.createStatement();
-  SQLRETURN ret = SQLPrepare(stmt.getHandle(), sqlchar("INSERT INTO t_vc_long VALUES (?)"), SQL_NTS);
-  REQUIRE_ODBC(ret, stmt);
-  ret = SQLBindParameter(stmt.getHandle(), 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_VARCHAR, 100, 0, &val, 0, &ind);
-  REQUIRE_ODBC(ret, stmt);
-  ret = SQLExecute(stmt.getHandle());
-  REQUIRE_ODBC(ret, stmt);
-
-  // Then fetching as SQL_C_CHAR yields 42
-  auto sel = conn.createStatement();
-  ret = SQLExecDirect(sel.getHandle(), sqlchar("SELECT col FROM t_vc_long"), SQL_NTS);
-  REQUIRE_ODBC(ret, sel);
-  ret = SQLFetch(sel.getHandle());
-  REQUIRE_ODBC(ret, sel);
-  CHECK(get_data<SQL_C_CHAR>(sel, 1) == "42");
-}
-
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_VARCHAR",
-                 "[c_numeric_types][conversion][sql_string]") {
+                 "[e2e][types][c_numeric_types][conversion][sql_string]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_vc_dbl (col VARCHAR(100))");
@@ -66,7 +39,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_VARCHAR",
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_VARCHAR",
-                 "[c_numeric_types][conversion][sql_string]") {
+                 "[e2e][types][c_numeric_types][conversion][sql_string]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_vc_bit (col VARCHAR(100))");
@@ -93,7 +66,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BIT to SQL_VARCHAR",
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_VARCHAR",
-                 "[c_numeric_types][conversion][sql_string]") {
+                 "[e2e][types][c_numeric_types][conversion][sql_string]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_vc_num (col VARCHAR(100))");
@@ -126,7 +99,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_VARCHAR",
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_VARCHAR",
-                 "[c_numeric_types][conversion][sql_string]") {
+                 "[e2e][types][c_numeric_types][conversion][sql_string]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_vc_sb (col VARCHAR(100))");
@@ -150,31 +123,4 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_VARCHAR",
   ret = SQLFetch(sel.getHandle());
   REQUIRE_ODBC(ret, sel);
   CHECK(get_data<SQL_C_CHAR>(sel, 1) == "9999999999");
-}
-
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG with NULL indicator to SQL_VARCHAR",
-                 "[c_numeric_types][conversion][sql_string]") {
-  // Given Snowflake client is logged in
-
-  conn.execute("CREATE TEMPORARY TABLE t_vc_null (col VARCHAR(100))");
-
-  SQLINTEGER val = 0;
-  SQLLEN ind = SQL_NULL_DATA;
-
-  // When SQL_C_SLONG is bound with SQL_NULL_DATA and inserted
-  auto stmt = conn.createStatement();
-  SQLRETURN ret = SQLPrepare(stmt.getHandle(), sqlchar("INSERT INTO t_vc_null VALUES (?)"), SQL_NTS);
-  REQUIRE_ODBC(ret, stmt);
-  ret = SQLBindParameter(stmt.getHandle(), 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_VARCHAR, 100, 0, &val, 0, &ind);
-  REQUIRE_ODBC(ret, stmt);
-  ret = SQLExecute(stmt.getHandle());
-  REQUIRE_ODBC(ret, stmt);
-
-  // Then the column is NULL when fetched as SQL_C_CHAR
-  auto sel = conn.createStatement();
-  ret = SQLExecDirect(sel.getHandle(), sqlchar("SELECT col FROM t_vc_null"), SQL_NTS);
-  REQUIRE_ODBC(ret, sel);
-  ret = SQLFetch(sel.getHandle());
-  REQUIRE_ODBC(ret, sel);
-  CHECK(get_data_optional<SQL_C_CHAR>(sel, 1) == std::nullopt);
 }

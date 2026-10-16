@@ -133,7 +133,7 @@ try {
         $ctestArgs = @("-j", ($NPROC * 4), "-C", "Debug", "--test-dir", "cmake-build", "--output-on-failure")
     }
     if ($env:CTEST_FILTER) {
-        $ctestArgs += @("-R", $env:CTEST_FILTER)
+        $ctestArgs += @("-L", $env:CTEST_FILTER, "--no-tests=error")
     }
     $junitFile = $null
     $ctestLog = $null

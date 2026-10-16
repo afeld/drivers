@@ -24,7 +24,7 @@
 // TYPE CASTING
 // ============================================================================
 
-TEST_CASE("should cast decfloat values to appropriate type", "[decfloat]") {
+TEST_CASE("should cast decfloat values to appropriate type", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -58,7 +58,7 @@ TEST_CASE("should cast decfloat values to appropriate type", "[decfloat]") {
 // SELECT WITH LITERALS (no tables)
 // ============================================================================
 
-TEST_CASE("should select decfloat literals", "[decfloat]") {
+TEST_CASE("should select decfloat literals", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -75,7 +75,7 @@ TEST_CASE("should select decfloat literals", "[decfloat]") {
   CHECK(get_data<SQL_C_CHAR>(stmt, 5) == "-987.654321");
 }
 
-TEST_CASE("should handle full 38-digit precision values from literals", "[decfloat]") {
+TEST_CASE("should handle full 38-digit precision values from literals", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -101,7 +101,7 @@ TEST_CASE("should handle full 38-digit precision values from literals", "[decflo
   }
 }
 
-TEST_CASE("should handle case exponent values from literals", "[decfloat]") {
+TEST_CASE("should handle case exponent values from literals", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -133,7 +133,7 @@ TEST_CASE("should handle case exponent values from literals", "[decfloat]") {
   }
 }
 
-TEST_CASE("should handle NULL values from literals", "[decfloat]") {
+TEST_CASE("should handle NULL values from literals for decfloat", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -146,7 +146,8 @@ TEST_CASE("should handle NULL values from literals", "[decfloat]") {
   CHECK(!get_data_optional<SQL_C_CHAR>(stmt, 3).has_value());
 }
 
-TEST_CASE("should download large result set with multiple chunks from GENERATOR", "[decfloat]") {
+TEST_CASE("should download large result set with multiple chunks from GENERATOR for decfloat",
+          "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -177,7 +178,7 @@ TEST_CASE("should download large result set with multiple chunks from GENERATOR"
 // TABLE OPERATIONS
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select decfloats from table", "[decfloat]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select decfloats from table", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
 
   // And Table with DECFLOAT column exists with values [0, 123.456, -789.012, 1.23e20, -9.87e-15]
@@ -211,7 +212,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select decfloats from table", "[decf
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "-0.00000000000000987");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle full 38-digit precision values from table", "[decfloat]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle full 38-digit precision values from table",
+                 "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
 
   // And Table with DECFLOAT column exists with values [12345678901234567890123456789012345678,
@@ -254,7 +256,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle full 38-digit precision value
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle extreme exponent values from table", "[decfloat]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle extreme exponent values from table", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
 
   // And Table with DECFLOAT column exists with values [1E+16384, 1E-16383, -1.234E+8000, 9.876E-8000]
@@ -298,7 +300,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle extreme exponent values from 
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table", "[decfloat]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table for decfloat", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
 
   // And Table with DECFLOAT column exists with values [NULL, 123.456, NULL, -789.012]
@@ -328,7 +330,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table", "[de
   CHECK(get_data_optional<SQL_C_CHAR>(stmt, 1) == "-789.012");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multiple chunks from table", "[decfloat]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multiple chunks from table for decfloat",
+                 "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
 
   // And Table with DECFLOAT column exists with values from 0 to 19999
@@ -364,7 +367,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multi
 // PARAMETER BINDING
 // ============================================================================
 
-TEST_CASE("should select decfloat using parameter binding", "[decfloat]") {
+TEST_CASE("should select decfloat using parameter binding", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -416,7 +419,7 @@ TEST_CASE("should select decfloat using parameter binding", "[decfloat]") {
   }
 }
 
-TEST_CASE("should select case decfloat using parameter binding", "[decfloat]") {
+TEST_CASE("should select case decfloat using parameter binding", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -466,7 +469,7 @@ TEST_CASE("should select case decfloat using parameter binding", "[decfloat]") {
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert decfloat using parameter binding", "[decfloat]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert decfloat using parameter binding", "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
 
   // And Table with DECFLOAT column exists
@@ -522,7 +525,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert decfloat using parameter bind
   CHECK(!get_data_optional<SQL_C_CHAR>(stmt, 1).has_value());
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert extreme decfloat values using parameter binding", "[decfloat]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert extreme decfloat values using parameter binding",
+                 "[e2e][types][decfloat]") {
   // Given Snowflake client is logged in
 
   // And Table with DECFLOAT column exists

@@ -19,7 +19,7 @@
 // SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("DECFLOAT to SQL_C_CHAR", "[decfloat][conversion][c_char]") {
+TEST_CASE("DECFLOAT to SQL_C_CHAR", "[e2e][types][decfloat][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -32,7 +32,7 @@ TEST_CASE("DECFLOAT to SQL_C_CHAR", "[decfloat][conversion][c_char]") {
   CHECK(check_char_success(stmt, 3) == "-789.012");
 }
 
-TEST_CASE("DECFLOAT full precision to SQL_C_CHAR", "[decfloat][conversion][c_char]") {
+TEST_CASE("DECFLOAT full precision to SQL_C_CHAR", "[e2e][types][decfloat][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -47,7 +47,7 @@ TEST_CASE("DECFLOAT full precision to SQL_C_CHAR", "[decfloat][conversion][c_cha
 // SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("DECFLOAT to SQL_C_WCHAR", "[decfloat][conversion][c_char]") {
+TEST_CASE("DECFLOAT to SQL_C_WCHAR", "[e2e][types][decfloat][conversion][c_char]") {
   PinDriverManagerEncoding pin_encoding;
   // Given Snowflake client is logged in
   Connection conn;
@@ -77,7 +77,8 @@ TEST_CASE("DECFLOAT to SQL_C_WCHAR", "[decfloat][conversion][c_char]") {
 // TRUNCATION
 // ============================================================================
 
-TEST_CASE("DECFLOAT SQL_C_CHAR truncation with small buffer", "[decfloat][conversion][c_char][truncation]") {
+TEST_CASE("DECFLOAT SQL_C_CHAR truncation with small buffer",
+          "[e2e][types][decfloat][conversion][c_char][truncation]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -96,7 +97,7 @@ TEST_CASE("DECFLOAT SQL_C_CHAR truncation with small buffer", "[decfloat][conver
   CHECK(buffer[19] == '\0');
 }
 
-TEST_CASE("DECFLOAT SQL_C_CHAR exact-fit buffer", "[decfloat][conversion][c_char][truncation]") {
+TEST_CASE("DECFLOAT SQL_C_CHAR exact-fit buffer", "[e2e][types][decfloat][conversion][c_char][truncation]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -113,7 +114,8 @@ TEST_CASE("DECFLOAT SQL_C_CHAR exact-fit buffer", "[decfloat][conversion][c_char
   CHECK(std::string(buffer) == "42");
 }
 
-TEST_CASE("DECFLOAT SQL_C_WCHAR truncation with small buffer", "[decfloat][conversion][c_char][truncation]") {
+TEST_CASE("DECFLOAT SQL_C_WCHAR truncation with small buffer",
+          "[e2e][types][decfloat][conversion][c_char][truncation]") {
   PinDriverManagerEncoding pin_encoding;
   // Given Snowflake client is logged in
   Connection conn;
@@ -148,7 +150,7 @@ TEST_CASE("DECFLOAT SQL_C_WCHAR truncation with small buffer", "[decfloat][conve
 // SQLBindCol
 // ============================================================================
 
-TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_CHAR", "[decfloat][conversion][c_char][bindcol]") {
+TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_CHAR", "[e2e][types][decfloat][conversion][c_char][bindcol]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -182,7 +184,7 @@ TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_CHAR", "[decfloat][conversion][c_
 // NULL handling
 // ============================================================================
 
-TEST_CASE("DECFLOAT NULL to SQL_C_CHAR types", "[decfloat][conversion][c_char][null]") {
+TEST_CASE("DECFLOAT NULL to SQL_C_CHAR types", "[e2e][types][decfloat][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

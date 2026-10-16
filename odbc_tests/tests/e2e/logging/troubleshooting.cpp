@@ -23,7 +23,7 @@ static fs::path create_temp_log_dir() {
   return dir;
 }
 
-TEST_CASE("should create troubleshooting log file when enabled via environment variable", "[logging]") {
+TEST_CASE("should create troubleshooting log file when enabled via environment variable", "[e2e][logging]") {
   SKIP_OLD_DRIVER("", "Old driver does not support SNOWFLAKE_TROUBLESHOOTING_ENABLED env var");
 
   // Given SNOWFLAKE_TROUBLESHOOTING_ENABLED is set to "true" and

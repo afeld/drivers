@@ -41,7 +41,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR timestamp string to SQL_TYPE_TIMESTAMP and read back",
-                 "[c_char][conversion][sql_timestamp]") {
+                 "[e2e][types][c_char][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -79,7 +79,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR timestamp string to 
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should bind SQL_C_CHAR timestamp string with fractional seconds to SQL_TYPE_TIMESTAMP",
-                 "[c_char][conversion][sql_timestamp]") {
+                 "[e2e][types][c_char][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -117,7 +117,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR malformed timestamp string for SQL_TYPE_TIMESTAMP",
-                 "[c_char][conversion][sql_timestamp]") {
+                 "[e2e][types][c_char][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -145,7 +145,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR malformed timestam
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR timestamp string to SQL_TYPE_TIMESTAMP and read back",
-                 "[c_char][conversion][sql_timestamp]") {
+                 "[e2e][types][c_char][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -186,7 +186,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR timestamp string to
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator to SQL_TYPE_TIMESTAMP",
-                 "[c_char][conversion][sql_timestamp]") {
+                 "[e2e][types][c_char][conversion][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 

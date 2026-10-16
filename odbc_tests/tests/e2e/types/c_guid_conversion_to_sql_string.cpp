@@ -35,7 +35,8 @@ void bind_guid_and_execute(StatementHandleWrapper& stmt, SQLGUID& val, SQLLEN& i
 // SQL_C_GUID → VARCHAR
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_GUID to SQL_VARCHAR", "[c_guid][conversion][sql_string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_GUID to SQL_VARCHAR",
+                 "[e2e][types][c_guid][conversion][sql_string]") {
   // Given a VARCHAR column wide enough for the canonical 36-char form
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(40))");
 
@@ -52,7 +53,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_GUID to SQL_VARCHAR", "[c
   CHECK(get_data<SQL_C_CHAR>(fetch_stmt, 1) == "01234567-89AB-CDEF-FEDC-BA9876543210");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind nil SQL_C_GUID to SQL_VARCHAR", "[c_guid][conversion][sql_string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind nil SQL_C_GUID to SQL_VARCHAR",
+                 "[e2e][types][c_guid][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(40))");
 
@@ -69,7 +71,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind nil SQL_C_GUID to SQL_VARCHAR",
   CHECK(get_data<SQL_C_CHAR>(fetch_stmt, 1) == "00000000-0000-0000-0000-000000000000");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind max SQL_C_GUID to SQL_VARCHAR", "[c_guid][conversion][sql_string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind max SQL_C_GUID to SQL_VARCHAR",
+                 "[e2e][types][c_guid][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(40))");
 
@@ -87,7 +90,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind max SQL_C_GUID to SQL_VARCHAR",
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_GUID with NULL indicator to SQL_VARCHAR",
-                 "[c_guid][conversion][sql_string]") {
+                 "[e2e][types][c_guid][conversion][sql_string]") {
   // Given a VARCHAR column
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(40))");
 

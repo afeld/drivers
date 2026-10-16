@@ -106,7 +106,7 @@ describe('DECFLOAT data type', () => {
       expect(Object.values(rows[0])).toEqual(expected);
     });
 
-    it('should handle NULL values from literals', async () => {
+    it('should handle NULL values from literals for decfloat', async () => {
       // Given Snowflake client is logged in
       void connection;
 
@@ -197,7 +197,7 @@ describe('DECFLOAT data type', () => {
       ]);
     });
 
-    it('should handle NULL values from table', async () => {
+    it('should handle NULL values from table for decfloat', async () => {
       // Given Snowflake client is logged in
       void connection;
 
@@ -304,7 +304,7 @@ describe('DECFLOAT data type', () => {
     describe.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)('multiple chunks', () => {
       const rowCount = 20_000;
 
-      it('should download large result set with multiple chunks from GENERATOR', async () => {
+      it('should download large result set with multiple chunks from GENERATOR for decfloat', async () => {
         // Given Snowflake client is logged in
         void connection;
 
@@ -321,7 +321,7 @@ describe('DECFLOAT data type', () => {
         );
       });
 
-      it('should download large result set with multiple chunks from table', async () => {
+      it('should download large result set with multiple chunks from table for decfloat', async () => {
         // Given Snowflake client is logged in
         void connection;
 

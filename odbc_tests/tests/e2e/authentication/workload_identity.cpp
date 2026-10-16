@@ -65,7 +65,7 @@ void require_simple_query(Connection& conn) {
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 1);
 }
 
-TEST_CASE("should authenticate with cloud identity using WIF", "[workload_identity]") {
+TEST_CASE("should authenticate with cloud identity using WIF", "[e2e][authentication][workload_identity]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_PROVIDER is configured
   const auto provider = require_wif_provider();
   const auto conn_str = wif_live_connection_string("WORKLOAD_IDENTITY", provider, "");
@@ -77,7 +77,7 @@ TEST_CASE("should authenticate with cloud identity using WIF", "[workload_identi
   require_simple_query(conn);
 }
 
-TEST_CASE("should authenticate with WIF using lowercase authenticator", "[workload_identity]") {
+TEST_CASE("should authenticate with WIF using lowercase authenticator", "[e2e][authentication][workload_identity]") {
   // Given Authentication is set to workload_identity (lowercase) and a valid provider is configured
   const auto provider = require_wif_provider();
   const auto conn_str = wif_live_connection_string("workload_identity", provider, "");
@@ -89,7 +89,7 @@ TEST_CASE("should authenticate with WIF using lowercase authenticator", "[worklo
   require_simple_query(conn);
 }
 
-TEST_CASE("should authenticate with WIF using impersonation", "[workload_identity]") {
+TEST_CASE("should authenticate with WIF using impersonation", "[e2e][authentication][workload_identity]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_IMPERSONATION_PATH is configured
   const auto provider = require_wif_provider();
   const auto params = get_test_parameters("testconnection");
@@ -107,7 +107,8 @@ TEST_CASE("should authenticate with WIF using impersonation", "[workload_identit
   require_simple_query(conn);
 }
 
-TEST_CASE("should authenticate AWS WIF using pre-signed GetCallerIdentity by default", "[workload_identity]") {
+TEST_CASE("should authenticate AWS WIF using pre-signed GetCallerIdentity by default",
+          "[e2e][authentication][workload_identity]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_PROVIDER is AWS
   const auto provider = require_wif_provider();
   if (provider != "AWS" && provider != "aws") {
@@ -124,7 +125,8 @@ TEST_CASE("should authenticate AWS WIF using pre-signed GetCallerIdentity by def
   require_simple_query(conn);
 }
 
-TEST_CASE("should authenticate AWS WIF using GetWebIdentityToken when opted in", "[workload_identity]") {
+TEST_CASE("should authenticate AWS WIF using GetWebIdentityToken when opted in",
+          "[e2e][authentication][workload_identity]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_PROVIDER is AWS
   const auto provider = require_wif_provider();
   if (provider != "AWS" && provider != "aws") {
@@ -142,7 +144,7 @@ TEST_CASE("should authenticate AWS WIF using GetWebIdentityToken when opted in",
 }
 
 TEST_CASE("should authenticate AWS WIF using GetWebIdentityToken when workload_identity_aws_use_outbound_token is true",
-          "[workload_identity]") {
+          "[e2e][authentication][workload_identity]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_PROVIDER is AWS
   const auto provider = require_wif_provider();
   if (provider != "AWS" && provider != "aws") {

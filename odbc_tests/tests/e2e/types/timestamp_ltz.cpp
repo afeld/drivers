@@ -20,7 +20,7 @@ void set_utc(Connection& conn) { conn.execute("ALTER SESSION SET TIMEZONE = 'UTC
 
 }  // namespace
 
-TEST_CASE("should cast timestamp_ltz values to appropriate type", "[timestamp_ltz]") {
+TEST_CASE("should cast timestamp_ltz values to appropriate type", "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
   set_utc(conn);
@@ -36,7 +36,7 @@ TEST_CASE("should cast timestamp_ltz values to appropriate type", "[timestamp_lt
   INFO("SQL_TIMESTAMP_STRUCT cannot carry timezone");
 }
 
-TEST_CASE("should select timestamp_ltz values", "[timestamp_ltz]") {
+TEST_CASE("should select timestamp_ltz values", "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
   set_utc(conn);
@@ -69,7 +69,7 @@ TEST_CASE("should select timestamp_ltz values", "[timestamp_ltz]") {
   }
 }
 
-TEST_CASE("should select sub-second timestamp_ltz values before epoch", "[timestamp_ltz]") {
+TEST_CASE("should select sub-second timestamp_ltz values before epoch", "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
   set_utc(conn);
@@ -86,7 +86,7 @@ TEST_CASE("should select sub-second timestamp_ltz values before epoch", "[timest
   }
 }
 
-TEST_CASE("should handle NULL values for timestamp_ltz", "[timestamp_ltz]") {
+TEST_CASE("should handle NULL values for timestamp_ltz", "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
   set_utc(conn);
@@ -99,7 +99,7 @@ TEST_CASE("should handle NULL values for timestamp_ltz", "[timestamp_ltz]") {
   REQUIRE(get_data_optional<SQL_C_TYPE_TIMESTAMP>(stmt, 2) == std::nullopt);
 }
 
-TEST_CASE("should download large result set with multiple chunks for timestamp_ltz", "[timestamp_ltz]") {
+TEST_CASE("should download large result set with multiple chunks for timestamp_ltz", "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
   set_utc(conn);
@@ -118,7 +118,8 @@ TEST_CASE("should download large result set with multiple chunks for timestamp_l
   require_sequential_from_2024(stmt, 50000);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for timestamp_ltz", "[timestamp_ltz]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for timestamp_ltz",
+                 "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   set_utc(conn);
 
@@ -175,7 +176,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for timesta
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should download large result set with multiple chunks from table for timestamp_ltz",
-                 "[timestamp_ltz]") {
+                 "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   set_utc(conn);
 
@@ -197,7 +198,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
   require_sequential_from_2024(stmt, 50000);
 }
 
-TEST_CASE("should select timestamp_ltz using parameter binding", "[timestamp_ltz]") {
+TEST_CASE("should select timestamp_ltz using parameter binding", "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
   set_utc(conn);
@@ -221,7 +222,7 @@ TEST_CASE("should select timestamp_ltz using parameter binding", "[timestamp_ltz
   require_ts(get_data<SQL_C_TYPE_TIMESTAMP>(stmt, 2), 2024, 6, 20, 14, 45, 30);
 }
 
-TEST_CASE("should select null timestamp_ltz using parameter binding", "[timestamp_ltz]") {
+TEST_CASE("should select null timestamp_ltz using parameter binding", "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -241,7 +242,8 @@ TEST_CASE("should select null timestamp_ltz using parameter binding", "[timestam
   REQUIRE(get_data_optional<SQL_C_TYPE_TIMESTAMP>(stmt, 1) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert timestamp_ltz using parameter binding", "[timestamp_ltz]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert timestamp_ltz using parameter binding",
+                 "[e2e][types][timestamp_ltz]") {
   // Given Snowflake client is logged in
   set_utc(conn);
 

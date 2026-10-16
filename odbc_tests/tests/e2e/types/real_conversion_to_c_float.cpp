@@ -130,7 +130,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL SQL_C_FLOAT overflow returns 22003", "
   CHECK(check_no_truncation<SQL_C_FLOAT>(stmt_ok, 1) == 1e38f);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_FLOAT and SQL_C_DOUBLE", "[real][conversion][c_float][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_FLOAT and SQL_C_DOUBLE",
+                 "[e2e][types][real][conversion][c_float][null]") {
   // Given A Snowflake connection
 
   // When NULL FLOAT values are queried
@@ -141,7 +142,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_FLOAT and SQL_C_DOUBLE",
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL mixed with non-NULL in multiple rows",
-                 "[real][conversion][c_float][null]") {
+                 "[e2e][types][real][conversion][c_float][null]") {
   // Given A Snowflake connection
 
   // When A table with mixed NULL and non-NULL FLOAT rows is queried
@@ -171,7 +172,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL mixed with non-NULL in multiple r
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "REAL SQLGetData NULL without indicator returns 22002",
-                 "[real][conversion][c_float][null][22002]") {
+                 "[e2e][types][real][conversion][c_float][null][22002]") {
   // Given A Snowflake connection
 
   // When A NULL FLOAT value is fetched without providing an indicator pointer

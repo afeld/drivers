@@ -30,7 +30,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to signed c_type",
-                 "[datatype][string][conversion][integer]") {
+                 "[e2e][types][datatype][string][conversion][integer]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals representing integers is executed
@@ -87,7 +87,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to signed c_
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to unsigned c_type",
-                 "[datatype][string][conversion][integer]") {
+                 "[e2e][types][datatype][string][conversion][integer]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals representing unsigned integers is executed
@@ -130,7 +130,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to unsigned 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to SQL_C_BIT",
-                 "[datatype][string][conversion][integer]") {
+                 "[e2e][types][datatype][string][conversion][integer]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals representing boolean values is executed
@@ -148,7 +148,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to SQL_C_BIT
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting string literals with to SQL_C_BIT",
-                 "[datatype][string][conversion][integer]") {
+                 "[e2e][types][datatype][string][conversion][integer]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals with leading/trailing whitespace is executed
@@ -167,7 +167,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting string literals with
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should truncate decimal string literals with fractional part when converting to integer types",
-                 "[datatype][string][conversion][integer]") {
+                 "[e2e][types][datatype][string][conversion][integer]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals with decimal parts is executed
@@ -251,7 +251,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should truncate decimal string literals without fractional part when converting to integer types",
-                 "[datatype][string][conversion][integer]") {
+                 "[e2e][types][datatype][string][conversion][integer]") {
   // Given Snowflake client is logged in
 
   {
@@ -337,7 +337,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert strings to integer types using SQLBindCol",
-                 "[datatype][string][conversion][integer]") {
+                 "[e2e][types][datatype][string][conversion][integer]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string numeric value is executed with SQLBindCol for SQL_C_LONG

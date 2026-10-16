@@ -10,7 +10,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY", "[timestamp_tz][conversion][c_binary]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY", "[e2e][types][timestamp_tz][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -34,7 +34,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY", "[timestamp_tz][conversion][c_binary]"
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY with fractional seconds", "[timestamp_tz][conversion][c_binary]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY with fractional seconds", "[e2e][types][timestamp_tz][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -52,7 +52,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY with fractional seconds", "[timestamp_tz
   CHECK(ts_frac.fraction == 123456789);
 }
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY pre-epoch", "[timestamp_tz][conversion][c_binary]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY pre-epoch", "[e2e][types][timestamp_tz][conversion][c_binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -76,7 +76,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY pre-epoch", "[timestamp_tz][conversion][
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY buffer too small", "[timestamp_tz][conversion][c_binary][22003]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY buffer too small", "[e2e][types][timestamp_tz][conversion][c_binary][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -93,7 +93,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_BINARY buffer too small", "[timestamp_tz][conve
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("TIMESTAMP_TZ NULL to SQL_C_BINARY", "[timestamp_tz][conversion][c_binary][null]") {
+TEST_CASE("TIMESTAMP_TZ NULL to SQL_C_BINARY", "[e2e][types][timestamp_tz][conversion][c_binary][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

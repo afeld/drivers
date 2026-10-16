@@ -66,7 +66,7 @@ void verify_simple_query(ConnectionHandleWrapper& dbc) {
   REQUIRE(result == 1);
 }
 
-TEST_CASE("should authenticate using username and password", "[user_password][requires_no_mfa]") {
+TEST_CASE("should authenticate using username and password", "[e2e][authentication][user_password][requires_no_mfa]") {
   REQUIRE_NO_MFA("requires parameters_aws_local.json");
 
   // Given Authentication is set to default (snowflake) with valid username and password
@@ -87,7 +87,8 @@ TEST_CASE("should authenticate using username and password", "[user_password][re
   SQLDisconnect(dbc.getHandle());
 }
 
-TEST_CASE("should authenticate using explicit snowflake authenticator", "[user_password][requires_no_mfa]") {
+TEST_CASE("should authenticate using explicit snowflake authenticator",
+          "[e2e][authentication][user_password][requires_no_mfa]") {
   REQUIRE_NO_MFA("requires parameters_aws_local.json");
   SKIP_OLD_DRIVER("", "Old driver already accepts 'snowflake' — test verifies new driver does too");
 
@@ -109,7 +110,8 @@ TEST_CASE("should authenticate using explicit snowflake authenticator", "[user_p
   SQLDisconnect(dbc.getHandle());
 }
 
-TEST_CASE("should fail authentication when wrong password is provided", "[user_password][requires_no_mfa]") {
+TEST_CASE("should fail authentication when wrong password is provided",
+          "[e2e][authentication][user_password][requires_no_mfa]") {
   REQUIRE_NO_MFA("requires parameters_aws_local.json");
 
   // Given Authentication is set to default with valid username and wrong password

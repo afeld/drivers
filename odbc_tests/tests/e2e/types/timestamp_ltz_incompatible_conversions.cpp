@@ -4,7 +4,8 @@
 #include "compatibility.hpp"
 #include "timestamp_incompatible_checks.hpp"
 
-TEST_CASE("should fail converting TIMESTAMP_LTZ to numeric C types", "[timestamp_ltz][conversion][negative]") {
+TEST_CASE("should fail converting TIMESTAMP_LTZ to numeric C types",
+          "[e2e][types][timestamp_ltz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -28,7 +29,7 @@ TEST_CASE("should fail converting TIMESTAMP_LTZ to numeric C types", "[timestamp
 }
 
 TEST_CASE("should fail converting TIMESTAMP_LTZ to additional numeric C types",
-          "[timestamp_ltz][conversion][negative]") {
+          "[e2e][types][timestamp_ltz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -58,7 +59,7 @@ TEST_CASE("should fail converting TIMESTAMP_LTZ to additional numeric C types",
 }
 
 TEST_CASE("should fail converting TIMESTAMP_LTZ to single-component interval C types",
-          "[timestamp_ltz][conversion][negative]") {
+          "[e2e][types][timestamp_ltz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -85,7 +86,7 @@ TEST_CASE("should fail converting TIMESTAMP_LTZ to single-component interval C t
 }
 
 TEST_CASE("should fail converting TIMESTAMP_LTZ to compound interval C types",
-          "[timestamp_ltz][conversion][negative]") {
+          "[e2e][types][timestamp_ltz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -114,7 +115,7 @@ TEST_CASE("should fail converting TIMESTAMP_LTZ to compound interval C types",
   check_incompat<SQL_INTERVAL_STRUCT>(stmt, 1, SQL_C_INTERVAL_MINUTE_TO_SECOND);
 }
 
-TEST_CASE("should fail converting TIMESTAMP_LTZ to SQL_C_GUID", "[timestamp_ltz][conversion][negative]") {
+TEST_CASE("should fail converting TIMESTAMP_LTZ to SQL_C_GUID", "[e2e][types][timestamp_ltz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

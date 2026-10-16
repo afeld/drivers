@@ -10,7 +10,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("OBJECT to SQL_C_DEFAULT", "[object][conversion][c_default]") {
+TEST_CASE("OBJECT to SQL_C_DEFAULT", "[e2e][types][object][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -24,7 +24,7 @@ TEST_CASE("OBJECT to SQL_C_DEFAULT", "[object][conversion][c_default]") {
   CHECK(v.is<picojson::object>());
 }
 
-TEST_CASE("OBJECT to SQL_C_DEFAULT empty", "[object][conversion][c_default]") {
+TEST_CASE("OBJECT to SQL_C_DEFAULT empty", "[e2e][types][object][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -39,7 +39,7 @@ TEST_CASE("OBJECT to SQL_C_DEFAULT empty", "[object][conversion][c_default]") {
   CHECK(v.get<picojson::object>().empty());
 }
 
-TEST_CASE("OBJECT to SQL_C_DEFAULT nested", "[object][conversion][c_default]") {
+TEST_CASE("OBJECT to SQL_C_DEFAULT nested", "[e2e][types][object][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -57,7 +57,7 @@ TEST_CASE("OBJECT to SQL_C_DEFAULT nested", "[object][conversion][c_default]") {
   CHECK(outer->second.is<picojson::object>());
 }
 
-TEST_CASE("OBJECT NULL to SQL_C_DEFAULT", "[object][conversion][c_default][null]") {
+TEST_CASE("OBJECT NULL to SQL_C_DEFAULT", "[e2e][types][object][conversion][c_default][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

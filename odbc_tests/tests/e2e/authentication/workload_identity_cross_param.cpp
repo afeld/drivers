@@ -26,7 +26,7 @@ using namespace Catch::Matchers;
 // sf_core::validate_settings rejects the combination (ConflictingParameters, Error), matching legacy
 // snowflake-connector-python's long-standing rejection (ProgrammingError errno 251017).
 TEST_CASE("should reject a WIF param under a non-WIF authenticator on the new driver but ignore it on the old driver",
-          "[workload_identity_cross_param]") {
+          "[e2e][authentication][workload_identity_cross_param]") {
   // Given the default connection string (AUTHENTICATOR=SNOWFLAKE_JWT) plus a WIF-only param.
   auto conn_str = get_connection_string() + "WORKLOAD_IDENTITY_PROVIDER=AWS;";
 

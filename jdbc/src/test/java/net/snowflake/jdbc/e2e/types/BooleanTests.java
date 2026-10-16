@@ -87,7 +87,7 @@ public class BooleanTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldHandleNULLValuesFromLiterals() throws Exception {
+  public void shouldHandleNULLValuesFromLiteralsForBoolean() throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 
@@ -112,7 +112,8 @@ public class BooleanTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldDownloadLargeResultSetWithMultipleChunksFromGenerator() throws Exception {
+  public void shouldDownloadLargeResultSetWithMultipleChunksFromGeneratorForBoolean()
+      throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 
@@ -160,7 +161,7 @@ public class BooleanTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldHandleNULLValuesFromTable() throws Exception {
+  public void shouldHandleNULLValuesFromTableForBoolean() throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 
@@ -182,7 +183,7 @@ public class BooleanTests extends SnowflakeIntegrationTestBase
   }
 
   @Test
-  public void shouldDownloadLargeResultSetWithMultipleChunksFromTable() throws Exception {
+  public void shouldDownloadLargeResultSetWithMultipleChunksFromTableForBoolean() throws Exception {
     // Given Snowflake client is logged in
     Connection connection = getDefaultConnection();
 

@@ -345,7 +345,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL table column conversions", "[e2e][type
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_DEFAULT", "[real][conversion][c_default][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_DEFAULT", "[e2e][types][real][conversion][c_default][null]") {
   // Given A Snowflake connection
 
   // When A NULL FLOAT value is queried

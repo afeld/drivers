@@ -23,7 +23,7 @@ static std::pair<std::string, fs::path> basic_test_file() {
   return {"test_data.csv", test_utils::shared_test_data_dir() / "basic" / "test_data.csv"};
 }
 
-TEST_CASE("should select data from file uploaded to stage", "[put_get]") {
+TEST_CASE("should select data from file uploaded to stage", "[e2e][put_get]") {
   // Given File is uploaded to stage
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_BASIC_OPS"));
@@ -42,7 +42,7 @@ TEST_CASE("should select data from file uploaded to stage", "[put_get]") {
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "3");
 }
 
-TEST_CASE("should list file uploaded to stage", "[put_get]") {
+TEST_CASE("should list file uploaded to stage", "[e2e][put_get]") {
   // Given File is uploaded to stage
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_BASIC_OPS"));
@@ -61,7 +61,7 @@ TEST_CASE("should list file uploaded to stage", "[put_get]") {
   CHECK(name == expected);
 }
 
-TEST_CASE("should get file uploaded to stage", "[put_get]") {
+TEST_CASE("should get file uploaded to stage", "[e2e][put_get]") {
   // Given File is uploaded to stage
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_BASIC_OPS"));
@@ -89,7 +89,7 @@ TEST_CASE("should get file uploaded to stage", "[put_get]") {
   CHECK(decompressed == original_content);
 }
 
-TEST_CASE("should return correct rowset for PUT", "[put_get]") {
+TEST_CASE("should return correct rowset for PUT", "[e2e][put_get]") {
   // Given Snowflake client is logged in
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_BASIC_ROWSET"));
@@ -118,7 +118,7 @@ TEST_CASE("should return correct rowset for PUT", "[put_get]") {
   CHECK(get_data<SQL_C_CHAR>(stmt, PUT_ROW_MESSAGE_IDX).empty());
 }
 
-TEST_CASE("should return correct rowset for GET", "[put_get]") {
+TEST_CASE("should return correct rowset for GET", "[e2e][put_get]") {
   // Given File is uploaded to stage
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_ROWSET"));
@@ -147,7 +147,7 @@ TEST_CASE("should return correct rowset for GET", "[put_get]") {
   CHECK(get_data<SQL_C_CHAR>(stmt, GET_ROW_ENCRYPTION_IDX) == "DECRYPTED");
 }
 
-TEST_CASE("should return local basename for GET from stage subdirectory", "[put_get]") {
+TEST_CASE("should return local basename for GET from stage subdirectory", "[e2e][put_get]") {
   // Given File is uploaded to a stage subdirectory
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_GET_SUBDIR"));

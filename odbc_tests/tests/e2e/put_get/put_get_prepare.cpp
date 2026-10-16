@@ -31,7 +31,7 @@ std::pair<std::string, fs::path> basic_test_file() {
 
 }  // namespace
 
-TEST_CASE("should upload file to stage via SQLPrepare + SQLExecute", "[put_get][prepare]") {
+TEST_CASE("should upload file to stage via SQLPrepare + SQLExecute", "[e2e][put_get][prepare]") {
   // Given Snowflake client is logged in and a stage exists
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_PREP_PUT"));
@@ -54,7 +54,7 @@ TEST_CASE("should upload file to stage via SQLPrepare + SQLExecute", "[put_get][
   CHECK(get_data<SQL_C_CHAR>(stmt, PUT_ROW_STATUS_IDX) == "UPLOADED");
 }
 
-TEST_CASE("should download file from stage via SQLPrepare + SQLExecute", "[put_get][prepare]") {
+TEST_CASE("should download file from stage via SQLPrepare + SQLExecute", "[e2e][put_get][prepare]") {
   // Given a file already uploaded to the stage
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_PREP_GET"));

@@ -41,13 +41,13 @@ Feature: DECFLOAT type support
       | large negative and small positive | '-1.234E+8000'::DECFLOAT, '9.876E-8000'::DECFLOAT | -1.234E+8000, 9.876E-8000 |
 
   @python_e2e @odbc_e2e @jdbc_e2e @nodejs_e2e
-  Scenario: should handle NULL values from literals
+  Scenario: should handle NULL values from literals for decfloat
     Given Snowflake client is logged in
     When Query "SELECT NULL::DECFLOAT, 42.5::DECFLOAT, NULL::DECFLOAT" is executed
     Then Result should contain [NULL, 42.5, NULL]
 
   @python_e2e @odbc_e2e @jdbc_e2e
-  Scenario: should download large result set with multiple chunks from GENERATOR
+  Scenario: should download large result set with multiple chunks from GENERATOR for decfloat
     Given Snowflake client is logged in
     When Query "SELECT seq8()::DECFLOAT as id FROM TABLE(GENERATOR(ROWCOUNT => 20000)) v" is executed
     Then Result should contain consecutive numbers from 0 to 19999 returned as appropriate type
@@ -97,14 +97,14 @@ Feature: DECFLOAT type support
     Then The reported type of the arithmetic result column should be FIXED with no scale
 
   @python_e2e @odbc_e2e @jdbc_e2e @nodejs_e2e
-  Scenario: should handle NULL values from table
+  Scenario: should handle NULL values from table for decfloat
     Given Snowflake client is logged in
     And Table with DECFLOAT column exists with values [NULL, 123.456, NULL, -789.012]
     When Query "SELECT * FROM <table>" is executed
     Then Result should contain [NULL, 123.456, NULL, -789.012]
 
   @python_e2e @odbc_e2e @jdbc_e2e
-  Scenario: should download large result set with multiple chunks from table
+  Scenario: should download large result set with multiple chunks from table for decfloat
     Given Snowflake client is logged in
     And Table with DECFLOAT column exists with values from 0 to 19999
     When Query "SELECT * FROM <table>" is executed

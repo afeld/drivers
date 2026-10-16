@@ -49,7 +49,7 @@ std::string build_unresolvable_connection_string(const std::string& extra) {
 
 }  // namespace
 
-TEST_CASE("should route request through proxy when proxy url is configured", "[session][proxy]") {
+TEST_CASE("should route request through proxy when proxy url is configured", "[e2e][session][proxy]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -72,7 +72,7 @@ TEST_CASE("should route request through proxy when proxy url is configured", "[s
   CHECK(wm.get_request_count("POST", "/session/v1/login-request") == 1);
 }
 
-TEST_CASE("should disable proxy when PROXY is empty and AllowEmptyProxy is true", "[session][proxy]") {
+TEST_CASE("should disable proxy when PROXY is empty and AllowEmptyProxy is true", "[e2e][session][proxy]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -95,7 +95,7 @@ TEST_CASE("should disable proxy when PROXY is empty and AllowEmptyProxy is true"
   CHECK(wm.get_request_count("POST", "/session/v1/login-request") == 0);
 }
 
-TEST_CASE("should ignore proxy env vars by default", "[session][proxy]") {
+TEST_CASE("should ignore proxy env vars by default", "[e2e][session][proxy]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -119,7 +119,7 @@ TEST_CASE("should ignore proxy env vars by default", "[session][proxy]") {
   CHECK(wm.get_request_count("POST", "/session/v1/login-request") == 0);
 }
 
-TEST_CASE("should route request through proxy when proxy env vars are enabled", "[session][proxy]") {
+TEST_CASE("should route request through proxy when proxy env vars are enabled", "[e2e][session][proxy]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif

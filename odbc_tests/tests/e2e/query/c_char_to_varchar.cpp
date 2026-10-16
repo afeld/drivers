@@ -6,7 +6,7 @@
 #include "get_data.hpp"
 #include "odbc_cast.hpp"
 
-TEST_CASE("should bind SQL_C_CHAR to SQL_VARCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_CHAR to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -24,7 +24,7 @@ TEST_CASE("should bind SQL_C_CHAR to SQL_VARCHAR.", "[query][bind_parameter][c_c
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "hello");
 }
 
-TEST_CASE("should bind SQL_C_WCHAR to SQL_VARCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_WCHAR to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -42,7 +42,7 @@ TEST_CASE("should bind SQL_C_WCHAR to SQL_VARCHAR.", "[query][bind_parameter][c_
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "hello");
 }
 
-TEST_CASE("should bind SQL_C_WCHAR with SQL_NTS to SQL_VARCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_WCHAR with SQL_NTS to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -60,7 +60,7 @@ TEST_CASE("should bind SQL_C_WCHAR with SQL_NTS to SQL_VARCHAR.", "[query][bind_
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "hello");
 }
 
-TEST_CASE("should bind SQL_C_DEFAULT to SQL_VARCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_DEFAULT to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -78,7 +78,7 @@ TEST_CASE("should bind SQL_C_DEFAULT to SQL_VARCHAR.", "[query][bind_parameter][
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "hello");
 }
 
-TEST_CASE("should bind SQL_C_SLONG to SQL_CHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_SLONG to SQL_CHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -96,7 +96,7 @@ TEST_CASE("should bind SQL_C_SLONG to SQL_CHAR.", "[query][bind_parameter][c_cha
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "42");
 }
 
-TEST_CASE("should bind SQL_C_SLONG to SQL_LONGVARCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_SLONG to SQL_LONGVARCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -114,7 +114,7 @@ TEST_CASE("should bind SQL_C_SLONG to SQL_LONGVARCHAR.", "[query][bind_parameter
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "42");
 }
 
-TEST_CASE("should bind SQL_C_SLONG to SQL_WCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_SLONG to SQL_WCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -132,7 +132,7 @@ TEST_CASE("should bind SQL_C_SLONG to SQL_WCHAR.", "[query][bind_parameter][c_ch
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "42");
 }
 
-TEST_CASE("should bind SQL_C_SLONG to SQL_WVARCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_SLONG to SQL_WVARCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -150,7 +150,7 @@ TEST_CASE("should bind SQL_C_SLONG to SQL_WVARCHAR.", "[query][bind_parameter][c
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "42");
 }
 
-TEST_CASE("should bind SQL_C_SLONG to SQL_WLONGVARCHAR.", "[query][bind_parameter][c_char_to_varchar]") {
+TEST_CASE("should bind SQL_C_SLONG to SQL_WLONGVARCHAR.", "[e2e][query][bind_parameter][c_char_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

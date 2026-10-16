@@ -10,7 +10,7 @@
 #include "conversion_checks.hpp"
 #include "get_data.hpp"
 
-TEST_CASE("Connection-level TIMEZONE parameter via DSN", "[timestamp][connection][timezone]") {
+TEST_CASE("Connection-level TIMEZONE parameter via DSN", "[e2e][types][timestamp][connection][timezone]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -23,7 +23,7 @@ TEST_CASE("Connection-level TIMEZONE parameter via DSN", "[timestamp][connection
 }
 
 TEST_CASE("TIMESTAMP_LTZ literal interpretation changes with session timezone",
-          "[timestamp][connection][timezone][ltz]") {
+          "[e2e][types][timestamp][connection][timezone][ltz]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -42,7 +42,8 @@ TEST_CASE("TIMESTAMP_LTZ literal interpretation changes with session timezone",
   CHECK(ts_la.hour == 19);
 }
 
-TEST_CASE("TIMESTAMP_NTZ is unaffected by session timezone changes", "[timestamp][connection][timezone][ntz]") {
+TEST_CASE("TIMESTAMP_NTZ is unaffected by session timezone changes",
+          "[e2e][types][timestamp][connection][timezone][ntz]") {
   // Given Snowflake client is logged in
   Connection conn;
 

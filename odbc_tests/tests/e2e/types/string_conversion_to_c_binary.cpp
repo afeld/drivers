@@ -22,7 +22,7 @@ static unsigned int to_unsigned_int(char c) { return static_cast<unsigned int>(s
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to SQL_C_BINARY",
-                 "[datatype][string][conversion][binary]") {
+                 "[e2e][types][datatype][string][conversion][binary]") {
   // Given Snowflake client is logged in
 
   // When Query selecting various string literals is executed
@@ -84,7 +84,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to SQL_C_BIN
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert UTF-8 string literals to SQL_C_BINARY",
-                 "[datatype][string][conversion][binary][utf8]") {
+                 "[e2e][types][datatype][string][conversion][binary][utf8]") {
   // Given Snowflake client is logged in
 
   // When Query selecting UTF-8 string literals is executed

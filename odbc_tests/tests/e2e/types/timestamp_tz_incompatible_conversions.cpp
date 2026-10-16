@@ -4,7 +4,8 @@
 #include "compatibility.hpp"
 #include "timestamp_incompatible_checks.hpp"
 
-TEST_CASE("should fail converting TIMESTAMP_TZ to numeric C types", "[timestamp_tz][conversion][negative]") {
+TEST_CASE("should fail converting TIMESTAMP_TZ to numeric C types",
+          "[e2e][types][timestamp_tz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -27,7 +28,8 @@ TEST_CASE("should fail converting TIMESTAMP_TZ to numeric C types", "[timestamp_
   check_incompat<SQLCHAR>(stmt, 1, SQL_C_BIT);
 }
 
-TEST_CASE("should fail converting TIMESTAMP_TZ to additional numeric C types", "[timestamp_tz][conversion][negative]") {
+TEST_CASE("should fail converting TIMESTAMP_TZ to additional numeric C types",
+          "[e2e][types][timestamp_tz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -57,7 +59,7 @@ TEST_CASE("should fail converting TIMESTAMP_TZ to additional numeric C types", "
 }
 
 TEST_CASE("should fail converting TIMESTAMP_TZ to single-component interval C types",
-          "[timestamp_tz][conversion][negative]") {
+          "[e2e][types][timestamp_tz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -83,7 +85,8 @@ TEST_CASE("should fail converting TIMESTAMP_TZ to single-component interval C ty
   check_incompat<SQL_INTERVAL_STRUCT>(stmt, 1, SQL_C_INTERVAL_SECOND);
 }
 
-TEST_CASE("should fail converting TIMESTAMP_TZ to compound interval C types", "[timestamp_tz][conversion][negative]") {
+TEST_CASE("should fail converting TIMESTAMP_TZ to compound interval C types",
+          "[e2e][types][timestamp_tz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -112,7 +115,7 @@ TEST_CASE("should fail converting TIMESTAMP_TZ to compound interval C types", "[
   check_incompat<SQL_INTERVAL_STRUCT>(stmt, 1, SQL_C_INTERVAL_MINUTE_TO_SECOND);
 }
 
-TEST_CASE("should fail converting TIMESTAMP_TZ to SQL_C_GUID", "[timestamp_tz][conversion][negative]") {
+TEST_CASE("should fail converting TIMESTAMP_TZ to SQL_C_GUID", "[e2e][types][timestamp_tz][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

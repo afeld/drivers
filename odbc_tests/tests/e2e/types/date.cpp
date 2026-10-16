@@ -86,7 +86,7 @@ void bind_date(const StatementHandleWrapper& stmt, SQLUSMALLINT param, SQL_DATE_
 
 }  // namespace
 
-TEST_CASE("should cast date values to appropriate type", "[date]") {
+TEST_CASE("should cast date values to appropriate type", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -104,7 +104,7 @@ TEST_CASE("should cast date values to appropriate type", "[date]") {
   require_date(get_data<SQL_C_TYPE_DATE>(stmt, 3), 1999, 12, 31);
 }
 
-TEST_CASE("should select date literals", "[date]") {
+TEST_CASE("should select date literals", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -117,7 +117,7 @@ TEST_CASE("should select date literals", "[date]") {
   require_date(get_data<SQL_C_TYPE_DATE>(stmt, 3), 1999, 12, 31);
 }
 
-TEST_CASE("should select epoch and pre-epoch dates", "[date]") {
+TEST_CASE("should select epoch and pre-epoch dates", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -130,7 +130,7 @@ TEST_CASE("should select epoch and pre-epoch dates", "[date]") {
   require_date(get_data<SQL_C_TYPE_DATE>(stmt, 3), 1900, 1, 1);
 }
 
-TEST_CASE("should select historical and boundary dates", "[date]") {
+TEST_CASE("should select historical and boundary dates", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -143,7 +143,7 @@ TEST_CASE("should select historical and boundary dates", "[date]") {
   require_date(get_data<SQL_C_TYPE_DATE>(stmt, 3), 9999, 12, 31);
 }
 
-TEST_CASE("should handle NULL values for date", "[date]") {
+TEST_CASE("should handle NULL values for date", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -156,7 +156,7 @@ TEST_CASE("should handle NULL values for date", "[date]") {
   REQUIRE(get_data_optional<SQL_C_TYPE_DATE>(stmt, 3) == std::nullopt);
 }
 
-TEST_CASE("should download large result set for date", "[date]") {
+TEST_CASE("should download large result set for date", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -174,7 +174,7 @@ TEST_CASE("should download large result set for date", "[date]") {
   require_sequential_dates(stmt, 100000, make_date(1970, 1, 1));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select dates from table", "[date]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select dates from table", "[e2e][types][date]") {
   // Given Snowflake client is logged in
 
   // And Table with DATE column exists with values ['2024-01-15', '1970-01-01', '1999-12-31']
@@ -200,7 +200,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select dates from table", "[date]") 
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select dates with NULL from table", "[date]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select dates with NULL from table", "[e2e][types][date]") {
   // Given Snowflake client is logged in
 
   // And Table with DATE column exists with values ['2024-01-15', NULL, '1999-12-31']
@@ -226,7 +226,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select dates with NULL from table", 
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select historical and boundary dates from table", "[date]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select historical and boundary dates from table", "[e2e][types][date]") {
   // Given Snowflake client is logged in
 
   // And Table with DATE column exists with values ['0001-01-01', '0100-03-01', '1582-10-15', '9999-12-31']
@@ -257,7 +257,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select historical and boundary dates
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set for date from table", "[date]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set for date from table", "[e2e][types][date]") {
   // Given Snowflake client is logged in
 
   // And Table with DATE column exists with 100000 sequential dates starting from 1970-01-01
@@ -276,7 +276,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set for date f
   require_sequential_dates(stmt, 100000, make_date(1970, 1, 1));
 }
 
-TEST_CASE("should select date using parameter binding", "[date]") {
+TEST_CASE("should select date using parameter binding", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -304,7 +304,7 @@ TEST_CASE("should select date using parameter binding", "[date]") {
   require_date(get_data<SQL_C_TYPE_DATE>(stmt, 3), 1999, 12, 31);
 }
 
-TEST_CASE("should select null date using parameter binding", "[date]") {
+TEST_CASE("should select null date using parameter binding", "[e2e][types][date]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -324,7 +324,7 @@ TEST_CASE("should select null date using parameter binding", "[date]") {
   REQUIRE(get_data_optional<SQL_C_TYPE_DATE>(stmt, 1) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert date using parameter binding", "[date]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert date using parameter binding", "[e2e][types][date]") {
   // Given Snowflake client is logged in
 
   // And Table with DATE column exists

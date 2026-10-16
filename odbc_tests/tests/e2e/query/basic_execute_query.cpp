@@ -10,7 +10,7 @@
 // SELECT QUERIES
 // =============================================================================
 
-TEST_CASE("should execute simple SELECT returning single value", "[query]") {
+TEST_CASE("should execute simple SELECT returning single value", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -22,7 +22,7 @@ TEST_CASE("should execute simple SELECT returning single value", "[query]") {
   CHECK(value == 1);
 }
 
-TEST_CASE("should execute SELECT returning multiple columns", "[query]") {
+TEST_CASE("should execute SELECT returning multiple columns", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -43,7 +43,7 @@ TEST_CASE("should execute SELECT returning multiple columns", "[query]") {
   CHECK(col3 == "3.14");
 }
 
-TEST_CASE("should execute SELECT returning multiple rows", "[query]") {
+TEST_CASE("should execute SELECT returning multiple rows", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -64,7 +64,7 @@ TEST_CASE("should execute SELECT returning multiple rows", "[query]") {
   CHECK(row_count == 5);
 }
 
-TEST_CASE("should execute SELECT returning empty result set", "[query]") {
+TEST_CASE("should execute SELECT returning empty result set", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -76,7 +76,7 @@ TEST_CASE("should execute SELECT returning empty result set", "[query]") {
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should execute SELECT returning NULL values", "[query]") {
+TEST_CASE("should execute SELECT returning NULL values", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -96,7 +96,7 @@ TEST_CASE("should execute SELECT returning NULL values", "[query]") {
 // DDL STATEMENTS
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should execute CREATE and DROP TABLE statements", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should execute CREATE and DROP TABLE statements", "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // When CREATE TABLE statement is executed
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should execute CREATE and DROP TABLE statem
 // DML STATEMENTS
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should execute INSERT and retrieve inserted data", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should execute INSERT and retrieve inserted data", "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And A temporary table is created
@@ -150,7 +150,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should execute INSERT and retrieve inserted
 // ERROR HANDLING
 // =============================================================================
 
-TEST_CASE("should return error for invalid SQL syntax", "[query]") {
+TEST_CASE("should return error for invalid SQL syntax", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -167,7 +167,7 @@ TEST_CASE("should return error for invalid SQL syntax", "[query]") {
 // SEQUENTIAL EXECUTION
 // =============================================================================
 
-TEST_CASE("should execute multiple queries sequentially on same connection", "[query]") {
+TEST_CASE("should execute multiple queries sequentially on same connection", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 

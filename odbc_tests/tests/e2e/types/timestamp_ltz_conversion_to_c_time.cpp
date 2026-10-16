@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME", "[timestamp_ltz][conversion][c_time]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME", "[e2e][types][timestamp_ltz][conversion][c_time]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -22,7 +22,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME", "[timestamp_ltz][conversion][c_tim
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME midnight", "[timestamp_ltz][conversion][c_time]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME midnight", "[e2e][types][timestamp_ltz][conversion][c_time]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -38,7 +38,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME midnight", "[timestamp_ltz][conversi
 }
 
 TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME with fractional truncation",
-          "[timestamp_ltz][conversion][c_time][truncation]") {
+          "[e2e][types][timestamp_ltz][conversion][c_time][truncation]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -53,7 +53,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIME with fractional truncation",
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_TYPE_TIME", "[timestamp_ltz][conversion][c_time][null]") {
+TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_TYPE_TIME", "[e2e][types][timestamp_ltz][conversion][c_time][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

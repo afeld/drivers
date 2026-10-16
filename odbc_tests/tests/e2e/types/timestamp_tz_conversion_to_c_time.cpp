@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME", "[timestamp_tz][conversion][c_time]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME", "[e2e][types][timestamp_tz][conversion][c_time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -21,7 +21,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME", "[timestamp_tz][conversion][c_time]
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME midnight", "[timestamp_tz][conversion][c_time]") {
+TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME midnight", "[e2e][types][timestamp_tz][conversion][c_time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -36,7 +36,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME midnight", "[timestamp_tz][conversion
 }
 
 TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME with fractional truncation",
-          "[timestamp_tz][conversion][c_time][truncation]") {
+          "[e2e][types][timestamp_tz][conversion][c_time][truncation]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -50,7 +50,7 @@ TEST_CASE("TIMESTAMP_TZ to SQL_C_TYPE_TIME with fractional truncation",
   CHECK(time.second == 45);
 }
 
-TEST_CASE("TIMESTAMP_TZ NULL to SQL_C_TYPE_TIME", "[timestamp_tz][conversion][c_time][null]") {
+TEST_CASE("TIMESTAMP_TZ NULL to SQL_C_TYPE_TIME", "[e2e][types][timestamp_tz][conversion][c_time][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -82,7 +82,7 @@ std::string fetch_utf8(const StatementHandleWrapper& stmt, SQLUSMALLINT col) {
 
 }  // namespace
 
-TEST_CASE("should bind basic types with positional parameters", "[parameter_binding]") {
+TEST_CASE("should bind basic types with positional parameters", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -114,7 +114,8 @@ TEST_CASE("should bind basic types with positional parameters", "[parameter_bind
   REQUIRE(get_data_optional<SQL_C_CHAR>(stmt, 5) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert single row with parameter binding", "[parameter_binding]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert single row with parameter binding",
+                 "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR, active BOOLEAN) exists
@@ -144,7 +145,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert single row with parameter bin
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should insert multiple rows sequentially with parameter binding",
-                 "[parameter_binding]") {
+                 "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists
@@ -189,7 +190,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert multiple rows sequentially wi
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should update row with parameter binding", "[parameter_binding]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should update row with parameter binding", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists
@@ -217,7 +218,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should update row with parameter binding", 
   REQUIRE(get_data<SQL_C_CHAR>(stmt, 2) == "Alice Updated");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should delete row with parameter binding", "[parameter_binding]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should delete row with parameter binding", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists
@@ -242,7 +243,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should delete row with parameter binding", 
   REQUIRE(get_data<SQL_C_CHAR>(stmt, 2) == "Bob");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select with WHERE clause parameter binding", "[parameter_binding]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select with WHERE clause parameter binding",
+                 "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR, age NUMBER) exists
@@ -274,7 +276,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select with WHERE clause parameter b
   REQUIRE((names[0] == "Charlie" || names[1] == "Charlie"));
 }
 
-TEST_CASE("should handle NULL values in parameter binding", "[parameter_binding]") {
+TEST_CASE("should handle NULL values in parameter binding", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -297,7 +299,7 @@ TEST_CASE("should handle NULL values in parameter binding", "[parameter_binding]
   REQUIRE(get_data_optional<SQL_C_CHAR>(stmt, 3) == std::nullopt);
 }
 
-TEST_CASE("should handle special characters in string binding", "[parameter_binding]") {
+TEST_CASE("should handle special characters in string binding", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -324,7 +326,7 @@ TEST_CASE("should handle special characters in string binding", "[parameter_bind
   }
 }
 
-TEST_CASE("should handle Unicode characters in parameter binding", "[parameter_binding]") {
+TEST_CASE("should handle Unicode characters in parameter binding", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
   conn.execute("CREATE TEMPORARY TABLE unicode_bind (a VARCHAR, b VARCHAR)");
@@ -351,7 +353,7 @@ TEST_CASE("should handle Unicode characters in parameter binding", "[parameter_b
   REQUIRE(fetch_utf8(fetch, 2) == snowman);
 }
 
-TEST_CASE("should bind zero values", "[parameter_binding]") {
+TEST_CASE("should bind zero values", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -376,7 +378,7 @@ TEST_CASE("should bind zero values", "[parameter_binding]") {
   REQUIRE(get_data<SQL_C_CHAR>(stmt, 3) == "");
 }
 
-TEST_CASE("should handle mixed type casting with parameter binding", "[parameter_binding]") {
+TEST_CASE("should handle mixed type casting with parameter binding", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -401,7 +403,7 @@ TEST_CASE("should handle mixed type casting with parameter binding", "[parameter
   REQUIRE(get_data<SQL_C_BIT>(stmt, 3) == 1);
 }
 
-TEST_CASE("should silently ignore extra positional parameters", "[parameter_binding]") {
+TEST_CASE("should silently ignore extra positional parameters", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -426,7 +428,7 @@ TEST_CASE("should silently ignore extra positional parameters", "[parameter_bind
   REQUIRE(get_data<SQL_C_SLONG>(stmt, 2) == 2);
 }
 
-TEST_CASE("should raise error for too few positional parameters", "[parameter_binding]") {
+TEST_CASE("should raise error for too few positional parameters", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -442,7 +444,8 @@ TEST_CASE("should raise error for too few positional parameters", "[parameter_bi
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("42601"));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert multiple rows using multirow binding", "[parameter_binding]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert multiple rows using multirow binding",
+                 "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists
@@ -493,7 +496,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert multiple rows using multirow 
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values in multirow binding", "[parameter_binding]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values in multirow binding",
+                 "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, value VARCHAR) exists
@@ -543,7 +547,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values in multirow bindi
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should bind many parameters", "[parameter_binding]") {
+TEST_CASE("should bind many parameters", "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -567,7 +571,7 @@ TEST_CASE("should bind many parameters", "[parameter_binding]") {
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind parameters with OR clause for multiple value matching",
-                 "[parameter_binding]") {
+                 "[e2e][query][parameter_binding]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with columns (id NUMBER, name VARCHAR) exists

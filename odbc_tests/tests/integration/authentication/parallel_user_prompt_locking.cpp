@@ -153,7 +153,7 @@ static void simulate_browser_callback(const WiremockClient& wm, const std::strin
 // =============================================================================
 
 TEST_CASE("should show only one external browser prompt when multiple connections authenticate concurrently",
-          "[parallel_user_prompt_locking]") {
+          "[integration][authentication][parallel_user_prompt_locking]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -213,7 +213,7 @@ TEST_CASE("should show only one external browser prompt when multiple connection
 // =============================================================================
 
 TEST_CASE("should show only one MFA prompt when multiple connections authenticate concurrently",
-          "[parallel_user_prompt_locking]") {
+          "[integration][authentication][parallel_user_prompt_locking]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -286,7 +286,7 @@ TEST_CASE("should show only one MFA prompt when multiple connections authenticat
 // =============================================================================
 
 TEST_CASE("should show independent prompts when DISABLE_PARALLEL_USER_PROMPT is false",
-          "[parallel_user_prompt_locking]") {
+          "[integration][authentication][parallel_user_prompt_locking]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -378,7 +378,7 @@ TEST_CASE("should show independent prompts when DISABLE_PARALLEL_USER_PROMPT is 
 // =============================================================================
 
 TEST_CASE("should show independent prompts when clientStoreTemporaryCredential is false",
-          "[parallel_user_prompt_locking]") {
+          "[integration][authentication][parallel_user_prompt_locking]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif

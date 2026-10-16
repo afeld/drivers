@@ -30,7 +30,8 @@ constexpr const char* kTzOverflowQuery =
     "SELECT DATEADD(YEAR, c_int, c_ts) FROM t";
 }  // namespace
 
-TEST_CASE("TIMESTAMP_NTZ year overflow surfaces a datetime overflow error", "[timestamp_ntz][overflow][22007]") {
+TEST_CASE("TIMESTAMP_NTZ year overflow surfaces a datetime overflow error",
+          "[e2e][types][timestamp_ntz][overflow][22007]") {
   // Given a connection
   Connection conn;
   auto stmt = conn.createStatement();
@@ -46,7 +47,8 @@ TEST_CASE("TIMESTAMP_NTZ year overflow surfaces a datetime overflow error", "[ti
   CHECK(result.sqlstate == "22007");
 }
 
-TEST_CASE("TIMESTAMP_LTZ year overflow surfaces a datetime overflow error", "[timestamp_ltz][overflow][22007]") {
+TEST_CASE("TIMESTAMP_LTZ year overflow surfaces a datetime overflow error",
+          "[e2e][types][timestamp_ltz][overflow][22007]") {
   // Given a connection
   Connection conn;
   auto stmt = conn.createStatement();
@@ -62,7 +64,8 @@ TEST_CASE("TIMESTAMP_LTZ year overflow surfaces a datetime overflow error", "[ti
   CHECK(result.sqlstate == "22007");
 }
 
-TEST_CASE("TIMESTAMP_TZ year overflow surfaces a datetime overflow error", "[timestamp_tz][overflow][22007]") {
+TEST_CASE("TIMESTAMP_TZ year overflow surfaces a datetime overflow error",
+          "[e2e][types][timestamp_tz][overflow][22007]") {
   // Given a connection
   Connection conn;
   auto stmt = conn.createStatement();

@@ -11,18 +11,12 @@ add_odbc_test(e2e_authentication_external_browser authentication/external_browse
 add_odbc_test(e2e_authentication_workload_identity_cross_param authentication/workload_identity_cross_param.cpp)
 add_odbc_test(e2e_authentication_workload_identity authentication/workload_identity.cpp)
 
-# Aggregate build target for the auth E2E suites that require the headless
-# browser container. Mirrors the `requires_browser` Catch2 tag used to select
-# them at run time (ctest -L requires_browser); keep the two in sync when adding
-# a new browser-dependent auth suite.
-add_custom_target(e2e_auth_browser DEPENDS
-  e2e_authentication_external_browser
-  e2e_authentication_mfa_auth
-  e2e_authentication_oauth)
+# These targets build the single odbc_tests binary. Browser auth cases are
+# selected with ctest -L '^requires_browser$'.
+add_custom_target(e2e_auth_browser DEPENDS odbc_tests)
 
-# Build target for requires_no_mfa auth tests (ctest -L requires_no_mfa).
-add_custom_target(e2e_auth_no_mfa DEPENDS
-  e2e_authentication_user_password)
+# Password auth without MFA is selected with ctest -L '^requires_no_mfa$'.
+add_custom_target(e2e_auth_no_mfa DEPENDS odbc_tests)
 
 # put_get
 add_odbc_test(e2e_put_get_put_get_auto_compress put_get/put_get_auto_compress.cpp)

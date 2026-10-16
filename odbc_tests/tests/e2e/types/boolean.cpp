@@ -11,7 +11,7 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("should cast boolean values to appropriate type", "[boolean]") {
+TEST_CASE("should cast boolean values to appropriate type", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -29,7 +29,7 @@ TEST_CASE("should cast boolean values to appropriate type", "[boolean]") {
   REQUIRE(col3 == 1);
 }
 
-TEST_CASE("should select boolean literals", "[boolean]") {
+TEST_CASE("should select boolean literals", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -41,7 +41,7 @@ TEST_CASE("should select boolean literals", "[boolean]") {
   REQUIRE(get_data<SQL_C_BIT>(stmt, 2) == 0);
 }
 
-TEST_CASE("should handle NULL values from literals", "[boolean]") {
+TEST_CASE("should handle NULL values from literals for boolean", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -55,7 +55,7 @@ TEST_CASE("should handle NULL values from literals", "[boolean]") {
   REQUIRE(get_data_optional<SQL_C_BIT>(stmt, 4) == std::nullopt);
 }
 
-TEST_CASE("should download large result set with multiple chunks from GENERATOR", "[boolean]") {
+TEST_CASE("should download large result set with multiple chunks from GENERATOR for boolean", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -93,7 +93,7 @@ TEST_CASE("should download large result set with multiple chunks from GENERATOR"
   REQUIRE(false_count == 500000);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select boolean values from table", "[boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select boolean values from table", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (BOOLEAN, BOOLEAN, BOOLEAN) exists
@@ -111,7 +111,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select boolean values from table", "
   REQUIRE(get_data<SQL_C_BIT>(stmt, 3) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table", "[boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table for boolean", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
 
   // And Table with BOOLEAN column exists
@@ -151,7 +151,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table", "[bo
   REQUIRE(null_count == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multiple chunks from table", "[boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multiple chunks from table for boolean",
+                 "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
 
   // And Table with BOOLEAN column exists with 500000 TRUE and 500000 FALSE values
@@ -193,7 +194,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multi
   REQUIRE(false_count == 500000);
 }
 
-TEST_CASE("should select boolean using parameter binding", "[boolean]") {
+TEST_CASE("should select boolean using parameter binding", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -224,7 +225,7 @@ TEST_CASE("should select boolean using parameter binding", "[boolean]") {
   }
 }
 
-TEST_CASE("should select null boolean using parameter binding", "[boolean]") {
+TEST_CASE("should select null boolean using parameter binding", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -245,7 +246,7 @@ TEST_CASE("should select null boolean using parameter binding", "[boolean]") {
   REQUIRE(get_data_optional<SQL_C_BIT>(stmt, 1) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert boolean using parameter binding", "[boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert boolean using parameter binding", "[e2e][types][boolean]") {
   // Given Snowflake client is logged in
 
   // And Table with BOOLEAN column exists

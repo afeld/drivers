@@ -17,7 +17,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to SQL_C_CHAR and SQL_C_DEFAULT conversion",
-                 "[fixed][conversion][c_char]") {
+                 "[e2e][types][fixed][conversion][c_char]") {
   // Given A Snowflake connection is established
 
   // When A table with various DECIMAL/NUMBER/INT columns is queried
@@ -42,7 +42,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to SQL_C_CHAR and SQL_C_DEFAUL
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL default conversion", "[fixed][conversion][c_char][default]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL default conversion",
+                 "[e2e][types][fixed][conversion][c_char][default]") {
   // Given A Snowflake connection is established
 
   {
@@ -161,7 +162,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL default conversion", "[fixed][c
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL default conversion - large precision",
-                 "[fixed][conversion][c_char][default]") {
+                 "[e2e][types][fixed][conversion][c_char][default]") {
   // Given A Snowflake connection is established
 
   {
@@ -200,7 +201,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL default conversion - large prec
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_WCHAR", "[fixed][conversion][c_wchar]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_WCHAR", "[e2e][types][fixed][conversion][c_wchar]") {
   // The old driver under iODBC writes UTF-16 code units into the 4-byte SQLWCHAR
   //   slots that iODBC's UTF-32 SQLWCHAR layout expects, so the decoded buffer is
   //   garbled (two 16-bit halves of "42" appear as one U+00320034 code point).
@@ -247,7 +248,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL to SQL_C_WCHAR", "[fixed][conve
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL SQL_C_CHAR buffer handling", "[fixed][conversion][c_char][buffer]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL SQL_C_CHAR buffer handling",
+                 "[e2e][types][fixed][conversion][c_char][buffer]") {
   // Given A Snowflake connection is established
 
   // When NUMBER values are fetched into various buffer sizes
@@ -319,7 +321,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL SQL_C_CHAR buffer handling", "[
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "Without TREAT_DECIMAL_AS_INT default is SQL_C_CHAR for scale=0",
-                 "[fixed][conversion][c_char][default]") {
+                 "[e2e][types][fixed][conversion][c_char][default]") {
   // Given A Snowflake connection is established
 
   // When An integer DECIMAL value is queried with SQL_C_DEFAULT
@@ -335,7 +337,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "Without TREAT_DECIMAL_AS_INT default is SQL
   CHECK(std::string(buffer, indicator) == "42");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "Test string at limits", "[fixed][conversion][c_char][limits]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "Test string at limits", "[e2e][types][fixed][conversion][c_char][limits]") {
   // Given A Snowflake connection is established
 
   // When Max and min 37-digit NUMBER values are fetched as SQL_C_CHAR and SQL_C_DEFAULT
@@ -350,7 +352,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "Test string at limits", "[fixed][conversion
   CHECK(get_data_default_as_string(stmt, 2) == min_val);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL multiple rows as SQL_C_CHAR", "[fixed][conversion][c_char][multirow]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL multiple rows as SQL_C_CHAR",
+                 "[e2e][types][fixed][conversion][c_char][multirow]") {
   // Given A Snowflake connection is established
 
   // When A table with various DECIMAL(10,2) values is queried
@@ -371,7 +374,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL multiple rows as SQL_C_CHAR", "[fix
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_CHAR types", "[fixed][conversion][c_char][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_CHAR types",
+                 "[e2e][types][fixed][conversion][c_char][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL NUMBER value is queried

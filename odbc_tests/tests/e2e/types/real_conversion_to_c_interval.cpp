@@ -13,7 +13,7 @@
 // SUCCESSFUL CONVERSIONS - Single-component interval types
 // ============================================================================
 
-TEST_CASE("FLOAT to single-field interval types", "[datatype][float][conversion][c_interval]") {
+TEST_CASE("FLOAT to single-field interval types", "[e2e][types][datatype][float][conversion][c_interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -106,7 +106,8 @@ TEST_CASE("FLOAT to single-field interval types", "[datatype][float][conversion]
 // FRACTIONAL TRUNCATION (SQLSTATE 01S07)
 // ============================================================================
 
-TEST_CASE("FLOAT fractional truncation to interval types", "[datatype][float][conversion][c_interval][01S07]") {
+TEST_CASE("FLOAT fractional truncation to interval types",
+          "[e2e][types][datatype][float][conversion][c_interval][01S07]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -191,7 +192,8 @@ TEST_CASE("FLOAT fractional truncation to interval types", "[datatype][float][co
 // MULTI-FIELD INTERVAL TYPES (SQLSTATE 22015)
 // ============================================================================
 
-TEST_CASE("FLOAT to multi-field interval returns 22015", "[datatype][float][conversion][c_interval][22015]") {
+TEST_CASE("FLOAT to multi-field interval returns 22015",
+          "[e2e][types][datatype][float][conversion][c_interval][22015]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -211,7 +213,8 @@ TEST_CASE("FLOAT to multi-field interval returns 22015", "[datatype][float][conv
 // SUB-MICROSECOND TRUNCATION (SQLSTATE 01S07)
 // ============================================================================
 
-TEST_CASE("FLOAT sub-microsecond truncation to interval second", "[datatype][float][conversion][c_interval][01S07]") {
+TEST_CASE("FLOAT sub-microsecond truncation to interval second",
+          "[e2e][types][datatype][float][conversion][c_interval][01S07]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -241,7 +244,7 @@ TEST_CASE("FLOAT sub-microsecond truncation to interval second", "[datatype][flo
 // EDGE CASES - No negative zero
 // ============================================================================
 
-TEST_CASE("FLOAT to interval - no negative zero", "[datatype][float][conversion][c_interval][edge]") {
+TEST_CASE("FLOAT to interval - no negative zero", "[e2e][types][datatype][float][conversion][c_interval][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -317,7 +320,7 @@ TEST_CASE("FLOAT to interval - no negative zero", "[datatype][float][conversion]
 // ============================================================================
 
 TEST_CASE("FLOAT to interval - default precision rejects values >= 100",
-          "[datatype][float][conversion][c_interval][precision]") {
+          "[e2e][types][datatype][float][conversion][c_interval][precision]") {
   SKIP_OLD_DRIVER("BD#18", "Old driver does not enforce interval leading precision");
   // Given Snowflake client is logged in
   Connection conn;
@@ -350,7 +353,7 @@ TEST_CASE("FLOAT to interval - default precision rejects values >= 100",
 // ============================================================================
 
 TEST_CASE("FLOAT to interval - custom precision via SQLSetDescField",
-          "[datatype][float][conversion][c_interval][precision][descriptor]") {
+          "[e2e][types][datatype][float][conversion][c_interval][precision][descriptor]") {
   SKIP_OLD_DRIVER("BD#18", "Old driver does not support SQL_DESC_DATETIME_INTERVAL_PRECISION");
   // Given Snowflake client is logged in
   Connection conn;
@@ -422,7 +425,7 @@ TEST_CASE("FLOAT to interval - custom precision via SQLSetDescField",
 // NULL handling
 // ============================================================================
 
-TEST_CASE("FLOAT NULL to interval C types", "[datatype][float][conversion][c_interval][null]") {
+TEST_CASE("FLOAT NULL to interval C types", "[e2e][types][datatype][float][conversion][c_interval][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -441,7 +444,7 @@ TEST_CASE("FLOAT NULL to interval C types", "[datatype][float][conversion][c_int
 // NaN/Infinity edge cases
 // ============================================================================
 
-TEST_CASE("FLOAT NaN to interval returns error", "[datatype][float][conversion][c_interval][edge]") {
+TEST_CASE("FLOAT NaN to interval returns error", "[e2e][types][datatype][float][conversion][c_interval][edge]") {
   SKIP_OLD_DRIVER("BD#16", "Old driver silently converts NaN to 0 instead of returning 22003");
   // Given Snowflake client is logged in
   Connection conn;
@@ -453,7 +456,7 @@ TEST_CASE("FLOAT NaN to interval returns error", "[datatype][float][conversion][
   check_numeric_out_of_range<SQL_C_INTERVAL_SECOND>(conn.execute_fetch("SELECT 'NaN'::FLOAT"), 1);
 }
 
-TEST_CASE("FLOAT Infinity to interval returns error", "[datatype][float][conversion][c_interval][edge]") {
+TEST_CASE("FLOAT Infinity to interval returns error", "[e2e][types][datatype][float][conversion][c_interval][edge]") {
   SKIP_OLD_DRIVER("BD#16", "Old driver silently converts Infinity instead of returning 22003");
   // Given Snowflake client is logged in
   Connection conn;

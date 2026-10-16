@@ -255,9 +255,9 @@ steps:
               mkdir -p /workdir/junit-results
               set +e
               if [ "$$TEST_FILTER" = "ALL" ]; then
-                ctest -j 1 -C Debug --test-dir cmake-build --output-on-failure --no-tests=error -R "e2e|integration" --output-junit /workdir/junit-results/odbc-junit.xml
+                ctest -j 1 -C Debug --test-dir cmake-build --output-on-failure --no-tests=error -L "^(e2e|integration)$$" --output-junit /workdir/junit-results/odbc-junit.xml
               else
-                ctest -j 1 -C Debug --test-dir cmake-build --output-on-failure --no-tests=error -R "$$TEST_FILTER" --output-junit /workdir/junit-results/odbc-junit.xml
+                ctest -j 1 -C Debug --test-dir cmake-build --output-on-failure --no-tests=error -L "$$TEST_FILTER" --output-junit /workdir/junit-results/odbc-junit.xml
               fi
               exit $$?
             ' || DOCKER_EXIT=$$?

@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("SQLDescribeCol for TIMESTAMP_NTZ", "[timestamp_ntz][describe_col]") {
+TEST_CASE("SQLDescribeCol for TIMESTAMP_NTZ", "[e2e][types][timestamp_ntz][describe_col]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -26,7 +26,7 @@ TEST_CASE("SQLDescribeCol for TIMESTAMP_NTZ", "[timestamp_ntz][describe_col]") {
   CHECK(decimal_digits == 9);
 }
 
-TEST_CASE("SQLDescribeCol for TIMESTAMP_LTZ", "[timestamp_ltz][describe_col]") {
+TEST_CASE("SQLDescribeCol for TIMESTAMP_LTZ", "[e2e][types][timestamp_ltz][describe_col]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -45,7 +45,7 @@ TEST_CASE("SQLDescribeCol for TIMESTAMP_LTZ", "[timestamp_ltz][describe_col]") {
   CHECK(decimal_digits == 9);
 }
 
-TEST_CASE("SQLDescribeCol for TIMESTAMP_TZ", "[timestamp_tz][describe_col]") {
+TEST_CASE("SQLDescribeCol for TIMESTAMP_TZ", "[e2e][types][timestamp_tz][describe_col]") {
   // Given Snowflake client is logged in
   Connection conn;
 

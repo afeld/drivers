@@ -60,9 +60,9 @@ public class BooleanTest : IClassFixture<ITFixture>
         Assert.False(reader.Read(), "Expected exactly one row");
     }
 
-    // Scenario: should handle NULL values from literals
+    // Scenario: should handle NULL values from literals for boolean
     [SnowflakeFact]
-    public void ShouldHandleNullValuesFromLiterals()
+    public void ShouldHandleNullValuesFromLiteralsForBoolean()
     {
         // Given Snowflake client is logged in
         using var connection = Fixture.Factory.Create(Output);
@@ -82,9 +82,9 @@ public class BooleanTest : IClassFixture<ITFixture>
         Assert.False(reader.Read(), "Expected exactly one row");
     }
 
-    // Scenario: should download large result set with multiple chunks from GENERATOR
+    // Scenario: should download large result set with multiple chunks from GENERATOR for boolean
     [SnowflakeFact]
-    public void ShouldDownloadLargeResultSetWithMultipleChunksFromGenerator()
+    public void ShouldDownloadLargeResultSetWithMultipleChunksFromGeneratorForBoolean()
     {
         const int rowCount = 1000000;
 
@@ -144,9 +144,9 @@ public class BooleanTest : IClassFixture<ITFixture>
         Assert.False(reader.Read(), "Expected exactly one row");
     }
 
-    // Scenario: should handle NULL values from table
+    // Scenario: should handle NULL values from table for boolean
     [SnowflakeFact]
-    public void ShouldHandleNullValuesFromTable()
+    public void ShouldHandleNullValuesFromTableForBoolean()
     {
         // Given Snowflake client is logged in
         using var connection = Fixture.Factory.Create(Output);
@@ -180,9 +180,9 @@ public class BooleanTest : IClassFixture<ITFixture>
         Assert.Contains(false, results);
     }
 
-    // Scenario: should download large result set with multiple chunks from table
+    // Scenario: should download large result set with multiple chunks from table for boolean
     [SnowflakeFact]
-    public void ShouldDownloadLargeResultSetWithMultipleChunksFromTable()
+    public void ShouldDownloadLargeResultSetWithMultipleChunksFromTableForBoolean()
     {
         const int rowCount = 1000000;
 

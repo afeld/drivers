@@ -13,7 +13,7 @@
 // SUCCESSFUL CONVERSIONS - Single-component interval types
 // ============================================================================
 
-TEST_CASE("DECFLOAT to single-field interval types", "[decfloat][conversion][c_interval]") {
+TEST_CASE("DECFLOAT to single-field interval types", "[e2e][types][decfloat][conversion][c_interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -106,7 +106,7 @@ TEST_CASE("DECFLOAT to single-field interval types", "[decfloat][conversion][c_i
 // FRACTIONAL TRUNCATION (SQLSTATE 01S07)
 // ============================================================================
 
-TEST_CASE("DECFLOAT fractional truncation to interval types", "[decfloat][conversion][c_interval][01S07]") {
+TEST_CASE("DECFLOAT fractional truncation to interval types", "[e2e][types][decfloat][conversion][c_interval][01S07]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -149,7 +149,7 @@ TEST_CASE("DECFLOAT fractional truncation to interval types", "[decfloat][conver
 // MULTI-FIELD INTERVAL TYPES (SQLSTATE 22015)
 // ============================================================================
 
-TEST_CASE("DECFLOAT to multi-field interval returns 22015", "[decfloat][conversion][c_interval][22015]") {
+TEST_CASE("DECFLOAT to multi-field interval returns 22015", "[e2e][types][decfloat][conversion][c_interval][22015]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -169,7 +169,8 @@ TEST_CASE("DECFLOAT to multi-field interval returns 22015", "[decfloat][conversi
 // SUB-MICROSECOND TRUNCATION (SQLSTATE 01S07)
 // ============================================================================
 
-TEST_CASE("DECFLOAT sub-microsecond truncation to interval second", "[decfloat][conversion][c_interval][01S07]") {
+TEST_CASE("DECFLOAT sub-microsecond truncation to interval second",
+          "[e2e][types][decfloat][conversion][c_interval][01S07]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -190,7 +191,7 @@ TEST_CASE("DECFLOAT sub-microsecond truncation to interval second", "[decfloat][
 // EDGE CASES - No negative zero
 // ============================================================================
 
-TEST_CASE("DECFLOAT to interval - no negative zero", "[decfloat][conversion][c_interval][edge]") {
+TEST_CASE("DECFLOAT to interval - no negative zero", "[e2e][types][decfloat][conversion][c_interval][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -238,7 +239,7 @@ TEST_CASE("DECFLOAT to interval - no negative zero", "[decfloat][conversion][c_i
 // EDGE CASES - Positive exponent
 // ============================================================================
 
-TEST_CASE("DECFLOAT with positive exponent to interval", "[decfloat][conversion][c_interval]") {
+TEST_CASE("DECFLOAT with positive exponent to interval", "[e2e][types][decfloat][conversion][c_interval]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -266,7 +267,7 @@ TEST_CASE("DECFLOAT with positive exponent to interval", "[decfloat][conversion]
 // ============================================================================
 
 TEST_CASE("DECFLOAT to interval - default precision rejects values >= 100",
-          "[decfloat][conversion][c_interval][precision]") {
+          "[e2e][types][decfloat][conversion][c_interval][precision]") {
   SKIP_OLD_DRIVER("BD#18", "Old driver does not enforce interval leading precision");
   // Given Snowflake client is logged in
   Connection conn;
@@ -299,7 +300,7 @@ TEST_CASE("DECFLOAT to interval - default precision rejects values >= 100",
 // ============================================================================
 
 TEST_CASE("DECFLOAT to interval - custom precision via SQLSetDescField",
-          "[decfloat][conversion][c_interval][precision][descriptor]") {
+          "[e2e][types][decfloat][conversion][c_interval][precision][descriptor]") {
   SKIP_OLD_DRIVER("BD#18", "Old driver does not support SQL_DESC_DATETIME_INTERVAL_PRECISION");
   // Given Snowflake client is logged in
   Connection conn;
@@ -358,7 +359,7 @@ TEST_CASE("DECFLOAT to interval - custom precision via SQLSetDescField",
 // NULL handling
 // ============================================================================
 
-TEST_CASE("DECFLOAT NULL to interval C types", "[decfloat][conversion][c_interval][null]") {
+TEST_CASE("DECFLOAT NULL to interval C types", "[e2e][types][decfloat][conversion][c_interval][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

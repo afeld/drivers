@@ -53,7 +53,7 @@ describe('BOOLEAN data type', () => {
       expect(Object.values(rows[0])).toEqual([true, false]);
     });
 
-    it('should handle NULL values from literals', async () => {
+    it('should handle NULL values from literals for boolean', async () => {
       // Given Snowflake client is logged in
       void connection;
 
@@ -87,7 +87,7 @@ describe('BOOLEAN data type', () => {
       expect(Object.values(rows[0])).toEqual([true, false, true]);
     });
 
-    it('should handle NULL values from table', async () => {
+    it('should handle NULL values from table for boolean', async () => {
       // Given Snowflake client is logged in
       void connection;
 
@@ -162,7 +162,7 @@ describe('BOOLEAN data type', () => {
   describe.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)('multiple chunks', () => {
     const HALF = 500_000;
 
-    it('should download large result set with multiple chunks from GENERATOR', async () => {
+    it('should download large result set with multiple chunks from GENERATOR for boolean', async () => {
       // Given Snowflake client is logged in
       void connection;
 
@@ -178,7 +178,7 @@ describe('BOOLEAN data type', () => {
       expect(rows.length - trueCount).toBe(HALF);
     });
 
-    it('should download large result set with multiple chunks from table', async () => {
+    it('should download large result set with multiple chunks from table for boolean', async () => {
       // Given Snowflake client is logged in
       void connection;
 

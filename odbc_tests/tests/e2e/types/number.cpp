@@ -5,7 +5,7 @@
 #include "SchemaFixtures.hpp"
 #include "get_data.hpp"
 
-TEST_CASE("should cast number values to appropriate type for number and synonyms", "[number]") {
+TEST_CASE("should cast number values to appropriate type for number and synonyms", "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -46,7 +46,7 @@ TEST_CASE("should cast number values to appropriate type for number and synonyms
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 4) == 123.45);
 }
 
-TEST_CASE("should select number literals for number and synonyms", "[number]") {
+TEST_CASE("should select number literals for number and synonyms", "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -65,7 +65,8 @@ TEST_CASE("should select number literals for number and synonyms", "[number]") {
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 6) == -789.012);
 }
 
-TEST_CASE("should handle scale and precision boundaries from literals for number and synonyms", "[number]") {
+TEST_CASE("should handle scale and precision boundaries from literals for number and synonyms",
+          "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -81,7 +82,8 @@ TEST_CASE("should handle scale and precision boundaries from literals for number
   CHECK(get_data<SQL_C_LONG>(stmt, 4) == -99999999);
 }
 
-TEST_CASE("should download large result set with multiple chunks from GENERATOR for number and synonyms", "[number]") {
+TEST_CASE("should download large result set with multiple chunks from GENERATOR for number and synonyms",
+          "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -126,7 +128,7 @@ TEST_CASE("should download large result set with multiple chunks from GENERATOR 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should select numbers from table with multiple scales for number and synonyms",
-                 "[number]") {
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(10,0), <type>(10,2), <type>(15,3), <type>(20,5)) exists
@@ -178,7 +180,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select numbers from table with multi
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle scale and precision boundaries from table for number and synonyms",
-                 "[number]") {
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(5,2), <type>(8,0)) exists
@@ -216,7 +218,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle scale and precision boundarie
   CHECK(get_data<SQL_C_LONG>(stmt, 2) == 0);
 }
 
-TEST_CASE("should handle NULL values from literals for number and synonyms", "[number]") {
+TEST_CASE("should handle NULL values from literals for number and synonyms", "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -232,7 +234,7 @@ TEST_CASE("should handle NULL values from literals for number and synonyms", "[n
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table with multiple scales for number and synonyms",
-                 "[number]") {
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(10,0), <type>(10,2), <type>(15,3)) exists
@@ -273,7 +275,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table with m
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 3) == -789.012);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set from table for number and synonyms", "[number]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set from table for number and synonyms",
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(38,0), <type>(20,5)) exists with 30000 sequential rows, from 0 to 29999 in the
@@ -323,7 +326,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set from table
 // High precision literals (NUMBER(38,x) - values exceed native int64/double)
 // ============================================================================
 
-TEST_CASE("should handle high precision values from literals for number and synonyms", "[number]") {
+TEST_CASE("should handle high precision values from literals for number and synonyms", "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -346,7 +349,7 @@ TEST_CASE("should handle high precision values from literals for number and syno
   CHECK(get_data<SQL_C_CHAR>(stmt, 4) == "0.0000000000000000000000000000000000001");
 }
 
-TEST_CASE("should handle high precision boundaries from literals for number and synonyms", "[number]") {
+TEST_CASE("should handle high precision boundaries from literals for number and synonyms", "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -366,7 +369,7 @@ TEST_CASE("should handle high precision boundaries from literals for number and 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle high precision values from table for number and synonyms",
-                 "[number]") {
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(38,0), <type>(38,2), <type>(38,10), <type>(38,37)) exists
@@ -396,7 +399,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle high precision values from ta
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle high precision boundaries from table for number and synonyms",
-                 "[number]") {
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(38,0), <type>(38,37)) exists
@@ -440,7 +443,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle high precision boundaries fro
 // Parameter binding - SELECT
 // ============================================================================
 
-TEST_CASE("should select number using parameter binding for number and synonyms", "[number]") {
+TEST_CASE("should select number using parameter binding for number and synonyms", "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -492,7 +495,8 @@ TEST_CASE("should select number using parameter binding for number and synonyms"
   CHECK(get_data_optional<SQL_C_LONG>(stmt, 5) == std::nullopt);
 }
 
-TEST_CASE("should select high precision number using parameter binding for number and synonyms", "[number]") {
+TEST_CASE("should select high precision number using parameter binding for number and synonyms",
+          "[e2e][types][number]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -531,7 +535,7 @@ TEST_CASE("should select high precision number using parameter binding for numbe
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should insert number using parameter binding for number and synonyms",
-                 "[number]") {
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(10,0), <type>(10,2)) exists
@@ -608,7 +612,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert number using parameter bindin
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture,
-                 "should insert high precision number using parameter binding for number and synonyms", "[number]") {
+                 "should insert high precision number using parameter binding for number and synonyms",
+                 "[e2e][types][number]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (<type>(38,0), <type>(38,2)) exists

@@ -25,13 +25,13 @@ Feature: BOOLEAN type support
     Then Result should contain [TRUE, FALSE]
 
   @python_e2e @jdbc_e2e @odbc_e2e @nodejs_e2e @dotnet_e2e
-  Scenario: should handle NULL values from literals
+  Scenario: should handle NULL values from literals for boolean
     Given Snowflake client is logged in
     When Query "SELECT FALSE::BOOLEAN, NULL::BOOLEAN, TRUE::BOOLEAN, NULL::BOOLEAN" is executed
     Then Result should contain [FALSE, NULL, TRUE, NULL]
 
   @python_e2e @jdbc_e2e @odbc_e2e @dotnet_e2e
-  Scenario: should download large result set with multiple chunks from GENERATOR
+  Scenario: should download large result set with multiple chunks from GENERATOR for boolean
     Given Snowflake client is logged in
     When Query "SELECT (id % 2 = 0)::BOOLEAN FROM <generator>" is executed
     Then Result should contain 500000 TRUE and 500000 FALSE values
@@ -49,7 +49,7 @@ Feature: BOOLEAN type support
     Then Result should contain [TRUE, FALSE, TRUE]
 
   @python_e2e @jdbc_e2e @odbc_e2e @nodejs_e2e @dotnet_e2e
-  Scenario: should handle NULL values from table
+  Scenario: should handle NULL values from table for boolean
     Given Snowflake client is logged in
     And Table with BOOLEAN column exists
     And Rows [NULL, TRUE, FALSE] are inserted
@@ -57,7 +57,7 @@ Feature: BOOLEAN type support
     Then Result should contain [NULL, TRUE, FALSE] in any order
 
   @python_e2e @jdbc_e2e @odbc_e2e @dotnet_e2e
-  Scenario: should download large result set with multiple chunks from table
+  Scenario: should download large result set with multiple chunks from table for boolean
     Given Snowflake client is logged in
     And Table with BOOLEAN column exists with 500000 TRUE and 500000 FALSE values
     When Query "SELECT col FROM <table>" is executed

@@ -45,7 +45,7 @@ class TestBooleanLiteral:
         assert result == (True, False)
         assert_type(result, bool)
 
-    def test_should_handle_null_values_from_literals(self, execute_query):
+    def test_should_handle_null_values_from_literals_for_boolean(self, execute_query):
         # Given Snowflake client is logged in
         pass
 
@@ -57,7 +57,7 @@ class TestBooleanLiteral:
         assert result == (False, None, True, None)
         assert_type(result, bool, can_be_none=True)
 
-    def test_should_download_large_result_set_with_multiple_chunks_from_generator(self, execute_query):
+    def test_should_download_large_result_set_with_multiple_chunks_from_generator_for_boolean(self, execute_query):
         # Given Snowflake client is logged in
         pass
 
@@ -95,7 +95,7 @@ class TestBooleanTable:
         assert_type(result, bool)
         assert result == (True, False, True)
 
-    def test_should_handle_null_values_from_table(self, execute_query, tmp_schema):
+    def test_should_handle_null_values_from_table_for_boolean(self, execute_query, tmp_schema):
         # Given Snowflake client is logged in
         pass
 
@@ -114,7 +114,9 @@ class TestBooleanTable:
         assert set(result) == {None, True, False}
         assert_type(result, bool, can_be_none=True)
 
-    def test_should_download_large_result_set_with_multiple_chunks_from_table(self, execute_query, tmp_schema):
+    def test_should_download_large_result_set_with_multiple_chunks_from_table_for_boolean(
+        self, execute_query, tmp_schema
+    ):
         # Given Snowflake client is logged in
         pass
 

@@ -85,7 +85,7 @@ When ccache is installed, the build scripts automatically use it as the compiler
 ./odbc_tests/run.sh
 
 # Run specific tests
-./odbc_tests/run.sh -R "suite_name"
+./odbc_tests/run.sh -L '^authentication$'
 ```
 
 ### Reference Testing (Docker)
@@ -95,5 +95,5 @@ When ccache is installed, the build scripts automatically use it as the compiler
 ./odbc_tests/run_reference.sh
 
 # Pass specific test arguments
-./odbc_tests/run_reference.sh -R "suite_name"
+./odbc_tests/run_reference.sh -L '^authentication$'
 ```

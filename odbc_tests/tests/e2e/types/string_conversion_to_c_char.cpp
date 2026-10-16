@@ -27,7 +27,7 @@
 
 // Byte length of data is longer than the buffer length, so the data is truncated.
 TEST_CASE_METHOD(ConnSchemaFixture, "should truncate string data when byte length is longer than the buffer length",
-                 "[datatype][string][conversion][char]") {
+                 "[e2e][types][datatype][string][conversion][char]") {
   // Given Snowflake client is logged in
 
   // When Query selecting a long string is executed
@@ -57,7 +57,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should truncate string data when byte lengt
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should truncate wide string data when byte length is longer than the buffer length",
-                 "[datatype][string][conversion][wchar]") {
+                 "[e2e][types][datatype][string][conversion][wchar]") {
   // Given Snowflake client is logged in
 
   // When Query selecting a long string is executed
@@ -87,7 +87,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert UTF-16 to ASCII with 0x1a substitution when using SQL_C_CHAR",
-                 "[datatype][string][conversion]") {
+                 "[e2e][types][datatype][string][conversion]") {
   if (!is_ascii_locale()) {
     SKIP("This test is not applicable on non-ASCII locales");
   }

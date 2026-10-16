@@ -28,7 +28,7 @@ static void check_json_eq(const std::string& actual, const std::string& expected
 // SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("ARRAY to SQL_C_CHAR", "[datatype][array][conversion][c_char]") {
+TEST_CASE("ARRAY to SQL_C_CHAR", "[e2e][types][datatype][array][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -49,7 +49,7 @@ TEST_CASE("ARRAY to SQL_C_CHAR", "[datatype][array][conversion][c_char]") {
   CHECK(json.get<picojson::array>().size() == 5);
 }
 
-TEST_CASE("ARRAY to SQL_C_CHAR nested", "[datatype][array][conversion][c_char]") {
+TEST_CASE("ARRAY to SQL_C_CHAR nested", "[e2e][types][datatype][array][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -63,7 +63,7 @@ TEST_CASE("ARRAY to SQL_C_CHAR nested", "[datatype][array][conversion][c_char]")
   check_json_eq(deep, "[[[1]]]");
 }
 
-TEST_CASE("ARRAY to SQL_C_CHAR large array", "[datatype][array][conversion][c_char]") {
+TEST_CASE("ARRAY to SQL_C_CHAR large array", "[e2e][types][datatype][array][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -77,7 +77,7 @@ TEST_CASE("ARRAY to SQL_C_CHAR large array", "[datatype][array][conversion][c_ch
   CHECK(json.get<picojson::array>().size() == 20);
 }
 
-TEST_CASE("ARRAY to SQL_C_CHAR truncation", "[datatype][array][conversion][c_char][01004]") {
+TEST_CASE("ARRAY to SQL_C_CHAR truncation", "[e2e][types][datatype][array][conversion][c_char][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -94,7 +94,7 @@ TEST_CASE("ARRAY to SQL_C_CHAR truncation", "[datatype][array][conversion][c_cha
   CHECK(records[0].sqlState == "01004");
 }
 
-TEST_CASE("ARRAY NULL to SQL_C_CHAR", "[datatype][array][conversion][c_char][null]") {
+TEST_CASE("ARRAY NULL to SQL_C_CHAR", "[e2e][types][datatype][array][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -105,7 +105,7 @@ TEST_CASE("ARRAY NULL to SQL_C_CHAR", "[datatype][array][conversion][c_char][nul
   check_null_via_get_data(stmt, 1, SQL_C_CHAR);
 }
 
-TEST_CASE("ARRAY to SQL_C_CHAR with null elements", "[datatype][array][conversion][c_char]") {
+TEST_CASE("ARRAY to SQL_C_CHAR with null elements", "[e2e][types][datatype][array][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -128,7 +128,7 @@ TEST_CASE("ARRAY to SQL_C_CHAR with null elements", "[datatype][array][conversio
 // SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("ARRAY to SQL_C_WCHAR", "[datatype][array][conversion][c_char]") {
+TEST_CASE("ARRAY to SQL_C_WCHAR", "[e2e][types][datatype][array][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -141,7 +141,7 @@ TEST_CASE("ARRAY to SQL_C_WCHAR", "[datatype][array][conversion][c_char]") {
   check_json_eq(sf::wide::utf32_to_utf8(empty), "[]");
 }
 
-TEST_CASE("ARRAY to SQL_C_WCHAR truncation", "[datatype][array][conversion][c_char][01004]") {
+TEST_CASE("ARRAY to SQL_C_WCHAR truncation", "[e2e][types][datatype][array][conversion][c_char][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -158,7 +158,7 @@ TEST_CASE("ARRAY to SQL_C_WCHAR truncation", "[datatype][array][conversion][c_ch
   CHECK(records[0].sqlState == "01004");
 }
 
-TEST_CASE("ARRAY NULL to SQL_C_WCHAR", "[datatype][array][conversion][c_char][null]") {
+TEST_CASE("ARRAY NULL to SQL_C_WCHAR", "[e2e][types][datatype][array][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -65,7 +65,8 @@ void verify_simple_query_execution(ConnectionHandleWrapper& dbc) {
 
 }  // namespace
 
-TEST_CASE("should authenticate with external browser via Okta IdP", "[external_browser_e2e][requires_browser]") {
+TEST_CASE("should authenticate with external browser via Okta IdP",
+          "[e2e][authentication][external_browser_e2e][requires_browser]") {
   REQUIRE_BROWSER("External browser E2E needs the headless Chromium container");
 
   oauth_auth::clean_browser_processes();
@@ -107,7 +108,8 @@ TEST_CASE("should authenticate with external browser via Okta IdP", "[external_b
   cleanup.connected = false;
 }
 
-TEST_CASE("should reuse cached ID token without browser interaction", "[external_browser_e2e][requires_browser]") {
+TEST_CASE("should reuse cached ID token without browser interaction",
+          "[e2e][authentication][external_browser_e2e][requires_browser]") {
   REQUIRE_BROWSER("External browser E2E needs the headless Chromium container");
 
   oauth_auth::clean_browser_processes();

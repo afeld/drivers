@@ -3,6 +3,7 @@ mod behavior_differences_processor;
 mod behavior_differences_utils;
 mod driver_handlers;
 mod feature_parser;
+mod odbc_registration;
 mod step_finder;
 mod test_discovery;
 mod utils;
@@ -41,6 +42,13 @@ fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let workspace_root = args.workspace;
+    let odbc_issues = odbc_registration::validate(&workspace_root)?;
+    if !odbc_issues.is_empty() {
+        for issue in &odbc_issues {
+            eprintln!("❌ {issue}");
+        }
+        std::process::exit(1);
+    }
     let validator = GherkinValidator::new(workspace_root.clone(), args.features)?;
 
     if args.json {

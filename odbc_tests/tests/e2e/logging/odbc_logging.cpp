@@ -36,7 +36,7 @@ static std::string read_all_files_in(const fs::path& dir) {
   return combined.str();
 }
 
-TEST_CASE("should create log file when sf.odbc.ini configures file logging", "[logging]") {
+TEST_CASE("should create log file when sf.odbc.ini configures file logging", "[e2e][logging]") {
   SKIP_OLD_DRIVER("BD#000", "Old driver does not support file logging setup via sf.odbc.ini");
 
   // Given a temp directory for logs and an sf.odbc.ini pointing at it.

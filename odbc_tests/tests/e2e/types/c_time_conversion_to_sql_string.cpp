@@ -52,7 +52,7 @@ void bind_time_and_select(StatementHandleWrapper& stmt, SQLSMALLINT sql_type, SQ
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_VARCHAR and read back",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 13:45:30 is bound to SQL_VARCHAR and projected via SELECT ?
@@ -65,7 +65,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_VARCHAR 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind midnight SQL_C_TYPE_TIME to SQL_VARCHAR",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 00:00:00 (midnight) is bound and projected via SELECT ?
@@ -78,7 +78,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind midnight SQL_C_TYPE_TIME to SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind end-of-day SQL_C_TYPE_TIME to SQL_VARCHAR",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 23:59:59 is bound and projected via SELECT ?
@@ -91,7 +91,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind end-of-day SQL_C_TYPE_TIME to S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad single-digit fields for SQL_C_TYPE_TIME",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 01:02:03 is bound and projected via SELECT ?
@@ -104,7 +104,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad single-digit fields for SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind noon SQL_C_TYPE_TIME to SQL_VARCHAR",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 12:00:00 (noon) is bound and projected via SELECT ?
@@ -121,7 +121,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind noon SQL_C_TYPE_TIME to SQL_VAR
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_CHAR target",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 13:45:30 is bound to a SQL_CHAR parameter
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_CHAR tar
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_LONGVARCHAR target",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 13:45:30 is bound to a SQL_LONGVARCHAR parameter
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_LONGVARC
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_WCHAR target",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 13:45:30 is bound to a SQL_WCHAR parameter
@@ -160,7 +160,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_WCHAR ta
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_WVARCHAR target",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 13:45:30 is bound to a SQL_WVARCHAR parameter
@@ -173,7 +173,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_WVARCHAR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_WLONGVARCHAR target",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME 13:45:30 is bound to a SQL_WLONGVARCHAR parameter
@@ -190,7 +190,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME to SQL_WLONGVAR
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_TIME with NULL indicator to SQL_VARCHAR",
-                 "[c_time][conversion][sql_string]") {
+                 "[e2e][types][c_time][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_TIME is bound with SQL_NULL_DATA and projected via SELECT ?

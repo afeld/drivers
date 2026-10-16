@@ -16,6 +16,12 @@
 #include "odbc_matchers.hpp"
 #include "test_setup.hpp"
 
+#if !defined(_WIN32)
+#include <dlfcn.h>
+#else
+#include <Windows.h>
+#endif
+
 // ============================================================================
 // SQLFreeConnect - Basic Functionality (ODBC 2.x; maps to SQLFreeHandle DBC)
 // ============================================================================
@@ -179,8 +185,6 @@ TEST_CASE_METHOD(DbcDefaultDSNFixture, "SQLFreeConnect: Freeing handle clears at
 
 #if !defined(_WIN32)
 
-#include <dlfcn.h>
-
 using SQLAllocHandleFn = SQLRETURN (*)(SQLSMALLINT, SQLHANDLE, SQLHANDLE*);
 using SQLFreeConnectFn = SQLRETURN (*)(SQLHDBC);
 using SQLFreeHandleFn = SQLRETURN (*)(SQLSMALLINT, SQLHANDLE);
@@ -245,8 +249,6 @@ TEST_CASE("direct driver: SQLFreeConnect is exported and frees a connection hand
 }
 
 #else
-
-#include <Windows.h>
 
 TEST_CASE("direct driver: SQLFreeConnect is exported", "[odbc-api][freeconnect][terminating_connection][direct]") {
   SKIP_OLD_DRIVER("BD#127", "reference driver does not export SQLFreeConnect; DM maps it");

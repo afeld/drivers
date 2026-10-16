@@ -14,7 +14,8 @@
 #include "get_data.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to floating point conversion", "[fixed][conversion][c_float]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to floating point conversion",
+                 "[e2e][types][fixed][conversion][c_float]") {
   // Given A Snowflake connection is established
 
   // When A table with DECIMAL/NUMBER/INT columns containing value 123 is queried
@@ -41,7 +42,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "Test decimal to floating point conversion",
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL explicit floating point conversions preserve fraction",
-                 "[fixed][conversion][c_float]") {
+                 "[e2e][types][fixed][conversion][c_float]") {
   // Given A Snowflake connection is established
 
   // When A fractional DECIMAL value 123.789 is fetched as float and double
@@ -57,7 +58,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_DECIMAL explicit floating point convers
   CHECK(double_val < 123.790);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL to floating point precision", "[fixed][conversion][c_float][precision]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL to floating point precision",
+                 "[e2e][types][fixed][conversion][c_float][precision]") {
   // Given A Snowflake connection is established
 
   // When NUMBER values with varying significant digits are fetched as float and double
@@ -78,7 +80,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL to floating point precision", "[fix
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL multiple rows as SQL_C_DOUBLE", "[fixed][conversion][c_float][multirow]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL multiple rows as SQL_C_DOUBLE",
+                 "[e2e][types][fixed][conversion][c_float][multirow]") {
   // Given A Snowflake connection is established
 
   // When A table with various DECIMAL(10,3) values is queried
@@ -99,7 +102,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "DECIMAL multiple rows as SQL_C_DOUBLE", "[f
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_FLOAT and SQL_C_DOUBLE",
-                 "[fixed][conversion][c_float][null]") {
+                 "[e2e][types][fixed][conversion][c_float][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL NUMBER value is queried

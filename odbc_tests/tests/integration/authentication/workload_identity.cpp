@@ -77,7 +77,8 @@ bool mentions_malformed_wif_token(const std::vector<DiagRec>& records) {
   return false;
 }
 
-TEST_CASE("should fail WORKLOAD_IDENTITY when provider is missing", "[workload_identity_auth]") {
+TEST_CASE("should fail WORKLOAD_IDENTITY when provider is missing",
+          "[integration][authentication][workload_identity_auth]") {
   // Given Authentication is set to WORKLOAD_IDENTITY but WORKLOAD_IDENTITY_PROVIDER is absent
   auto env = setup_wif_environment();
   auto dbc = env.createConnectionHandle();
@@ -100,7 +101,8 @@ TEST_CASE("should fail WORKLOAD_IDENTITY when provider is missing", "[workload_i
   }
 }
 
-TEST_CASE("should fail WORKLOAD_IDENTITY when provider is an invalid value", "[workload_identity_auth]") {
+TEST_CASE("should fail WORKLOAD_IDENTITY when provider is an invalid value",
+          "[integration][authentication][workload_identity_auth]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_PROVIDER is an invalid value
   auto env = setup_wif_environment();
   auto dbc = env.createConnectionHandle();
@@ -115,7 +117,7 @@ TEST_CASE("should fail WORKLOAD_IDENTITY when provider is an invalid value", "[w
   NEW_DRIVER_ONLY("BD#155") { require_4x_wif_client_reject(records[0], "workload_identity_provider"); }
 }
 
-TEST_CASE("should fail OIDC WIF when token is missing", "[workload_identity_auth]") {
+TEST_CASE("should fail OIDC WIF when token is missing", "[integration][authentication][workload_identity_auth]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_PROVIDER is OIDC but token is absent
   auto env = setup_wif_environment();
   auto dbc = env.createConnectionHandle();
@@ -130,7 +132,7 @@ TEST_CASE("should fail OIDC WIF when token is missing", "[workload_identity_auth
   NEW_DRIVER_ONLY("BD#155") { require_4x_wif_client_reject(records[0], "token"); }
 }
 
-TEST_CASE("should fail OIDC WIF when token is malformed", "[workload_identity_auth]") {
+TEST_CASE("should fail OIDC WIF when token is malformed", "[integration][authentication][workload_identity_auth]") {
   // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_PROVIDER is OIDC
   auto env = setup_wif_environment();
   auto dbc = env.createConnectionHandle();

@@ -61,7 +61,7 @@ static std::optional<std::string> get_binary_hex_optional(const StatementHandleW
   return hex;
 }
 
-TEST_CASE("should cast binary values to appropriate type", "[datatype][binary]") {
+TEST_CASE("should cast binary values to appropriate type", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -78,7 +78,7 @@ TEST_CASE("should cast binary values to appropriate type", "[datatype][binary]")
   REQUIRE(hex2 == "576F726C64");
 }
 
-TEST_CASE("should select binary literals", "[datatype][binary]") {
+TEST_CASE("should select binary literals", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -93,7 +93,7 @@ TEST_CASE("should select binary literals", "[datatype][binary]") {
   REQUIRE(get_binary_hex(stmt3, 1) == "0123456789ABCDEF");
 }
 
-TEST_CASE("should handle binary corner case values from literals", "[datatype][binary]") {
+TEST_CASE("should handle binary corner case values from literals", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -111,7 +111,7 @@ TEST_CASE("should handle binary corner case values from literals", "[datatype][b
   REQUIRE(get_binary_hex(stmt, 6) == "48006500");
 }
 
-TEST_CASE("should handle NULL binary values from literals", "[datatype][binary]") {
+TEST_CASE("should handle NULL binary values from literals", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -124,7 +124,7 @@ TEST_CASE("should handle NULL binary values from literals", "[datatype][binary]"
   REQUIRE(get_binary_hex_optional(stmt, 3) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select binary values from table", "[datatype][binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select binary values from table", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with BINARY column is created
@@ -150,7 +150,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select binary values from table", "[
   REQUIRE(SQLFetch(stmt.getHandle()) == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case binary values from table", "[datatype][binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case binary values from table",
+                 "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with BINARY column is created
@@ -175,7 +176,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case binary values fro
   REQUIRE(SQLFetch(stmt.getHandle()) == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select NULL binary values from table", "[datatype][binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select NULL binary values from table", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with BINARY column is created
@@ -215,7 +216,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select NULL binary values from table
   REQUIRE(value_count == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select binary with specified length from table", "[datatype][binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select binary with specified length from table",
+                 "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
 
   // And Table with columns (bin5 BINARY(5), bin10 BINARY(10), bin_default BINARY) exists
@@ -272,7 +274,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select binary with specified length 
   }
 }
 
-TEST_CASE("should select binary literals using parameter binding", "[datatype][binary]") {
+TEST_CASE("should select binary literals using parameter binding", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -305,7 +307,7 @@ TEST_CASE("should select binary literals using parameter binding", "[datatype][b
   REQUIRE(get_binary_hex(stmt, 3) == "0123456789ABCDEF");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert binary using parameter binding", "[datatype][binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert binary using parameter binding", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
 
   // And Table with BINARY column exists
@@ -345,7 +347,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert binary using parameter bindin
   REQUIRE(actual == expected);
 }
 
-TEST_CASE("should bind corner case binary values", "[datatype][binary]") {
+TEST_CASE("should bind corner case binary values", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -399,7 +401,7 @@ TEST_CASE("should bind corner case binary values", "[datatype][binary]") {
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle VARBINARY as synonym for BINARY", "[datatype][binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle VARBINARY as synonym for BINARY", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with VARBINARY column is created
@@ -422,7 +424,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle VARBINARY as synonym for BINA
   REQUIRE(SQLFetch(stmt.getHandle()) == SQL_NO_DATA);
 }
 
-TEST_CASE("should download binary data in multiple chunks using GENERATOR", "[datatype][binary]") {
+TEST_CASE("should download binary data in multiple chunks using GENERATOR", "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -453,7 +455,8 @@ TEST_CASE("should download binary data in multiple chunks using GENERATOR", "[da
   REQUIRE(row_count == 30000);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should download binary data in multiple chunks from table", "[datatype][binary]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should download binary data in multiple chunks from table",
+                 "[e2e][types][datatype][binary]") {
   // Given Snowflake client is logged in
 
   // And Table with (bin_data BINARY) exists with 30000 sequential binary values

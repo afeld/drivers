@@ -16,7 +16,7 @@
 // SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("DATE to SQL_C_CHAR", "[date][conversion][c_char]") {
+TEST_CASE("DATE to SQL_C_CHAR", "[e2e][types][date][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -77,7 +77,7 @@ TEST_CASE("DATE to SQL_C_CHAR", "[date][conversion][c_char]") {
   }
 }
 
-TEST_CASE("DATE to SQL_C_CHAR exact buffer fit", "[date][conversion][c_char]") {
+TEST_CASE("DATE to SQL_C_CHAR exact buffer fit", "[e2e][types][date][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -93,7 +93,7 @@ TEST_CASE("DATE to SQL_C_CHAR exact buffer fit", "[date][conversion][c_char]") {
   CHECK(std::string(buffer) == "2024-01-15");
 }
 
-TEST_CASE("DATE to SQL_C_CHAR buffer too small", "[date][conversion][c_char][22003]") {
+TEST_CASE("DATE to SQL_C_CHAR buffer too small", "[e2e][types][date][conversion][c_char][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -110,7 +110,7 @@ TEST_CASE("DATE to SQL_C_CHAR buffer too small", "[date][conversion][c_char][220
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("DATE to SQL_C_CHAR far future", "[date][conversion][c_char][edge]") {
+TEST_CASE("DATE to SQL_C_CHAR far future", "[e2e][types][date][conversion][c_char][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -121,7 +121,7 @@ TEST_CASE("DATE to SQL_C_CHAR far future", "[date][conversion][c_char][edge]") {
   CHECK(result == "9999-12-31");
 }
 
-TEST_CASE("DATE to SQL_C_CHAR far past", "[date][conversion][c_char][edge]") {
+TEST_CASE("DATE to SQL_C_CHAR far past", "[e2e][types][date][conversion][c_char][edge]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -132,7 +132,7 @@ TEST_CASE("DATE to SQL_C_CHAR far past", "[date][conversion][c_char][edge]") {
   CHECK(result == "0001-01-01");
 }
 
-TEST_CASE("DATE NULL to SQL_C_CHAR", "[date][conversion][c_char][null]") {
+TEST_CASE("DATE NULL to SQL_C_CHAR", "[e2e][types][date][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -147,7 +147,7 @@ TEST_CASE("DATE NULL to SQL_C_CHAR", "[date][conversion][c_char][null]") {
 // SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("DATE to SQL_C_WCHAR", "[date][conversion][c_wchar]") {
+TEST_CASE("DATE to SQL_C_WCHAR", "[e2e][types][date][conversion][c_wchar]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -180,7 +180,7 @@ TEST_CASE("DATE to SQL_C_WCHAR", "[date][conversion][c_wchar]") {
   }
 }
 
-TEST_CASE("DATE to SQL_C_WCHAR exact buffer fit", "[date][conversion][c_wchar]") {
+TEST_CASE("DATE to SQL_C_WCHAR exact buffer fit", "[e2e][types][date][conversion][c_wchar]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -195,7 +195,7 @@ TEST_CASE("DATE to SQL_C_WCHAR exact buffer fit", "[date][conversion][c_wchar]")
   CHECK(sf::wide::decode_wide_cstr(buffer) == U"2024-01-15");
 }
 
-TEST_CASE("DATE to SQL_C_WCHAR buffer too small", "[date][conversion][c_wchar][22003]") {
+TEST_CASE("DATE to SQL_C_WCHAR buffer too small", "[e2e][types][date][conversion][c_wchar][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -215,7 +215,7 @@ TEST_CASE("DATE to SQL_C_WCHAR buffer too small", "[date][conversion][c_wchar][2
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("DATE NULL to SQL_C_WCHAR", "[date][conversion][c_wchar][null]") {
+TEST_CASE("DATE NULL to SQL_C_WCHAR", "[e2e][types][date][conversion][c_wchar][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

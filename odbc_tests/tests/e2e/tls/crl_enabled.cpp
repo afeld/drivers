@@ -56,7 +56,7 @@ static int count_crl_threads() {
 #endif
 
 // Scenario: Should connect and select with CRL enabled
-TEST_CASE("Should connect and select with CRL enabled") {
+TEST_CASE("Should connect and select with CRL enabled", "[e2e][tls]") {
   // Given Snowflake client is logged in
   auto connection_string = get_connection_string();
   // And CRL is enabled

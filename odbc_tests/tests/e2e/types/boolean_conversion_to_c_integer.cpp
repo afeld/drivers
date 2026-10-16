@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("should convert boolean to signed integer c_type", "[datatype][boolean][conversion][integer]") {
+TEST_CASE("should convert boolean to signed integer c_type", "[e2e][types][datatype][boolean][conversion][integer]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -59,7 +59,7 @@ TEST_CASE("should convert boolean to signed integer c_type", "[datatype][boolean
   }
 }
 
-TEST_CASE("should convert boolean to unsigned integer c_type", "[datatype][boolean][conversion][integer]") {
+TEST_CASE("should convert boolean to unsigned integer c_type", "[e2e][types][datatype][boolean][conversion][integer]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -97,7 +97,7 @@ TEST_CASE("should convert boolean to unsigned integer c_type", "[datatype][boole
 // NULL handling
 // ============================================================================
 
-TEST_CASE("should handle NULL boolean with integer C types", "[datatype][boolean][conversion][integer]") {
+TEST_CASE("should handle NULL boolean with integer C types", "[e2e][types][datatype][boolean][conversion][integer]") {
   // Given Snowflake client is logged in
   Connection conn;
 

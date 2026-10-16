@@ -8,7 +8,7 @@
 #include "compatibility.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("should fail converting VECTOR to numeric C types", "[datatype][vector][conversion][negative]") {
+TEST_CASE("should fail converting VECTOR to numeric C types", "[e2e][types][datatype][vector][conversion][negative]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -68,7 +68,7 @@ TEST_CASE("should fail converting VECTOR to numeric C types", "[datatype][vector
   }
 }
 
-TEST_CASE("should fail converting VECTOR to temporal C types", "[datatype][vector][conversion][negative]") {
+TEST_CASE("should fail converting VECTOR to temporal C types", "[e2e][types][datatype][vector][conversion][negative]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -92,7 +92,7 @@ TEST_CASE("should fail converting VECTOR to temporal C types", "[datatype][vecto
   }
 }
 
-TEST_CASE("should fail converting VECTOR to interval C types", "[datatype][vector][conversion][negative]") {
+TEST_CASE("should fail converting VECTOR to interval C types", "[e2e][types][datatype][vector][conversion][negative]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -118,7 +118,7 @@ TEST_CASE("should fail converting VECTOR to interval C types", "[datatype][vecto
   check_incompatible_conversion(stmt, 1, SQL_C_INTERVAL_MINUTE_TO_SECOND, &value, sizeof(value));
 }
 
-TEST_CASE("should fail converting VECTOR to SQL_C_GUID", "[datatype][vector][conversion][negative]") {
+TEST_CASE("should fail converting VECTOR to SQL_C_GUID", "[e2e][types][datatype][vector][conversion][negative]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -132,7 +132,8 @@ TEST_CASE("should fail converting VECTOR to SQL_C_GUID", "[datatype][vector][con
   check_incompatible_conversion(stmt, 1, SQL_C_GUID, &value, sizeof(value));
 }
 
-TEST_CASE("should fail converting FLOAT VECTOR to numeric C types", "[datatype][vector][conversion][negative]") {
+TEST_CASE("should fail converting FLOAT VECTOR to numeric C types",
+          "[e2e][types][datatype][vector][conversion][negative]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in

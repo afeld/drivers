@@ -93,7 +93,8 @@ SQLRETURN end_tran(Connection& conn, SQLSMALLINT completion_type) {
 
 }  // namespace
 
-TEST_CASE("should report autocommit as disabled after it was disabled on the connection", "[session][autocommit]") {
+TEST_CASE("should report autocommit as disabled after it was disabled on the connection",
+          "[e2e][session][autocommit]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -105,7 +106,8 @@ TEST_CASE("should report autocommit as disabled after it was disabled on the con
   set_autocommit(conn, true);
 }
 
-TEST_CASE("should report autocommit as enabled after it was re-enabled on the connection", "[session][autocommit]") {
+TEST_CASE("should report autocommit as enabled after it was re-enabled on the connection",
+          "[e2e][session][autocommit]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -119,7 +121,7 @@ TEST_CASE("should report autocommit as enabled after it was re-enabled on the co
   REQUIRE(get_autocommit(conn) == SQL_AUTOCOMMIT_ON);
 }
 
-TEST_CASE("should discard uncommitted inserts on rollback", "[session][autocommit]") {
+TEST_CASE("should discard uncommitted inserts on rollback", "[e2e][session][autocommit]") {
   // Given Snowflake client is logged in
   Connection writer;
   Connection reader;
@@ -136,7 +138,7 @@ TEST_CASE("should discard uncommitted inserts on rollback", "[session][autocommi
   REQUIRE(count_rows(reader, table.name()) == 0);
 }
 
-TEST_CASE("should publish committed inserts to other sessions", "[session][autocommit]") {
+TEST_CASE("should publish committed inserts to other sessions", "[e2e][session][autocommit]") {
   // Given Snowflake client is logged in
   Connection writer;
   Connection reader;

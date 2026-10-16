@@ -32,7 +32,7 @@ std::string read_text(const std::filesystem::path& path) {
 
 }  // namespace
 
-TEST_CASE("should get multiple files from stage in single command", "[put_get]") {
+TEST_CASE("should get multiple files from stage in single command", "[e2e][put_get]") {
   Connection conn;
   if (!is_gcp_account(conn)) {
     SKIP("account CURRENT_REGION() is not GCP; multi-file GET presigned-URL path is GCS-only");

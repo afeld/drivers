@@ -20,7 +20,7 @@ Feature: Username Password MFA Authentication
     Then Login is successful and simple query can be executed
 
   @core_e2e @python_e2e @odbc_e2e @jdbc_e2e
-  Scenario: should fail authentication when wrong password is provided
+  Scenario: should fail MFA authentication when wrong password is provided
     Given Authentication is set to username_password_mfa and user is provided but password is skipped or invalid
     When Trying to Connect
     Then There is error returned

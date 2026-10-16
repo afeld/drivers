@@ -93,4 +93,4 @@ echo "=== Running ODBC auth browser E2E tests ==="
 # Select by the shared `requires_browser` Catch2 tag (exposed as a CTest label
 # via ADD_TAGS_AS_LABELS) rather than by target/file name, mirroring the
 # `requires_browser` pytest marker used by the Python suite.
-ctest -C Debug --test-dir "${BUILD_DIR}" --output-on-failure -L requires_browser
+ctest -C Debug --test-dir "${BUILD_DIR}" --output-on-failure -L '^requires_browser$' --no-tests=error

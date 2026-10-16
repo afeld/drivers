@@ -69,7 +69,7 @@ void verify_okta_simple_query_execution(ConnectionHandleWrapper& dbc) {
 // E2E Tests
 // =============================================================================
 
-TEST_CASE("should authenticate using native okta", "[native_okta]") {
+TEST_CASE("should authenticate using native okta", "[e2e][authentication][native_okta]") {
   REQUIRE_VPN("Native Okta E2E tests need access to preprod Snowflake account");
   std::string connection_string = get_okta_connection_string();
 
@@ -86,7 +86,7 @@ TEST_CASE("should authenticate using native okta", "[native_okta]") {
   SQLDisconnect(dbc.getHandle());
 }
 
-TEST_CASE("should fail native okta authentication with wrong credentials", "[native_okta]") {
+TEST_CASE("should fail native okta authentication with wrong credentials", "[e2e][authentication][native_okta]") {
   REQUIRE_VPN("Native Okta E2E tests need access to preprod Snowflake account");
 
   // Given Okta authentication is configured with wrong password
@@ -110,7 +110,7 @@ TEST_CASE("should fail native okta authentication with wrong credentials", "[nat
   CHECK_THAT(records[0].messageText, ContainsSubstring("rejected credentials"));
 }
 
-TEST_CASE("should fail native okta authentication with wrong okta url", "[native_okta]") {
+TEST_CASE("should fail native okta authentication with wrong okta url", "[e2e][authentication][native_okta]") {
   REQUIRE_VPN("Native Okta E2E tests need access to preprod Snowflake account");
 
   // Given Okta authentication is configured with invalid okta url

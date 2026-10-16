@@ -37,7 +37,7 @@ static void populate_test_files(const TempTestDir& temp_dir, const std::vector<s
   }
 }
 
-TEST_CASE("should upload files that match wildcard question mark pattern", "[put_get]") {
+TEST_CASE("should upload files that match wildcard question mark pattern", "[e2e][put_get]") {
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_WILDCARD_Q"));
   TempTestDir wildcard_dir("odbc_wildcard_");
@@ -74,7 +74,7 @@ TEST_CASE("should upload files that match wildcard question mark pattern", "[put
   CHECK(all.find("patternabc.csv.gz") == std::string::npos);
 }
 
-TEST_CASE("should upload files that match wildcard star pattern", "[put_get]") {
+TEST_CASE("should upload files that match wildcard star pattern", "[e2e][put_get]") {
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_WILDCARD_STAR"));
 
@@ -112,7 +112,7 @@ TEST_CASE("should upload files that match wildcard star pattern", "[put_get]") {
   CHECK(all.find("patternabc.csv.gz") == std::string::npos);
 }
 
-TEST_CASE("should download files that are matching wildcard pattern", "[put_get]") {
+TEST_CASE("should download files that are matching wildcard pattern", "[e2e][put_get]") {
   Connection conn;
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_REGEXP_GET"));
 

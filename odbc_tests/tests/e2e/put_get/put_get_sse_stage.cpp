@@ -17,7 +17,7 @@ static std::string create_sse_stage(Connection& conn, const std::string& stage_n
   return stage_name;
 }
 
-TEST_CASE("should put and get file on SSE stage", "[put_get]") {
+TEST_CASE("should put and get file on SSE stage", "[e2e][put_get]") {
   // Given Stage with server-side encryption (SNOWFLAKE_SSE)
   Connection conn;
   const std::string stage = create_sse_stage(conn, unique_stage_name("ODBCTST_SSE_PUT_GET"));
@@ -48,7 +48,7 @@ TEST_CASE("should put and get file on SSE stage", "[put_get]") {
   CHECK(content == "hello sse\n");
 }
 
-TEST_CASE("should put and get file on SSE stage with DIRECTORY enabled", "[put_get]") {
+TEST_CASE("should put and get file on SSE stage with DIRECTORY enabled", "[e2e][put_get]") {
   // Given Stage with server-side encryption and DIRECTORY enabled
   Connection conn;
   const std::string stage = unique_stage_name("ODBCTST_SSE_DIR");

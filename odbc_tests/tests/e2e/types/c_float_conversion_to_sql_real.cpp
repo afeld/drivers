@@ -19,7 +19,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_DOUBLE and read back",
-                 "[c_float][conversion][sql_real]") {
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -40,7 +40,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE to SQL_DOUBLE and 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT to SQL_REAL and read back",
-                 "[c_float][conversion][sql_real]") {
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -60,7 +60,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT to SQL_REAL and rea
   CHECK(get_data<SQL_C_DOUBLE>(fetch_stmt, 1) == Catch::Approx(1.5).epsilon(1e-6));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE negative zero", "[c_float][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE negative zero",
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -82,7 +83,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE negative zero", "[
   CHECK(std::fpclassify(read) == FP_ZERO);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE large value", "[c_float][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE large value",
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -102,7 +104,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE large value", "[c_
   CHECK(get_data<SQL_C_DOUBLE>(fetch_stmt, 1) == Catch::Approx(1.7e308).epsilon(1e-12));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE small value", "[c_float][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE small value",
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -123,7 +126,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE small value", "[c_
   NEW_DRIVER_ONLY("BD#36") { CHECK(get_data<SQL_C_DOUBLE>(fetch_stmt, 1) == Catch::Approx(2.2e-308).epsilon(1e-12)); }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT max value", "[c_float][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT max value",
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -143,7 +147,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_FLOAT max value", "[c_flo
   CHECK(get_data<SQL_C_DOUBLE>(fetch_stmt, 1) == Catch::Approx(static_cast<double>(FLT_MAX)).epsilon(1e-6));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE with NULL indicator", "[c_float][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE with NULL indicator",
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -163,7 +168,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE with NULL indicato
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DEFAULT to SQL_DOUBLE and read back",
-                 "[c_float][conversion][sql_real]") {
+                 "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -183,7 +188,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DEFAULT to SQL_DOUBLE and
   CHECK(get_data<SQL_C_DOUBLE>(fetch_stmt, 1) == Catch::Approx(2.718));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE zero", "[c_float][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_DOUBLE zero", "[e2e][types][c_float][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 

@@ -4,7 +4,8 @@
 #include "get_data.hpp"
 #include "odbc_cast.hpp"
 
-TEST_CASE("should bind SQL_C_NUMERIC nonzero to SQL_BIT.", "[query][bind_parameter][c_numeric_to_boolean]") {
+TEST_CASE("should bind SQL_C_NUMERIC nonzero to SQL_BIT.",
+          "[e2e][types][query][bind_parameter][c_numeric_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -26,7 +27,7 @@ TEST_CASE("should bind SQL_C_NUMERIC nonzero to SQL_BIT.", "[query][bind_paramet
   CHECK(get_data<SQL_C_BIT>(stmt, 1) == 1);
 }
 
-TEST_CASE("should bind SQL_C_NUMERIC zero to SQL_BIT.", "[query][bind_parameter][c_numeric_to_boolean]") {
+TEST_CASE("should bind SQL_C_NUMERIC zero to SQL_BIT.", "[e2e][types][query][bind_parameter][c_numeric_to_boolean]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

@@ -37,7 +37,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR date string to SQL_TYPE_DATE and read back",
-                 "[c_char][conversion][sql_date]") {
+                 "[e2e][types][c_char][conversion][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -66,7 +66,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR date string to SQL_T
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR end-of-year date string to SQL_TYPE_DATE",
-                 "[c_char][conversion][sql_date]") {
+                 "[e2e][types][c_char][conversion][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -95,7 +95,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR end-of-year date str
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR malformed date string for SQL_TYPE_DATE",
-                 "[c_char][conversion][sql_date]") {
+                 "[e2e][types][c_char][conversion][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -123,7 +123,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR malformed date str
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR date string to SQL_TYPE_DATE and read back",
-                 "[c_char][conversion][sql_date]") {
+                 "[e2e][types][c_char][conversion][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 
@@ -156,7 +156,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR date string to SQL_
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator to SQL_TYPE_DATE",
-                 "[c_char][conversion][sql_date]") {
+                 "[e2e][types][c_char][conversion][sql_date]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_DATE, SQL_TYPE_DATE);
   CAPTURE(sql_type);
 

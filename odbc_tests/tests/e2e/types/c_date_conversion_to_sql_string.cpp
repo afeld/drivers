@@ -52,7 +52,7 @@ void bind_date_and_select(StatementHandleWrapper& stmt, SQLSMALLINT sql_type, SQ
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_VARCHAR and read back",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-03-15 is bound to SQL_VARCHAR and projected via SELECT ?
@@ -65,7 +65,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_VARCHAR 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad single-digit month and day for SQL_C_TYPE_DATE",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-01-05 is bound to SQL_VARCHAR and projected via SELECT ?
@@ -78,7 +78,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad single-digit month and day 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind leap-day SQL_C_TYPE_DATE to SQL_VARCHAR",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-02-29 (a leap day) is bound and projected via SELECT ?
@@ -91,7 +91,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind leap-day SQL_C_TYPE_DATE to SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind end-of-year SQL_C_TYPE_DATE to SQL_VARCHAR",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2023-12-31 is bound and projected via SELECT ?
@@ -104,7 +104,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind end-of-year SQL_C_TYPE_DATE to 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind maximum-year SQL_C_TYPE_DATE to SQL_VARCHAR",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 9999-12-31 (the ODBC maximum year) is bound
@@ -117,7 +117,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind maximum-year SQL_C_TYPE_DATE to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad the year for early SQL_C_TYPE_DATE values",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 0001-01-01 is bound and projected via SELECT ?
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should zero-pad the year for early SQL_C_TY
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_CHAR target",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-03-15 is bound to a SQL_CHAR parameter
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_CHAR tar
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_LONGVARCHAR target",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-03-15 is bound to a SQL_LONGVARCHAR parameter
@@ -160,7 +160,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_LONGVARC
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_WCHAR target",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-03-15 is bound to a SQL_WCHAR parameter
@@ -173,7 +173,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_WCHAR ta
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_WVARCHAR target",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-03-15 is bound to a SQL_WVARCHAR parameter
@@ -186,7 +186,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_WVARCHAR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_WLONGVARCHAR target",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE 2024-03-15 is bound to a SQL_WLONGVARCHAR parameter
@@ -203,7 +203,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE to SQL_WLONGVAR
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TYPE_DATE with NULL indicator to SQL_VARCHAR",
-                 "[c_date][conversion][sql_string]") {
+                 "[e2e][types][c_date][conversion][sql_string]") {
   auto stmt = conn.createStatement();
 
   // When SQL_C_TYPE_DATE is bound with SQL_NULL_DATA and projected via SELECT ?

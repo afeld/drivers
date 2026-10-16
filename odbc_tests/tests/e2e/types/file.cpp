@@ -39,7 +39,7 @@ void require_file_doc(const std::string& json, const char* relative_path, const 
 
 }  // namespace
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should cast FILE values to appropriate type", "[file]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should cast FILE values to appropriate type", "[e2e][types][file]") {
   // Given Snowflake client is logged in
 
   // When A FILE column is populated via TO_FILE and queried
@@ -51,7 +51,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should cast FILE values to appropriate type
   require_file_doc(get_data<SQL_C_CHAR>(stmt, 1), "some_new_file.jpeg", "@myStage");
 }
 
-TEST_CASE("should select a FILE value built by TO_FILE without a table", "[file]") {
+TEST_CASE("should select a FILE value built by TO_FILE without a table", "[e2e][types][file]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -62,7 +62,7 @@ TEST_CASE("should select a FILE value built by TO_FILE without a table", "[file]
   require_file_doc(get_data<SQL_C_CHAR>(stmt, 1), "some_new_file.jpeg", "@myStage");
 }
 
-TEST_CASE("should handle NULL FILE values from literals", "[file]") {
+TEST_CASE("should handle NULL FILE values from literals", "[e2e][types][file]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -74,7 +74,7 @@ TEST_CASE("should handle NULL FILE values from literals", "[file]") {
   REQUIRE(get_data_optional<SQL_C_CHAR>(stmt, 2) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select FILE values from table", "[file]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select FILE values from table", "[e2e][types][file]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with an ID and a FILE column is created
@@ -101,7 +101,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select FILE values from table", "[fi
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL FILE values from table", "[file]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL FILE values from table", "[e2e][types][file]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with an ID and a FILE column is created
@@ -130,7 +130,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL FILE values from table",
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should download FILE data in multiple chunks", "[file]") {
+TEST_CASE("should download FILE data in multiple chunks", "[e2e][types][file]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -10,7 +10,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG to SQL_VARCHAR and read back",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -31,7 +31,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG to SQL_VARCHAR and 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_VARCHAR and read back",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -52,7 +52,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_VARCHAR an
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SSHORT to SQL_VARCHAR and read back",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -73,7 +73,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SSHORT to SQL_VARCHAR and
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UTINYINT to SQL_VARCHAR and read back",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -94,7 +94,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UTINYINT to SQL_VARCHAR a
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_ULONG to SQL_VARCHAR and read back",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -115,7 +115,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_ULONG to SQL_VARCHAR and 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_STINYINT negative to SQL_VARCHAR",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -136,7 +136,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_STINYINT negative to SQL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_USHORT to SQL_VARCHAR and read back",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -157,7 +157,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_USHORT to SQL_VARCHAR and
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UBIGINT max to SQL_VARCHAR",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -178,7 +178,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UBIGINT max to SQL_VARCHA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG zero to SQL_VARCHAR",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 
@@ -199,7 +199,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG zero to SQL_VARCHAR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG with NULL indicator to SQL_VARCHAR",
-                 "[c_integer][conversion][sql_string]") {
+                 "[e2e][types][c_integer][conversion][sql_string]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col VARCHAR(100))");
 

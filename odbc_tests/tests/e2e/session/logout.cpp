@@ -26,7 +26,7 @@ static ConnectionHandleWrapper connect_to_wiremock(EnvironmentHandleWrapper& env
   return dbc;
 }
 
-TEST_CASE("should reject queries client-side after connection is closed", "[session][logout]") {
+TEST_CASE("should reject queries client-side after connection is closed", "[e2e][session][logout]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -54,7 +54,7 @@ TEST_CASE("should reject queries client-side after connection is closed", "[sess
   REQUIRE_EXPECTED_ERROR(ret, "08003", conn.handleWrapper().getHandle(), SQL_HANDLE_DBC);
 }
 
-TEST_CASE("should be idempotent when close called multiple times", "[session][logout]") {
+TEST_CASE("should be idempotent when close called multiple times", "[e2e][session][logout]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -89,7 +89,7 @@ TEST_CASE("should be idempotent when close called multiple times", "[session][lo
 // unixODBC (~64–80% abort on Linux / macos-arm-gcp). iODBC serializes at the DM
 // and is clean. Keep [flaky] until the driver serializes disconnect; do not
 // un-quarantine while aborts remain.
-TEST_CASE("should handle concurrent close calls safely", "[session][logout][flaky]") {
+TEST_CASE("should handle concurrent close calls safely", "[e2e][session][logout][flaky]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -143,7 +143,7 @@ TEST_CASE("should handle concurrent close calls safely", "[session][logout][flak
   CHECK_THAT(OdbcResult(after, dbc), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("08003"));
 }
 
-TEST_CASE("should succeed even when server returns error during logout", "[session][logout]") {
+TEST_CASE("should succeed even when server returns error during logout", "[e2e][session][logout]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif

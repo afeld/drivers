@@ -11,7 +11,7 @@
 // BASIC BIT CONVERSIONS
 // ============================================================================
 
-TEST_CASE("DECFLOAT to SQL_C_BIT spec compliance", "[decfloat][conversion][c_bit]") {
+TEST_CASE("DECFLOAT to SQL_C_BIT spec compliance", "[e2e][types][decfloat][conversion][c_bit]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -52,7 +52,7 @@ TEST_CASE("DECFLOAT to SQL_C_BIT spec compliance", "[decfloat][conversion][c_bit
 // NULL handling
 // ============================================================================
 
-TEST_CASE("DECFLOAT NULL to SQL_C_BIT", "[decfloat][conversion][c_bit][null]") {
+TEST_CASE("DECFLOAT NULL to SQL_C_BIT", "[e2e][types][decfloat][conversion][c_bit][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

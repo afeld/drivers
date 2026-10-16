@@ -16,7 +16,7 @@
 // INCOMPATIBLE CONVERSIONS - Float to Temporal C Types
 // ============================================================================
 
-TEST_CASE("should fail converting float to temporal C types", "[datatype][float][conversion][negative]") {
+TEST_CASE("should fail converting float to temporal C types", "[e2e][types][datatype][float][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -46,7 +46,7 @@ TEST_CASE("should fail converting float to temporal C types", "[datatype][float]
 // INCOMPATIBLE CONVERSIONS - Float to GUID C Type
 // ============================================================================
 
-TEST_CASE("should fail converting float to SQL_C_GUID", "[datatype][float][conversion][negative]") {
+TEST_CASE("should fail converting float to SQL_C_GUID", "[e2e][types][datatype][float][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -41,4 +41,4 @@ cmake --build "${BUILD_DIR}" --target e2e_auth_no_mfa -- -j 16
 
 echo ""
 echo "=== Running ODBC requires_no_mfa tests ==="
-ctest -C Debug --test-dir "${BUILD_DIR}" --output-on-failure -L requires_no_mfa
+ctest -C Debug --test-dir "${BUILD_DIR}" --output-on-failure -L '^requires_no_mfa$' --no-tests=error

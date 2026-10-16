@@ -68,7 +68,8 @@ void check_binary_to_string(SQLSMALLINT sql_type, std::vector<unsigned char> byt
 
 }  // namespace
 
-TEST_CASE("should hex-encode SQL_C_BINARY bound to every SQL string target", "[c_binary][conversion][sql_string]") {
+TEST_CASE("should hex-encode SQL_C_BINARY bound to every SQL string target",
+          "[e2e][types][c_binary][conversion][sql_string]") {
   // Given Snowflake client is logged in
   SKIP_OLD_DRIVER("BD#34", "Legacy driver forwards raw bytes instead of hex-encoding SQL_C_BINARY -> string");
   for (const auto& target : STRING_TARGETS) {
@@ -81,7 +82,7 @@ TEST_CASE("should hex-encode SQL_C_BINARY bound to every SQL string target", "[c
 }
 
 TEST_CASE("should hex-encode SQL_C_BINARY containing embedded NUL and high bytes",
-          "[c_binary][conversion][sql_string]") {
+          "[e2e][types][c_binary][conversion][sql_string]") {
   // Given Snowflake client is logged in
   SKIP_OLD_DRIVER("BD#34", "Legacy driver forwards raw bytes instead of hex-encoding SQL_C_BINARY -> string");
   // When a binary buffer with an embedded 0x00 and 0xFF is bound to SQL_VARCHAR
@@ -90,7 +91,8 @@ TEST_CASE("should hex-encode SQL_C_BINARY containing embedded NUL and high bytes
   check_binary_to_string(SQL_VARCHAR, bytes, "0001ff10");
 }
 
-TEST_CASE("should hex-encode a single SQL_C_BINARY byte to SQL_VARCHAR", "[c_binary][conversion][sql_string]") {
+TEST_CASE("should hex-encode a single SQL_C_BINARY byte to SQL_VARCHAR",
+          "[e2e][types][c_binary][conversion][sql_string]") {
   // Given Snowflake client is logged in
   SKIP_OLD_DRIVER("BD#34", "Legacy driver forwards raw bytes instead of hex-encoding SQL_C_BINARY -> string");
   // When a single 0x00 byte is bound to SQL_VARCHAR and selected
@@ -99,7 +101,8 @@ TEST_CASE("should hex-encode a single SQL_C_BINARY byte to SQL_VARCHAR", "[c_bin
   check_binary_to_string(SQL_VARCHAR, bytes, "00");
 }
 
-TEST_CASE("should bind SQL_C_BINARY with NULL indicator to SQL_VARCHAR", "[c_binary][conversion][sql_string]") {
+TEST_CASE("should bind SQL_C_BINARY with NULL indicator to SQL_VARCHAR",
+          "[e2e][types][c_binary][conversion][sql_string]") {
   // Given Snowflake client is logged in
   SKIP_OLD_DRIVER("BD#34", "Legacy driver forwards raw bytes instead of hex-encoding SQL_C_BINARY -> string");
   Connection conn;

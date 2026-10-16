@@ -42,7 +42,7 @@ static std::string generate_random_ascii_string(std::mt19937& gen, size_t length
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle LOB string at maximum 128 MB limit with increased LOB size",
-                 "[datatype][string][lob][flaky]") {
+                 "[e2e][types][datatype][string][lob][flaky]") {
   // Corner case: string at maximum LOB limit (128 MB) - requires Increased LOB Size feature
   // Given Snowflake client is logged in
 
@@ -95,7 +95,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle LOB string at maximum 128 MB 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle LOB string at historical 16 MB limit",
-                 "[datatype][string][lob][flaky]") {
+                 "[e2e][types][datatype][string][lob][flaky]") {
   // Corner case: string at the historical LOB limit (16 MB = 16,777,216 bytes)
   // Given Snowflake client is logged in
 

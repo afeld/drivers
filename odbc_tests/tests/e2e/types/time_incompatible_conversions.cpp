@@ -4,7 +4,7 @@
 #include "compatibility.hpp"
 #include "timestamp_incompatible_checks.hpp"
 
-TEST_CASE("should fail converting TIME to numeric C types", "[time][conversion][negative]") {
+TEST_CASE("should fail converting TIME to numeric C types", "[e2e][types][time][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -27,7 +27,7 @@ TEST_CASE("should fail converting TIME to numeric C types", "[time][conversion][
   check_incompat<SQLCHAR>(stmt, 1, SQL_C_BIT);
 }
 
-TEST_CASE("should fail converting TIME to additional numeric C types", "[time][conversion][negative]") {
+TEST_CASE("should fail converting TIME to additional numeric C types", "[e2e][types][time][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -56,7 +56,8 @@ TEST_CASE("should fail converting TIME to additional numeric C types", "[time][c
   check_incompat<SQLUBIGINT>(stmt, 1, SQL_C_UBIGINT);
 }
 
-TEST_CASE("should fail converting TIME to single-component interval C types", "[time][conversion][negative]") {
+TEST_CASE("should fail converting TIME to single-component interval C types",
+          "[e2e][types][time][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -82,7 +83,7 @@ TEST_CASE("should fail converting TIME to single-component interval C types", "[
   check_incompat<SQL_INTERVAL_STRUCT>(stmt, 1, SQL_C_INTERVAL_SECOND);
 }
 
-TEST_CASE("should fail converting TIME to compound interval C types", "[time][conversion][negative]") {
+TEST_CASE("should fail converting TIME to compound interval C types", "[e2e][types][time][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -111,7 +112,7 @@ TEST_CASE("should fail converting TIME to compound interval C types", "[time][co
   check_incompat<SQL_INTERVAL_STRUCT>(stmt, 1, SQL_C_INTERVAL_MINUTE_TO_SECOND);
 }
 
-TEST_CASE("should fail converting TIME to SQL_C_TYPE_DATE", "[time][conversion][negative]") {
+TEST_CASE("should fail converting TIME to SQL_C_TYPE_DATE", "[e2e][types][time][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -122,7 +123,7 @@ TEST_CASE("should fail converting TIME to SQL_C_TYPE_DATE", "[time][conversion][
   check_incompat<SQL_DATE_STRUCT>(stmt, 1, SQL_C_TYPE_DATE);
 }
 
-TEST_CASE("should fail converting TIME to SQL_C_GUID", "[time][conversion][negative]") {
+TEST_CASE("should fail converting TIME to SQL_C_GUID", "[e2e][types][time][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

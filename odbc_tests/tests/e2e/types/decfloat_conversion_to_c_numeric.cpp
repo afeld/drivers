@@ -11,7 +11,7 @@
 // BASIC SQL_C_NUMERIC CONVERSIONS
 // ============================================================================
 
-TEST_CASE("DECFLOAT to SQL_C_NUMERIC", "[decfloat][conversion][c_numeric]") {
+TEST_CASE("DECFLOAT to SQL_C_NUMERIC", "[e2e][types][decfloat][conversion][c_numeric]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -46,7 +46,7 @@ TEST_CASE("DECFLOAT to SQL_C_NUMERIC", "[decfloat][conversion][c_numeric]") {
 // FRACTIONAL TRUNCATION
 // ============================================================================
 
-TEST_CASE("DECFLOAT fractional truncation to SQL_C_NUMERIC", "[decfloat][conversion][c_numeric]") {
+TEST_CASE("DECFLOAT fractional truncation to SQL_C_NUMERIC", "[e2e][types][decfloat][conversion][c_numeric]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -61,7 +61,8 @@ TEST_CASE("DECFLOAT fractional truncation to SQL_C_NUMERIC", "[decfloat][convers
 // OVERFLOW (extreme exponent)
 // ============================================================================
 
-TEST_CASE("DECFLOAT extreme exponent to SQL_C_NUMERIC returns 22003", "[decfloat][conversion][c_numeric][22003]") {
+TEST_CASE("DECFLOAT extreme exponent to SQL_C_NUMERIC returns 22003",
+          "[e2e][types][decfloat][conversion][c_numeric][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -83,7 +84,7 @@ TEST_CASE("DECFLOAT extreme exponent to SQL_C_NUMERIC returns 22003", "[decfloat
 // NULL handling
 // ============================================================================
 
-TEST_CASE("DECFLOAT NULL to SQL_C_NUMERIC", "[decfloat][conversion][c_numeric][null]") {
+TEST_CASE("DECFLOAT NULL to SQL_C_NUMERIC", "[e2e][types][decfloat][conversion][c_numeric][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

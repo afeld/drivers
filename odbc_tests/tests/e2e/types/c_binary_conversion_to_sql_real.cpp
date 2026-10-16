@@ -14,7 +14,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY f64 to SQL_DOUBLE and read back",
-                 "[c_binary][conversion][sql_real]") {
+                 "[e2e][types][c_binary][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -35,7 +35,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY f64 to SQL_DOUBLE 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY f32 to SQL_REAL and read back",
-                 "[c_binary][conversion][sql_real]") {
+                 "[e2e][types][c_binary][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -56,7 +56,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY f32 to SQL_REAL an
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should accept SQL_C_BINARY NaN for SQL_DOUBLE",
-                 "[c_binary][conversion][sql_real]") {
+                 "[e2e][types][c_binary][conversion][sql_real]") {
   // Per MS ODBC "C to SQL: Binary", the only validation for SQL_C_BINARY ->
   // SQL_DOUBLE is the length-equals check (8 bytes). NaN is a valid IEEE-754
   // value that Snowflake FLOAT columns accept, so the bind and insert must
@@ -82,7 +82,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should accept SQL_C_BINARY NaN for SQL_DOUB
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should accept SQL_C_BINARY infinity for SQL_REAL",
-                 "[c_binary][conversion][sql_real]") {
+                 "[e2e][types][c_binary][conversion][sql_real]") {
   // Per MS ODBC "C to SQL: Binary", the only validation for SQL_C_BINARY ->
   // SQL_REAL is the length-equals check (4 bytes). +Infinity is a valid
   // IEEE-754 value that Snowflake FLOAT columns accept, so the bind and
@@ -109,7 +109,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should accept SQL_C_BINARY infinity for SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should accept SQL_C_BINARY negative infinity for SQL_REAL",
-                 "[c_binary][conversion][sql_real]") {
+                 "[e2e][types][c_binary][conversion][sql_real]") {
   // Per MS ODBC "C to SQL: Binary", the only validation for SQL_C_BINARY ->
   // SQL_REAL is the length-equals check (4 bytes). -Infinity is a valid
   // IEEE-754 value that Snowflake FLOAT columns accept, so the bind and
@@ -136,7 +136,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should accept SQL_C_BINARY negative infinit
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size for SQL_DOUBLE",
-                 "[c_binary][conversion][sql_real]") {
+                 "[e2e][types][c_binary][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 

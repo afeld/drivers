@@ -34,7 +34,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG to SQL_INTERVAL_YEAR",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -59,7 +59,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG to SQL_INTERVAL_YEA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_SLONG to SQL_INTERVAL_YEAR",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -84,7 +84,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_SLONG to SQL_INT
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_INTERVAL_MONTH",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -109,7 +109,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_INTERVAL_M
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SSHORT to SQL_INTERVAL_DAY",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SSHORT to SQL_INTERVAL_DA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UTINYINT to SQL_INTERVAL_HOUR",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -159,7 +159,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UTINYINT to SQL_INTERVAL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_ULONG to SQL_INTERVAL_MINUTE",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -184,7 +184,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_ULONG to SQL_INTERVAL_MIN
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_STINYINT to SQL_INTERVAL_SECOND",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -210,7 +210,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_STINYINT to SQL_INTERVAL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG with NULL indicator to SQL_INTERVAL_YEAR",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -243,7 +243,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG with NULL indicator
 // ---------------------------------------------------------------------------
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TINYINT (unsuffixed alias) to SQL_INTERVAL_HOUR",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -268,7 +268,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_TINYINT (unsuffixed alias
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SHORT (unsuffixed alias) to SQL_INTERVAL_MONTH",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -293,7 +293,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SHORT (unsuffixed alias) 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_LONG (unsuffixed alias) to SQL_INTERVAL_DAY",
-                 "[c_integer][conversion][sql_interval]") {
+                 "[e2e][types][c_integer][conversion][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");

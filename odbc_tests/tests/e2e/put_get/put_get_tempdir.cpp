@@ -27,7 +27,7 @@ static void write_compressible_csv(const fs::path& file) {
   }
 }
 
-TEST_CASE("should create nested PUT_TEMPDIR and clean gzip tempfiles after PUT AUTO_COMPRESS", "[put_get]") {
+TEST_CASE("should create nested PUT_TEMPDIR and clean gzip tempfiles after PUT AUTO_COMPRESS", "[e2e][put_get]") {
   TempTestDir src_dir("odbc_put_tempdir_src_");
   TempTestDir temp_root("odbc_put_tempdir_dst_");
   const fs::path nested = temp_root.path() / "nested" / "gzip";
@@ -50,7 +50,7 @@ TEST_CASE("should create nested PUT_TEMPDIR and clean gzip tempfiles after PUT A
   REQUIRE(fs::is_empty(nested));
 }
 
-TEST_CASE("should treat PUT_TEMPDIR shell metacharacters as a directory name", "[put_get]") {
+TEST_CASE("should treat PUT_TEMPDIR shell metacharacters as a directory name", "[e2e][put_get]") {
   TempTestDir src_dir("odbc_put_tempdir_inj_src_");
   TempTestDir temp_root("odbc_put_tempdir_inj_dst_");
   const fs::path injection_dir = temp_root.path() / "dir;touch pwned";
@@ -72,7 +72,7 @@ TEST_CASE("should treat PUT_TEMPDIR shell metacharacters as a directory name", "
   REQUIRE_FALSE(fs::exists(sentinel));
 }
 
-TEST_CASE("should fail PUT AUTO_COMPRESS when PUT_TEMPDIR is an existing file", "[put_get]") {
+TEST_CASE("should fail PUT AUTO_COMPRESS when PUT_TEMPDIR is an existing file", "[e2e][put_get]") {
   TempTestDir src_dir("odbc_put_tempdir_bad_src_");
   TempTestDir temp_root("odbc_put_tempdir_bad_dst_");
   const fs::path not_a_dir = temp_root.path() / "not-a-dir";

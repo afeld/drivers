@@ -75,7 +75,8 @@ static void verify_private_key_forwarded_to_core(ConnectionHandleWrapper& dbc, c
 // Integration tests: SQLSetConnectAttr forwarding to core
 // ============================================================================
 
-TEST_CASE("should forward private key content set via SQLSetConnectAttr to core", "[private_key_auth_connect_attr]") {
+TEST_CASE("should forward private key content set via SQLSetConnectAttr to core",
+          "[integration][authentication][private_key_auth_connect_attr]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests direct attribute handling");
   // iODBC routes narrow SQLSetConnectAttr through SQLSetConnectAttrW with
   // implicit UTF-8→UTF-32 transcoding for the binary PEM octets (LF bytes
@@ -107,7 +108,8 @@ TEST_CASE("should forward private key content set via SQLSetConnectAttr to core"
   verify_private_key_forwarded_to_core(dbc, connection_string);
 }
 
-TEST_CASE("should forward base64 private key set via SQLSetConnectAttr to core", "[private_key_auth_connect_attr]") {
+TEST_CASE("should forward base64 private key set via SQLSetConnectAttr to core",
+          "[integration][authentication][private_key_auth_connect_attr]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests direct attribute handling");
   // iODBC's `SQLSetConnectAttr_Internal` only transcodes the narrow → wide
   // buffer for a hardcoded set of known string attribute IDs
@@ -149,7 +151,8 @@ TEST_CASE("should forward base64 private key set via SQLSetConnectAttr to core",
   verify_private_key_forwarded_to_core(dbc, connection_string);
 }
 
-TEST_CASE("should forward private key password set via SQLSetConnectAttr to core", "[private_key_auth_connect_attr]") {
+TEST_CASE("should forward private key password set via SQLSetConnectAttr to core",
+          "[integration][authentication][private_key_auth_connect_attr]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests direct attribute handling");
 
   // Given A connection handle is allocated and PRIV_KEY_PASSWORD is set via SQLSetConnectAttr

@@ -38,7 +38,7 @@ static std::string get_string_attr(const HandleWrapper& stmt, SQLUSMALLINT col, 
 // Per-type attribute coverage
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR.", "[e2e][query][col_attribute]") {
   // Given A table with a VARCHAR(100) column is queried
   bool is_ascii = is_ascii_locale();
   Connection conn;
@@ -77,7 +77,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR.", "[query][co
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for NUMBER.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for NUMBER.", "[e2e][query][col_attribute]") {
   // Given A table with a NUMBER(10,2) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -108,7 +108,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for NUMBER.", "[query][col
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for BOOLEAN.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for BOOLEAN.", "[e2e][query][col_attribute]") {
   // Given A table with a BOOLEAN column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -139,7 +139,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for BOOLEAN.", "[query][co
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for DATE.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for DATE.", "[e2e][query][col_attribute]") {
   // Given A table with a DATE column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -170,7 +170,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for DATE.", "[query][col_a
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for TIME.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for TIME.", "[e2e][query][col_attribute]") {
   // Given A table with a TIME(9) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -198,7 +198,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for TIME.", "[query][col_a
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_NTZ.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_NTZ.", "[e2e][query][col_attribute]") {
   // Given A table with a TIMESTAMP_NTZ(9) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -232,7 +232,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_NTZ.", "[que
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_LTZ.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_LTZ.", "[e2e][query][col_attribute]") {
   // Given A table with a TIMESTAMP_LTZ(9) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -266,7 +266,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_LTZ.", "[que
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_TZ.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for TIMESTAMP_TZ.", "[e2e][query][col_attribute]") {
   // Given A table with a TIMESTAMP_TZ(9) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -318,7 +318,7 @@ static void expect_standard_timestamp_metadata(const HandleWrapper& stmt, SQLUSM
   CHECK(get_string_attr(stmt, col, SQL_DESC_LOCAL_TYPE_NAME) == type_name);
 }
 
-TEST_CASE("should report the Snowflake timestamp variant in SQL_DESC_TYPE_NAME.", "[query][col_attribute]") {
+TEST_CASE("should report the Snowflake timestamp variant in SQL_DESC_TYPE_NAME.", "[e2e][query][col_attribute]") {
   // Given A query result with TIMESTAMP_NTZ, TIMESTAMP_LTZ, and TIMESTAMP_TZ columns
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -368,7 +368,7 @@ static void expect_timestamp_sql_types(const HandleWrapper& stmt, SQLUSMALLINT c
 }
 
 TEST_CASE("should report vendor timestamp type codes when ODBC_USE_CUSTOM_SQL_DATA_TYPES is set.",
-          "[query][col_attribute]") {
+          "[e2e][query][col_attribute]") {
   // Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES enabled
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -401,7 +401,7 @@ TEST_CASE("should report vendor timestamp type codes when ODBC_USE_CUSTOM_SQL_DA
 }
 
 TEST_CASE("should keep SQL_TYPE_TIMESTAMP for timestamp columns when ODBC_USE_CUSTOM_SQL_DATA_TYPES is false.",
-          "[query][col_attribute]") {
+          "[e2e][query][col_attribute]") {
   // Given A session with ODBC_USE_CUSTOM_SQL_DATA_TYPES disabled
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -442,7 +442,7 @@ TEST_CASE("should keep SQL_TYPE_TIMESTAMP for timestamp columns when ODBC_USE_CU
   }
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for BINARY.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for BINARY.", "[e2e][query][col_attribute]") {
   // Given A table with a BINARY column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -473,7 +473,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for BINARY.", "[query][col
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for BINARY with explicit size.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for BINARY with explicit size.", "[e2e][query][col_attribute]") {
   // Given A table with a BINARY(100) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -489,7 +489,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for BINARY with explicit s
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_OCTET_LENGTH) == 100);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for FLOAT.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for FLOAT.", "[e2e][query][col_attribute]") {
   // Given A table with a FLOAT column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -517,7 +517,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for FLOAT.", "[query][col_
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_UNNAMED) == SQL_NAMED);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for DECFLOAT.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for DECFLOAT.", "[e2e][query][col_attribute]") {
   // Given A table with a DECFLOAT column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -624,7 +624,7 @@ TEST_CASE("should report vendor codes for ARRAY, OBJECT, and VARIANT when ODBC_U
 // Semi-structured type names (ARRAY/OBJECT/VARIANT)
 // =============================================================================
 
-TEST_CASE("should return correct type name for ARRAY.", "[query][col_attribute]") {
+TEST_CASE("should return correct type name for ARRAY.", "[e2e][query][col_attribute]") {
   // Given A table with an ARRAY column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -640,7 +640,7 @@ TEST_CASE("should return correct type name for ARRAY.", "[query][col_attribute]"
   NEW_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "ARRAY"); }
 }
 
-TEST_CASE("should return correct type name for OBJECT.", "[query][col_attribute]") {
+TEST_CASE("should return correct type name for OBJECT.", "[e2e][query][col_attribute]") {
   // Given A table with an OBJECT column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -656,7 +656,7 @@ TEST_CASE("should return correct type name for OBJECT.", "[query][col_attribute]
   NEW_DRIVER_ONLY("BD#171") { CHECK(get_string_attr(stmt, 1, SQL_DESC_LOCAL_TYPE_NAME) == "STRUCT"); }
 }
 
-TEST_CASE("should return correct type name for VARIANT.", "[query][col_attribute]") {
+TEST_CASE("should return correct type name for VARIANT.", "[e2e][query][col_attribute]") {
   // Given A table with a VARIANT column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -676,7 +676,7 @@ TEST_CASE("should return correct type name for VARIANT.", "[query][col_attribute
 // Nullable behavior
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns SQL_NULLABLE for nullable column.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns SQL_NULLABLE for nullable column.", "[e2e][query][col_attribute]") {
   // Given A table with a nullable column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -689,7 +689,7 @@ TEST_CASE("SQLColAttribute returns SQL_NULLABLE for nullable column.", "[query][
   CHECK(nullable == SQL_NULLABLE);
 }
 
-TEST_CASE("SQLColAttribute returns SQL_NO_NULLS for NOT NULL column.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns SQL_NO_NULLS for NOT NULL column.", "[e2e][query][col_attribute]") {
   // Given A table with a NOT NULL column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -706,7 +706,7 @@ TEST_CASE("SQLColAttribute returns SQL_NO_NULLS for NOT NULL column.", "[query][
 // Column name and label
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns column name via SQL_DESC_NAME.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns column name via SQL_DESC_NAME.", "[e2e][query][col_attribute]") {
   // Given A query with a named column is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS MY_COLUMN");
@@ -722,7 +722,7 @@ TEST_CASE("SQLColAttribute returns column name via SQL_DESC_NAME.", "[query][col
   CHECK(str_len == 9);
 }
 
-TEST_CASE("SQLColAttribute returns column label via SQL_DESC_LABEL.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns column label via SQL_DESC_LABEL.", "[e2e][query][col_attribute]") {
   // Given A query with a labeled column is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS MY_LABEL");
@@ -734,7 +734,7 @@ TEST_CASE("SQLColAttribute returns column label via SQL_DESC_LABEL.", "[query][c
   CHECK(label == "MY_LABEL");
 }
 
-TEST_CASE("SQLColAttribute returns empty table/schema/catalog names.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns empty table/schema/catalog names.", "[e2e][query][col_attribute]") {
   // Given A query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS val");
@@ -748,7 +748,7 @@ TEST_CASE("SQLColAttribute returns empty table/schema/catalog names.", "[query][
   CHECK(get_string_attr(stmt, 1, SQL_DESC_CATALOG_NAME) == "");
 }
 
-TEST_CASE("SQLColAttribute returns base column name via SQL_DESC_BASE_COLUMN_NAME.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns base column name via SQL_DESC_BASE_COLUMN_NAME.", "[e2e][query][col_attribute]") {
   // Given A query with a named column is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS MY_COL");
@@ -763,7 +763,7 @@ TEST_CASE("SQLColAttribute returns base column name via SQL_DESC_BASE_COLUMN_NAM
 // SQL_DESC_COUNT
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns column count via SQL_DESC_COUNT.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns column count via SQL_DESC_COUNT.", "[e2e][query][col_attribute]") {
   // Given A multi-column query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 1 AS a, 2 AS b, 3 AS c");
@@ -781,7 +781,8 @@ TEST_CASE("SQLColAttribute returns column count via SQL_DESC_COUNT.", "[query][c
 // ODBC 2.x aliases via SQLColAttribute
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns same values for ODBC 2.x aliases as 3.x equivalents.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns same values for ODBC 2.x aliases as 3.x equivalents.",
+          "[e2e][query][col_attribute]") {
   // Given A query with a named column is executed
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -829,7 +830,7 @@ TEST_CASE("SQLColAttribute returns same values for ODBC 2.x aliases as 3.x equiv
 // Prepared state support
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns column name after SQLPrepare without SQLExecute.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns column name after SQLPrepare without SQLExecute.", "[e2e][query][col_attribute]") {
   // Given A SELECT statement is prepared but not executed
   Connection conn;
   auto stmt = conn.createStatement();
@@ -847,7 +848,7 @@ TEST_CASE("SQLColAttribute returns column name after SQLPrepare without SQLExecu
   CHECK(std::string(reinterpret_cast<char*>(buffer)) == "MY_COL");
 }
 
-TEST_CASE("SQLColAttribute returns column count after SQLPrepare without SQLExecute.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns column count after SQLPrepare without SQLExecute.", "[e2e][query][col_attribute]") {
   // Given A multi-column SELECT is prepared but not executed
   Connection conn;
   auto stmt = conn.createStatement();
@@ -864,7 +865,7 @@ TEST_CASE("SQLColAttribute returns column count after SQLPrepare without SQLExec
   CHECK(num_attr == 2);
 }
 
-TEST_CASE("SQLColAttribute returns type after SQLPrepare without SQLExecute.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns type after SQLPrepare without SQLExecute.", "[e2e][query][col_attribute]") {
   // Given A SELECT returning a numeric literal is prepared but not executed
   Connection conn;
   auto stmt = conn.createStatement();
@@ -884,7 +885,8 @@ TEST_CASE("SQLColAttribute returns type after SQLPrepare without SQLExecute.", "
 // String truncation
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns SQL_SUCCESS_WITH_INFO with 01004 on string truncation.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns SQL_SUCCESS_WITH_INFO with 01004 on string truncation.",
+          "[e2e][query][col_attribute]") {
   // Given A query with a named column is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS MY_COLUMN");
@@ -910,7 +912,7 @@ TEST_CASE("SQLColAttribute returns SQL_SUCCESS_WITH_INFO with 01004 on string tr
 // Error cases
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns 07009 for column number 0.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns 07009 for column number 0.", "[e2e][query][col_attribute]") {
   // Given A query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS value");
@@ -923,7 +925,7 @@ TEST_CASE("SQLColAttribute returns 07009 for column number 0.", "[query][col_att
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("07009"));
 }
 
-TEST_CASE("SQLColAttribute returns 07009 for out-of-range column number.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns 07009 for out-of-range column number.", "[e2e][query][col_attribute]") {
   // Given A single-column query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS value");
@@ -936,7 +938,7 @@ TEST_CASE("SQLColAttribute returns 07009 for out-of-range column number.", "[que
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("07009"));
 }
 
-TEST_CASE("SQLColAttribute returns HY010 before prepare or execute.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns HY010 before prepare or execute.", "[e2e][query][col_attribute]") {
   // Given A statement handle exists but no query has been prepared or executed
   Connection conn;
   auto stmt = conn.createStatement();
@@ -949,7 +951,7 @@ TEST_CASE("SQLColAttribute returns HY010 before prepare or execute.", "[query][c
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("HY010"));
 }
 
-TEST_CASE("SQLColAttribute returns HY091 for unrecognized field identifier.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns HY091 for unrecognized field identifier.", "[e2e][query][col_attribute]") {
   // Given A query is executed
   Connection conn;
   auto stmt = conn.execute("SELECT 42 AS value");
@@ -966,7 +968,8 @@ TEST_CASE("SQLColAttribute returns HY091 for unrecognized field identifier.", "[
 // Cross-function consistency: SQLColAttribute vs SQLGetDescField(IRD)
 // =============================================================================
 
-TEST_CASE("SQLColAttribute and SQLGetDescField(IRD) return consistent values.", "[query][col_attribute][consistency]") {
+TEST_CASE("SQLColAttribute and SQLGetDescField(IRD) return consistent values.",
+          "[e2e][query][col_attribute][consistency]") {
   // Given A table with multiple column types is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1047,7 +1050,7 @@ TEST_CASE("SQLColAttribute and SQLGetDescField(IRD) return consistent values.", 
 // Cross-function consistency: SQLColAttribute vs SQLDescribeCol
 // =============================================================================
 
-TEST_CASE("SQLColAttribute and SQLDescribeCol return consistent values.", "[query][col_attribute][consistency]") {
+TEST_CASE("SQLColAttribute and SQLDescribeCol return consistent values.", "[e2e][query][col_attribute][consistency]") {
   // Given A table with multiple column types is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1100,7 +1103,7 @@ TEST_CASE("SQLColAttribute and SQLDescribeCol return consistent values.", "[quer
 // NUMBER precision/scale variations
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(38,0).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(38,0).", "[e2e][query][col_attribute]") {
   // Given A table with a NUMBER(38,0) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1115,7 +1118,7 @@ TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(38,0).", "
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_LENGTH) == 38);
 }
 
-TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(1,0).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(1,0).", "[e2e][query][col_attribute]") {
   // Given A table with a NUMBER(1,0) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1130,7 +1133,7 @@ TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(1,0).", "[
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_LENGTH) == 1);
 }
 
-TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(38,18).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(38,18).", "[e2e][query][col_attribute]") {
   // Given A table with a NUMBER(38,18) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1149,7 +1152,7 @@ TEST_CASE("SQLColAttribute returns correct precision/scale for NUMBER(38,18).", 
 // TIME/TIMESTAMP scale variations
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns correct display size for TIME(0).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct display size for TIME(0).", "[e2e][query][col_attribute]") {
   // Given A table with a TIME(0) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1162,7 +1165,7 @@ TEST_CASE("SQLColAttribute returns correct display size for TIME(0).", "[query][
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_DISPLAY_SIZE) == 8);
 }
 
-TEST_CASE("SQLColAttribute returns correct display size for TIMESTAMP_NTZ(3).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct display size for TIMESTAMP_NTZ(3).", "[e2e][query][col_attribute]") {
   // Given A table with a TIMESTAMP_NTZ(3) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1179,7 +1182,7 @@ TEST_CASE("SQLColAttribute returns correct display size for TIMESTAMP_NTZ(3).", 
 // BINARY/VARCHAR size edge cases
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns correct attributes for BINARY(1).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for BINARY(1).", "[e2e][query][col_attribute]") {
   // Given A table with a BINARY(1) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1194,7 +1197,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for BINARY(1).", "[query][
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_OCTET_LENGTH) == 1);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR(1).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR(1).", "[e2e][query][col_attribute]") {
   // Given A table with a VARCHAR(1) column is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1209,7 +1212,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR(1).", "[query]
   CHECK(get_numeric_attr(stmt, 1, SQL_DESC_PRECISION) == 1);
 }
 
-TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR(16777216).", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR(16777216).", "[e2e][query][col_attribute]") {
   // Given A table with a VARCHAR(16777216) column (Snowflake max) is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1227,7 +1230,7 @@ TEST_CASE("SQLColAttribute returns correct attributes for VARCHAR(16777216).", "
 // StringLengthPtr validation
 // =============================================================================
 
-TEST_CASE("SQLColAttribute returns correct StringLengthPtr for string attributes.", "[query][col_attribute]") {
+TEST_CASE("SQLColAttribute returns correct StringLengthPtr for string attributes.", "[e2e][query][col_attribute]") {
   // Given A table with multiple column types is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);
@@ -1296,7 +1299,7 @@ TEST_CASE("SQLColAttribute returns correct StringLengthPtr for string attributes
 // =============================================================================
 
 TEST_CASE("SQLColAttribute returns correct attributes for each column in a multi-column result.",
-          "[query][col_attribute]") {
+          "[e2e][query][col_attribute]") {
   // Given A table with diverse types is queried
   Connection conn;
   Schema::use_temp_session_schema(conn);

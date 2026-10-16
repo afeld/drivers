@@ -10,7 +10,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTEGER and read back",
-                 "[c_numeric][conversion][sql_fixed]") {
+                 "[e2e][types][c_numeric][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_int (col NUMBER)");
@@ -42,7 +42,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_INTEGER an
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_NUMERIC to SQL_BIGINT",
-                 "[c_numeric][conversion][sql_fixed]") {
+                 "[e2e][types][c_numeric][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_big (col BIGINT)");
@@ -74,7 +74,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_NUMERIC to SQL_B
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC with scale to SQL_DECIMAL",
-                 "[c_numeric][conversion][sql_fixed]") {
+                 "[e2e][types][c_numeric][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_dec (col DECIMAL(10,2))");
@@ -106,7 +106,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC with scale to SQL
   NEW_DRIVER_ONLY("BD#33") { CHECK(get_data<SQL_C_CHAR>(sel, 1) == "123.45"); }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC zero", "[c_numeric][conversion][sql_fixed]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC zero",
+                 "[e2e][types][c_numeric][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_zero (col NUMBER)");
@@ -138,7 +139,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC zero", "[c_numeri
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind large SQL_C_NUMERIC exceeding 64-bit range",
-                 "[c_numeric][conversion][sql_fixed]") {
+                 "[e2e][types][c_numeric][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_big128 (col NUMBER(38,0))");
@@ -171,7 +172,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind large SQL_C_NUMERIC exceeding 6
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC overflow into NUMBER(3,0)",
-                 "[c_numeric][conversion][sql_fixed]") {
+                 "[e2e][types][c_numeric][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_ovf (col NUMBER(3,0))");
@@ -198,7 +199,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC overflow into N
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC with NULL indicator",
-                 "[c_numeric][conversion][sql_fixed]") {
+                 "[e2e][types][c_numeric][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_null (col NUMBER)");

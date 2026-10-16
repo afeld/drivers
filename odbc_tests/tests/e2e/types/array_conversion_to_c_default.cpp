@@ -10,7 +10,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("ARRAY to SQL_C_DEFAULT", "[array][conversion][c_default]") {
+TEST_CASE("ARRAY to SQL_C_DEFAULT", "[e2e][types][array][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -25,7 +25,7 @@ TEST_CASE("ARRAY to SQL_C_DEFAULT", "[array][conversion][c_default]") {
   CHECK(v.get<picojson::array>().size() == 3);
 }
 
-TEST_CASE("ARRAY to SQL_C_DEFAULT empty", "[array][conversion][c_default]") {
+TEST_CASE("ARRAY to SQL_C_DEFAULT empty", "[e2e][types][array][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -40,7 +40,7 @@ TEST_CASE("ARRAY to SQL_C_DEFAULT empty", "[array][conversion][c_default]") {
   CHECK(v.get<picojson::array>().empty());
 }
 
-TEST_CASE("ARRAY to SQL_C_DEFAULT nested", "[array][conversion][c_default]") {
+TEST_CASE("ARRAY to SQL_C_DEFAULT nested", "[e2e][types][array][conversion][c_default]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -56,7 +56,7 @@ TEST_CASE("ARRAY to SQL_C_DEFAULT nested", "[array][conversion][c_default]") {
   CHECK(v.get<picojson::array>().size() == 2);
 }
 
-TEST_CASE("ARRAY NULL to SQL_C_DEFAULT", "[array][conversion][c_default][null]") {
+TEST_CASE("ARRAY NULL to SQL_C_DEFAULT", "[e2e][types][array][conversion][c_default][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

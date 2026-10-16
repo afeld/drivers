@@ -7,7 +7,7 @@
 #include "odbc_cast.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE("Replay: exec_direct_getdata_13col_22rows", "[dtm]") {
+TEST_CASE("Replay: exec_direct_getdata_13col_22rows", "[replay][dtm]") {
   SKIP_IODBC("Datometry replays use unixODBC, so replay is not exercised under iODBC");
   auto config = DataSourceConfig::Snowflake().install();
   SKIP_NEW_DRIVER_NOT_IMPLEMENTED();

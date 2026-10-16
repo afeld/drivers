@@ -10,7 +10,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY", "[timestamp_ltz][conversion][c_binary]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY", "[e2e][types][timestamp_ltz][conversion][c_binary]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -35,7 +35,8 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY", "[timestamp_ltz][conversion][c_binary
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY with fractional seconds", "[timestamp_ltz][conversion][c_binary]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY with fractional seconds",
+          "[e2e][types][timestamp_ltz][conversion][c_binary]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -54,7 +55,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY with fractional seconds", "[timestamp_l
   CHECK(ts_frac.fraction == 123456789);
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY pre-epoch", "[timestamp_ltz][conversion][c_binary]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY pre-epoch", "[e2e][types][timestamp_ltz][conversion][c_binary]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -79,7 +80,8 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY pre-epoch", "[timestamp_ltz][conversion
   CHECK(ts.fraction == 0);
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY buffer too small", "[timestamp_ltz][conversion][c_binary][22003]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY buffer too small",
+          "[e2e][types][timestamp_ltz][conversion][c_binary][22003]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -97,7 +99,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_BINARY buffer too small", "[timestamp_ltz][con
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_BINARY", "[timestamp_ltz][conversion][c_binary][null]") {
+TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_BINARY", "[e2e][types][timestamp_ltz][conversion][c_binary][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

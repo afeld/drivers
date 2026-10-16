@@ -8,7 +8,7 @@
 #include "compatibility.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("should fail converting VARIANT to numeric C types", "[variant][conversion][negative]") {
+TEST_CASE("should fail converting VARIANT to numeric C types", "[e2e][types][variant][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -66,7 +66,7 @@ TEST_CASE("should fail converting VARIANT to numeric C types", "[variant][conver
   }
 }
 
-TEST_CASE("should fail converting VARIANT to temporal C types", "[variant][conversion][negative]") {
+TEST_CASE("should fail converting VARIANT to temporal C types", "[e2e][types][variant][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -88,7 +88,7 @@ TEST_CASE("should fail converting VARIANT to temporal C types", "[variant][conve
   }
 }
 
-TEST_CASE("should fail converting VARIANT to interval C types", "[variant][conversion][negative]") {
+TEST_CASE("should fail converting VARIANT to interval C types", "[e2e][types][variant][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -112,7 +112,7 @@ TEST_CASE("should fail converting VARIANT to interval C types", "[variant][conve
   check_incompatible_conversion(stmt, 1, SQL_C_INTERVAL_MINUTE_TO_SECOND, &value, sizeof(value), true);
 }
 
-TEST_CASE("should fail converting VARIANT to SQL_C_GUID", "[variant][conversion][negative]") {
+TEST_CASE("should fail converting VARIANT to SQL_C_GUID", "[e2e][types][variant][conversion][negative]") {
   // Given Snowflake client is logged in
   Connection conn;
 

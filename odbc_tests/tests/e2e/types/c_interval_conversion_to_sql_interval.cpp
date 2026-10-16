@@ -134,7 +134,7 @@ void check_same_family_grid(Connection& conn, SQLSMALLINT c_type, SQL_INTERVAL_S
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR to every year-month SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_YEAR source carrying 5 years
   SQL_INTERVAL_STRUCT val = ym_interval(SQL_FALSE, 5, 0);
@@ -144,7 +144,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR to every ye
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MONTH to every year-month SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_MONTH source carrying 11 months
   SQL_INTERVAL_STRUCT val = ym_interval(SQL_FALSE, 0, 11);
@@ -154,7 +154,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MONTH to every y
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to every year-month SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_YEAR_TO_MONTH source carrying 3 years 6 months
   SQL_INTERVAL_STRUCT val = ym_interval(SQL_FALSE, 3, 6);
@@ -169,7 +169,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR_TO_MONTH to
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_DAY source carrying 7 days
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 7, 0, 0, 0, 0);
@@ -179,7 +179,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY to every day
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_HOUR source carrying 9 hours
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 0, 9, 0, 0, 0);
@@ -189,7 +189,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR to every da
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_MINUTE source carrying 30 minutes
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 0, 0, 30, 0, 0);
@@ -199,7 +199,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE to every 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_SECOND source carrying 45 seconds
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 0, 0, 0, 45, 0);
@@ -209,7 +209,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_SECOND to every 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_HOUR to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_DAY_TO_HOUR source carrying 1 day 2 hours
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 1, 2, 0, 0, 0);
@@ -219,7 +219,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_HOUR to e
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_MINUTE to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_DAY_TO_MINUTE source carrying 1 day 2 hours 3 minutes
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 1, 2, 3, 0, 0);
@@ -229,7 +229,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_MINUTE to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_DAY_TO_SECOND source carrying 1 day 2 hours 3 minutes 4 seconds
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 1, 2, 3, 4, 0);
@@ -239,7 +239,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY_TO_SECOND to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_MINUTE to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_HOUR_TO_MINUTE source carrying 10 hours 30 minutes
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 0, 10, 30, 0, 0);
@@ -249,7 +249,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_MINUTE t
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_SECOND to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_HOUR_TO_SECOND source carrying 10 hours 30 minutes 15 seconds
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 0, 10, 30, 15, 0);
@@ -259,7 +259,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR_TO_SECOND t
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE_TO_SECOND to every day-time SQL_INTERVAL target",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_MINUTE_TO_SECOND source carrying 30 minutes 15 seconds
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 0, 0, 30, 15, 0);
@@ -274,7 +274,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE_TO_SECOND
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR to SQL_INTERVAL_YEAR",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_YEAR source carrying -7 years
   SQL_INTERVAL_STRUCT val = ym_interval(SQL_TRUE, 7, 0);
@@ -284,7 +284,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR_TO_MONTH to SQL_INTERVAL_YEAR_TO_MONTH",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_YEAR_TO_MONTH source carrying -2 years 3 months
   SQL_INTERVAL_STRUCT val = ym_interval(SQL_TRUE, 2, 3);
@@ -294,7 +294,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_YEAR_TO
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_SECOND to SQL_INTERVAL_SECOND",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_SECOND source carrying -3 seconds
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_TRUE, 0, 0, 0, 3, 0);
@@ -304,7 +304,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_SECOND 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_SECOND to SQL_INTERVAL_DAY_TO_SECOND",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_DAY_TO_SECOND source carrying -(1 day 2 hours 3 minutes 4 seconds)
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_TRUE, 1, 2, 3, 4, 0);
@@ -319,7 +319,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative SQL_C_INTERVAL_DAY_TO_
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind fractional SQL_C_INTERVAL_SECOND to SQL_INTERVAL_SECOND",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a SQL_C_INTERVAL_SECOND source carrying 12.5 seconds (500000 microseconds)
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 0, 0, 0, 12, 500'000);
@@ -329,7 +329,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind fractional SQL_C_INTERVAL_SECON
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind fractional SQL_C_INTERVAL_DAY_TO_SECOND to SQL_INTERVAL_DAY_TO_SECOND",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   // Given a compound SQL_C_INTERVAL_DAY_TO_SECOND source carrying 1 day 2 hours 3 minutes 4.5 seconds
   SQL_INTERVAL_STRUCT val = ds_interval(SQL_FALSE, 1, 2, 3, 4, 500'000);
@@ -345,7 +345,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind fractional SQL_C_INTERVAL_DAY_T
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject cross-family SQL_C_INTERVAL to SQL_INTERVAL with 07006",
-                 "[c_interval][incompatible][sql_interval]") {
+                 "[e2e][types][c_interval][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
   auto [c_type, sql_type] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLSMALLINT>({
       // year-month source -> day-time target
@@ -381,7 +381,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject cross-family SQL_C_INTERVAL t
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR with NULL indicator to SQL_INTERVAL_YEAR",
-                 "[c_interval][conversion][sql_interval]") {
+                 "[e2e][types][c_interval][conversion][sql_interval]") {
   SKIP_OLD_DRIVER(kBdInterval, kBdMessage);
 
   // Given a VARCHAR column

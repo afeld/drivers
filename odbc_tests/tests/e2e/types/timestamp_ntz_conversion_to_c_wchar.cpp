@@ -12,7 +12,7 @@
 #include "conversion_checks.hpp"
 #include "get_diag_rec.hpp"
 
-TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR", "[timestamp_ntz][conversion][c_wchar]") {
+TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR", "[e2e][types][timestamp_ntz][conversion][c_wchar]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -50,7 +50,7 @@ TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR", "[timestamp_ntz][conversion][c_wchar]"
   }
 }
 
-TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR buffer too small", "[timestamp_ntz][conversion][c_wchar][22003]") {
+TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR buffer too small", "[e2e][types][timestamp_ntz][conversion][c_wchar][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -67,7 +67,7 @@ TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR buffer too small", "[timestamp_ntz][conv
   CHECK(records[0].sqlState == "22003");
 }
 
-TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR truncation", "[timestamp_ntz][conversion][c_wchar][01004]") {
+TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR truncation", "[e2e][types][timestamp_ntz][conversion][c_wchar][01004]") {
   // Physical buffer is oversized (64 units) so the test runs to completion; BufferLength=21 is the truncation point
   // Given Snowflake client is logged in
   Connection conn;
@@ -93,7 +93,7 @@ TEST_CASE("TIMESTAMP_NTZ to SQL_C_WCHAR truncation", "[timestamp_ntz][conversion
   }
 }
 
-TEST_CASE("TIMESTAMP_NTZ NULL to SQL_C_WCHAR", "[timestamp_ntz][conversion][c_wchar][null]") {
+TEST_CASE("TIMESTAMP_NTZ NULL to SQL_C_WCHAR", "[e2e][types][timestamp_ntz][conversion][c_wchar][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

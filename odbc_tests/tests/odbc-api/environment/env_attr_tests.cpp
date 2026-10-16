@@ -11,6 +11,12 @@
 #include "odbc_cast.hpp"
 #include "test_macros.hpp"
 
+#if !defined(_WIN32)
+#include <dlfcn.h>
+
+#include "ODBCConfig.hpp"
+#endif
+
 // SQL_CP_DRIVER_AWARE is defined in ODBC 3.8 but may not be in all system headers
 #ifndef SQL_CP_DRIVER_AWARE
 #define SQL_CP_DRIVER_AWARE 3UL
@@ -417,10 +423,6 @@ TEST_CASE("should accept null StringLengthPtr in SQLGetEnvAttr", "[odbc-api][env
 // ============================================================================
 
 #if !defined(_WIN32)
-
-#include <dlfcn.h>
-
-#include "ODBCConfig.hpp"
 
 // Function pointer types matching ODBC C API signatures
 using SQLAllocHandleFn = SQLRETURN (*)(SQLSMALLINT, SQLHANDLE, SQLHANDLE*);

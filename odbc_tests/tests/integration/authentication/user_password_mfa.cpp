@@ -77,7 +77,7 @@ SQLRETURN attempt_mfa_connection(ConnectionHandleWrapper& dbc, const std::string
 // MFA DUO push flow
 // =============================================================================
 
-TEST_CASE("should forward USERNAME_PASSWORD_MFA parameters to core", "[mfa_auth]") {
+TEST_CASE("should forward USERNAME_PASSWORD_MFA parameters to core", "[integration][authentication][mfa_auth]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests MFA parameter forwarding");
 
   // Given Authentication is set to USERNAME_PASSWORD_MFA with user and password
@@ -101,7 +101,7 @@ TEST_CASE("should forward USERNAME_PASSWORD_MFA parameters to core", "[mfa_auth]
 // MFA TOTP passcode flow
 // =============================================================================
 
-TEST_CASE("should forward PASSCODE parameter to core", "[mfa_auth]") {
+TEST_CASE("should forward PASSCODE parameter to core", "[integration][authentication][mfa_auth]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests MFA parameter forwarding");
 
   // Given Authentication is set to USERNAME_PASSWORD_MFA with a TOTP passcode
@@ -126,7 +126,7 @@ TEST_CASE("should forward PASSCODE parameter to core", "[mfa_auth]") {
 // MFA passcode-in-password flow
 // =============================================================================
 
-TEST_CASE("should forward PASSCODEINPASSWORD parameter to core", "[mfa_auth]") {
+TEST_CASE("should forward PASSCODEINPASSWORD parameter to core", "[integration][authentication][mfa_auth]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests MFA parameter forwarding");
 
   // Given Authentication is set to USERNAME_PASSWORD_MFA with passcode appended to password
@@ -151,7 +151,7 @@ TEST_CASE("should forward PASSCODEINPASSWORD parameter to core", "[mfa_auth]") {
 // Missing password error
 // =============================================================================
 
-TEST_CASE("should fail MFA authentication when password is not provided", "[mfa_auth]") {
+TEST_CASE("should fail MFA authentication when password is not provided", "[integration][authentication][mfa_auth]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests MFA parameter validation");
 
   // Given Authentication is set to USERNAME_PASSWORD_MFA but password is omitted
@@ -175,7 +175,8 @@ TEST_CASE("should fail MFA authentication when password is not provided", "[mfa_
 // CLIENT_STORE_TEMPORARY_CREDENTIAL forwarding
 // =============================================================================
 
-TEST_CASE("should forward CLIENT_STORE_TEMPORARY_CREDENTIAL parameter to core", "[mfa_auth]") {
+TEST_CASE("should forward CLIENT_STORE_TEMPORARY_CREDENTIAL parameter to core",
+          "[integration][authentication][mfa_auth]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests MFA parameter forwarding");
 
   // Given Authentication is set to USERNAME_PASSWORD_MFA with token caching enabled

@@ -89,7 +89,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL Infinity to BIT returns 22003",
   check_numeric_out_of_range<SQL_C_BIT>(conn.execute_fetch("SELECT '-Infinity'::FLOAT"), 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_BIT", "[real][conversion][c_bit][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_BIT", "[e2e][types][real][conversion][c_bit][null]") {
   // Given A Snowflake connection is established
 
   // When A NULL FLOAT value is queried

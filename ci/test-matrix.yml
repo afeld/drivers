@@ -31,8 +31,8 @@
 #   rust integ:  cargo test --package sf_core --test integration_tests <filter>
 #   rust e2e:    cargo test --package sf_core --test e2e_tests <filter>
 #   odbc unit:   cargo test --package odbc (no ctest filter — Rust inline tests only)
-#   odbc integ:  ctest -R <filter> (C++ integration tests)
-#   odbc e2e:    ctest -R <filter> (C++ e2e tests)
+#   odbc integ:  ctest -L <filter> (anchored label regex; the label is the Catch2 tag without brackets, e.g. ^authentication$)
+#   odbc e2e:    ctest -L <filter> (anchored label regex; e.g. ^query$, ^(e2e)$)
 #   python unit: pytest <paths> (tests/unit/)
 #   python integ: pytest <paths> (tests/integ/)
 #   python e2e:  pytest <paths> (tests/e2e/)
@@ -60,8 +60,8 @@ core:
           integ: "authentication"
           e2e: "authentication"
         odbc:
-          integ: "integration_authentication"
-          e2e: "e2e_authentication"
+          integ: "^(authentication)$"
+          e2e: "^(authentication)$"
         python:
           integ: "tests/integ/authentication"
           e2e: "tests/e2e/authentication"
@@ -86,7 +86,7 @@ core:
           integ: "query"
           e2e: "query"
         odbc:
-          e2e: "e2e_query|basic_execute|sql_fetch|sql_get_data|sql_bind_col|sql_row_count"
+          e2e: "^(query)$"
         python:
           integ: "tests/integ/test_cursor.py"
           e2e: "tests/e2e/query"
@@ -106,7 +106,7 @@ core:
           unit: "tls|crl"
           e2e: "tls"
         odbc:
-          e2e: "e2e_tls|crl"
+          e2e: "^(tls)$"
         python:
           e2e: "tests/e2e/tls"
 
@@ -122,7 +122,7 @@ core:
           integ: "put_get"
           e2e: "put_get"
         odbc:
-          e2e: "e2e_put_get|put_get"
+          e2e: "^(put_get)$"
         python:
           integ: "tests/integ/put_get"
           e2e: "tests/e2e/put_get"
@@ -170,8 +170,8 @@ core:
         rust:
           unit: "connection|alter_session"
         odbc:
-          integ: "integration_authentication"
-          e2e: "connecting|disconnect|free_handle|alloc_handle"
+          integ: "^(authentication)$"
+          e2e: "^(odbc-api)$"
         python:
           integ: "tests/integ/test_connection.py"
         java:
@@ -220,7 +220,7 @@ odbc:
       tests:
         odbc:
           unit: "conversion|number_tests|numeric_literal"
-          e2e: "e2e_types|datatype|string_conversion|bindings|number"
+          e2e: "^(types)$|^(bindings)$"
 
     - name: query
       paths:
@@ -230,7 +230,7 @@ odbc:
       tests:
         odbc:
           unit: "data"
-          e2e: "e2e_query|basic_execute|sql_fetch|sql_get_data|sql_bind_col|sql_row_count"
+          e2e: "^(query)$"
 
     - name: connection
       paths:
@@ -240,7 +240,7 @@ odbc:
         - "odbc_tests/tests/odbc-api/terminating_connection/**"
       tests:
         odbc:
-          e2e: "connecting|disconnect|free_handle|alloc_handle|e2e_logging"
+          e2e: "^(odbc-api)$|^(logging)$"
 
     - name: authentication
       paths:
@@ -248,29 +248,29 @@ odbc:
         - "odbc_tests/tests/integration/authentication/**"
       tests:
         odbc:
-          integ: "integration_authentication"
-          e2e: "e2e_authentication"
+          integ: "^(authentication)$"
+          e2e: "^(authentication)$"
 
     - name: put_get
       paths:
         - "odbc_tests/tests/e2e/put_get/**"
       tests:
         odbc:
-          e2e: "e2e_put_get|put_get"
+          e2e: "^(put_get)$"
 
     - name: tls
       paths:
         - "odbc_tests/tests/e2e/tls/**"
       tests:
         odbc:
-          e2e: "e2e_tls|crl"
+          e2e: "^(tls)$"
 
     - name: logging
       paths:
         - "odbc_tests/tests/e2e/logging/**"
       tests:
         odbc:
-          e2e: "e2e_logging"
+          e2e: "^(logging)$"
 
     - name: odbc_api
       paths:
@@ -287,7 +287,7 @@ odbc:
       tests:
         odbc:
           unit: "sql_state"
-          e2e: "catalog|driver_info|preparing|get_cursor|set_cursor|execute|submitting|terminating|descriptor|basic"
+          e2e: "^(odbc-api)$|^(basic)$"
 
   # ODBC fallback: changes here run ALL ODBC tests (but not other wrappers)
   fallback_paths:

@@ -55,7 +55,7 @@ static std::optional<std::string> gzip_header_filename(const std::string& bytes)
   return bytes.substr(i, nul - i);
 }
 
-TEST_CASE("should compress the file before uploading to stage when AUTO_COMPRESS set to true", "[put_get]") {
+TEST_CASE("should compress the file before uploading to stage when AUTO_COMPRESS set to true", "[e2e][put_get]") {
   Connection conn;
   // Given Snowflake client is logged in
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_COMPRESS"));
@@ -95,7 +95,7 @@ TEST_CASE("should compress the file before uploading to stage when AUTO_COMPRESS
   REQUIRE_FALSE(fname.has_value());
 }
 
-TEST_CASE("should not compress the file before uploading to stage when AUTO_COMPRESS set to false", "[put_get]") {
+TEST_CASE("should not compress the file before uploading to stage when AUTO_COMPRESS set to false", "[e2e][put_get]") {
   Connection conn;
   // Given Snowflake client is logged in
   const std::string stage = pg_utils::create_stage(conn, unique_stage_name("ODBCTST_COMPRESS"));

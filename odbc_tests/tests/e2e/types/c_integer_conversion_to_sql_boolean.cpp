@@ -7,7 +7,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG one to SQL_BIT via integer",
-                 "[c_integer][conversion][sql_boolean]") {
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -28,7 +28,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG one to SQL_BIT via 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG zero to SQL_BIT via integer",
-                 "[c_integer][conversion][sql_boolean]") {
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -49,7 +49,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG zero to SQL_BIT via
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG other than 0 or 1 bound to SQL_BIT",
-                 "[c_integer][conversion][sql_boolean]") {
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -68,7 +68,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG other than 0 or 1
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG negative bound to SQL_BIT via integer",
-                 "[c_integer][conversion][sql_boolean]") {
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -86,7 +86,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG negative bound to
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::IsError() && OdbcMatchers::HasSqlState("22003"));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_BIT", "[c_integer][conversion][sql_boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_BIT",
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -106,7 +107,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SBIGINT to SQL_BIT", "[c_
   CHECK(get_data<SQL_C_BIT>(fetch_stmt, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SSHORT to SQL_BIT", "[c_integer][conversion][sql_boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SSHORT to SQL_BIT",
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -126,7 +128,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SSHORT to SQL_BIT", "[c_i
   CHECK(get_data<SQL_C_BIT>(fetch_stmt, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UTINYINT to SQL_BIT", "[c_integer][conversion][sql_boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UTINYINT to SQL_BIT",
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -146,7 +149,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UTINYINT to SQL_BIT", "[c
   CHECK(get_data<SQL_C_BIT>(fetch_stmt, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_ULONG to SQL_BIT", "[c_integer][conversion][sql_boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_ULONG to SQL_BIT",
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -166,7 +170,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_ULONG to SQL_BIT", "[c_in
   CHECK(get_data<SQL_C_BIT>(fetch_stmt, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_STINYINT to SQL_BIT", "[c_integer][conversion][sql_boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_STINYINT to SQL_BIT",
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -186,7 +191,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_STINYINT to SQL_BIT", "[c
   CHECK(get_data<SQL_C_BIT>(fetch_stmt, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_USHORT to SQL_BIT", "[c_integer][conversion][sql_boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_USHORT to SQL_BIT",
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -206,7 +212,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_USHORT to SQL_BIT", "[c_i
   CHECK(get_data<SQL_C_BIT>(fetch_stmt, 1) == 1);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UBIGINT to SQL_BIT", "[c_integer][conversion][sql_boolean]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UBIGINT to SQL_BIT",
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 
@@ -227,7 +234,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_UBIGINT to SQL_BIT", "[c_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_SLONG with NULL indicator to SQL_BIT via integer",
-                 "[c_integer][conversion][sql_boolean]") {
+                 "[e2e][types][c_integer][conversion][sql_boolean]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col BOOLEAN)");
 

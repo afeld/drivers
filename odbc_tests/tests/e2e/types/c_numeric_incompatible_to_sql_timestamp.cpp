@@ -26,7 +26,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to TIMESTAMP target",
-                 "[c_numeric][incompatible][sql_timestamp]") {
+                 "[e2e][types][c_numeric][incompatible][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -46,7 +46,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to TIMESTAM
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE bound to TIMESTAMP target",
-                 "[c_numeric][incompatible][sql_timestamp]") {
+                 "[e2e][types][c_numeric][incompatible][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -66,7 +66,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_DOUBLE bound to TIMESTA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_FLOAT bound to TIMESTAMP target",
-                 "[c_numeric][incompatible][sql_timestamp]") {
+                 "[e2e][types][c_numeric][incompatible][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -86,7 +86,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_FLOAT bound to TIMESTAM
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to TIMESTAMP target",
-                 "[c_numeric][incompatible][sql_timestamp]") {
+                 "[e2e][types][c_numeric][incompatible][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -106,7 +106,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to TIMESTAMP 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC bound to TIMESTAMP target",
-                 "[c_numeric][incompatible][sql_timestamp]") {
+                 "[e2e][types][c_numeric][incompatible][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 
@@ -130,7 +130,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC bound to TIMEST
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SBIGINT bound to TIMESTAMP target",
-                 "[c_numeric][incompatible][sql_timestamp]") {
+                 "[e2e][types][c_numeric][incompatible][sql_timestamp]") {
   const SQLSMALLINT sql_type = GENERATE(SQL_TIMESTAMP, SQL_TYPE_TIMESTAMP);
   CAPTURE(sql_type);
 

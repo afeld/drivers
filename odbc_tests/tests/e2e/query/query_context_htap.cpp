@@ -118,7 +118,7 @@ std::string parameter_value(Connection& conn, const char* name) {
   return get_data<SQL_C_CHAR>(stmt, 2);
 }
 
-TEST_CASE("should preserve schema after SELECT under HTAP optimization", "[query][query_context_htap]") {
+TEST_CASE("should preserve schema after SELECT under HTAP optimization", "[e2e][query][query_context_htap]") {
   // Given the account has ENABLE_SNOW_654741_FOR_TESTING enabled
   Connection conn;
   enable_htap_or_skip(conn);
@@ -135,7 +135,7 @@ TEST_CASE("should preserve schema after SELECT under HTAP optimization", "[query
   CHECK(current_name(conn, "SELECT CURRENT_SCHEMA()") == schema);
 }
 
-TEST_CASE("should preserve database after SELECT under HTAP optimization", "[query][query_context_htap]") {
+TEST_CASE("should preserve database after SELECT under HTAP optimization", "[e2e][query][query_context_htap]") {
   // Given the account has ENABLE_SNOW_654741_FOR_TESTING enabled
   Connection conn;
   enable_htap_or_skip(conn);
@@ -155,7 +155,7 @@ TEST_CASE("should preserve database after SELECT under HTAP optimization", "[que
   CHECK(current_catalog(conn) == database);
 }
 
-TEST_CASE("should preserve role after SELECT under HTAP optimization", "[query][query_context_htap]") {
+TEST_CASE("should preserve role after SELECT under HTAP optimization", "[e2e][query][query_context_htap]") {
   // Given the account has ENABLE_SNOW_654741_FOR_TESTING enabled
   Connection conn;
   enable_htap_or_skip(conn);
@@ -173,7 +173,8 @@ TEST_CASE("should preserve role after SELECT under HTAP optimization", "[query][
   }
 }
 
-TEST_CASE("should preserve session parameter after SELECT under HTAP optimization", "[query][query_context_htap]") {
+TEST_CASE("should preserve session parameter after SELECT under HTAP optimization",
+          "[e2e][query][query_context_htap]") {
   // Given the account has ENABLE_SNOW_654741_FOR_TESTING enabled
   Connection conn;
   enable_htap_or_skip(conn);
@@ -188,7 +189,7 @@ TEST_CASE("should preserve session parameter after SELECT under HTAP optimizatio
   conn.try_execute("ALTER SESSION SET DATE_OUTPUT_FORMAT = 'YYYY-MM-DD'");
 }
 
-TEST_CASE("should operate on hybrid tables across multiple databases", "[query][query_context_htap]") {
+TEST_CASE("should operate on hybrid tables across multiple databases", "[e2e][query][query_context_htap]") {
   // Given a connection to Snowflake
   Connection conn;
   const auto original = current_catalog(conn);

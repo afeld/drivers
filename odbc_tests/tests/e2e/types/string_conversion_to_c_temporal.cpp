@@ -28,7 +28,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to c_type",
-                 "[datatype][string][conversion][temporal]") {
+                 "[e2e][types][datatype][string][conversion][temporal]") {
   // Given Snowflake client is logged in
 
   // When Query selecting string literals representing dates and times is executed
@@ -107,7 +107,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to c_type",
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert date-only and time-only strings to SQL_C_TYPE_TIMESTAMP",
-                 "[datatype][string][conversion][temporal]") {
+                 "[e2e][types][datatype][string][conversion][temporal]") {
   // Given Snowflake client is logged in
 
   // When Query selecting date-only string is executed
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert date-only and time-only stri
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert timestamp string to SQL_C_TYPE_DATE",
-                 "[datatype][string][conversion][temporal][.skip]") {
+                 "[e2e][types][datatype][string][conversion][temporal][.skip]") {
   // Given Snowflake client is logged in
 
   // When Query selecting timestamp strings is executed
@@ -172,7 +172,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert timestamp string to SQL_C_TY
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert timestamp string to SQL_C_TYPE_TIME",
-                 "[datatype][string][conversion][temporal][.skip]") {
+                 "[e2e][types][datatype][string][conversion][temporal][.skip]") {
   // Given Snowflake client is logged in
 
   // When Query selecting timestamp strings is executed
@@ -201,7 +201,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should convert timestamp string to SQL_C_TY
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting invalid date/time strings",
-                 "[datatype][string][conversion][temporal][failure]") {
+                 "[e2e][types][datatype][string][conversion][temporal][failure]") {
   // Given Snowflake client is logged in
 
   // When Query selecting invalid date/time strings is executed
@@ -218,7 +218,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting invalid date/time st
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting impossible date values",
-                 "[datatype][string][conversion][temporal][failure][impossible]") {
+                 "[e2e][types][datatype][string][conversion][temporal][failure][impossible]") {
   // Given Snowflake client is logged in
 
   // When Query selecting date strings with correct syntax but impossible values is executed
@@ -237,7 +237,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting impossible date valu
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting impossible time values",
-                 "[datatype][string][conversion][temporal][failure][impossible][.skip]") {
+                 "[e2e][types][datatype][string][conversion][temporal][failure][impossible][.skip]") {
   // Given Snowflake client is logged in
 
   // When Query selecting time strings with correct syntax but impossible values is executed
@@ -265,7 +265,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting impossible time valu
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting impossible timestamp values",
-                 "[datatype][string][conversion][temporal][failure][impossible]") {
+                 "[e2e][types][datatype][string][conversion][temporal][failure][impossible]") {
   // Given Snowflake client is logged in
 
   // When Query selecting timestamp strings with correct syntax but impossible values is executed
@@ -288,7 +288,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting impossible timestamp
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting alternative date formats to SQL_C_TYPE_DATE",
-                 "[datatype][string][conversion][temporal][failure][date_format]") {
+                 "[e2e][types][datatype][string][conversion][temporal][failure][date_format]") {
   // Given Snowflake client is logged in
 
   // When Query selecting multiple date strings in alternative formats is executed
@@ -318,7 +318,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting alternative date for
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting alternative time formats to SQL_C_TYPE_TIME",
-                 "[datatype][string][conversion][temporal][failure][time_format]") {
+                 "[e2e][types][datatype][string][conversion][temporal][failure][time_format]") {
   // Given Snowflake client is logged in
 
   // When Query selecting multiple time strings in alternative formats is executed
@@ -343,7 +343,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting alternative time for
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail converting alternative timestamp formats to SQL_C_TYPE_TIMESTAMP",
-                 "[datatype][string][conversion][temporal][failure][timestamp_format]") {
+                 "[e2e][types][datatype][string][conversion][temporal][failure][timestamp_format]") {
   // Given Snowflake client is logged in
 
   // When Query selecting multiple timestamp strings in alternative formats is executed

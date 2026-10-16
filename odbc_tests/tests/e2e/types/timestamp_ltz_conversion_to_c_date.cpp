@@ -7,7 +7,7 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE", "[timestamp_ltz][conversion][c_date]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE", "[e2e][types][timestamp_ltz][conversion][c_date]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -22,7 +22,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE", "[timestamp_ltz][conversion][c_dat
   CHECK(date.day == 15);
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE boundary values", "[timestamp_ltz][conversion][c_date]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE boundary values", "[e2e][types][timestamp_ltz][conversion][c_date]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -49,7 +49,8 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE boundary values", "[timestamp_ltz][c
   }
 }
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE with time truncation", "[timestamp_ltz][conversion][c_date][truncation]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE with time truncation",
+          "[e2e][types][timestamp_ltz][conversion][c_date][truncation]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -64,7 +65,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_DATE with time truncation", "[timestamp_l
   CHECK(date.day == 15);
 }
 
-TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_TYPE_DATE", "[timestamp_ltz][conversion][c_date][null]") {
+TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_TYPE_DATE", "[e2e][types][timestamp_ltz][conversion][c_date][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

@@ -11,7 +11,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR integer string to SQL_INTEGER",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -32,7 +32,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR integer string to SQ
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR negative integer string to SQL_BIGINT",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -53,7 +53,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR negative integer str
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR decimal string to SQL_DECIMAL",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(10,2))");
 
@@ -74,7 +74,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR decimal string to SQ
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR integer string to SQL_INTEGER",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -95,7 +95,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR integer string to S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR negative integer string to SQL_BIGINT",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -116,7 +116,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR negative integer st
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR decimal string to SQL_DECIMAL",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(10,2))");
 
@@ -167,7 +167,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR decimal string to S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator to SQL_INTEGER",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -187,7 +187,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR with NULL indicator to SQL_INTEGER",
-                 "[c_char][conversion][sql_fixed]") {
+                 "[e2e][types][c_char][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 

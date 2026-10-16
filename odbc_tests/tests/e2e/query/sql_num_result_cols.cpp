@@ -21,7 +21,7 @@
 // Happy Path
 // =============================================================================
 
-TEST_CASE("SQLNumResultCols returns 1 for SELECT with single column.", "[query]") {
+TEST_CASE("SQLNumResultCols returns 1 for SELECT with single column.", "[e2e][query]") {
   // Doc: "SQLNumResultCols returns the number of columns in a result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#summary
 
@@ -38,7 +38,7 @@ TEST_CASE("SQLNumResultCols returns 1 for SELECT with single column.", "[query]"
   CHECK(num_cols == 1);
 }
 
-TEST_CASE("SQLNumResultCols returns correct count for SELECT with many columns.", "[query]") {
+TEST_CASE("SQLNumResultCols returns correct count for SELECT with many columns.", "[e2e][query]") {
   // Doc: "SQLNumResultCols returns the number of columns in a result set."
   // Doc: "This count does not include a bound bookmark column."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#arguments
@@ -56,7 +56,7 @@ TEST_CASE("SQLNumResultCols returns correct count for SELECT with many columns."
   CHECK(num_cols == 5);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns correct count for SELECT * from table.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns correct count for SELECT * from table.", "[e2e][query]") {
   // Doc: "SQLNumResultCols returns the number of columns in a result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#summary
 
@@ -79,7 +79,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns correct count for 
 // Empty Result Set
 // =============================================================================
 
-TEST_CASE("SQLNumResultCols returns correct column count for empty result set.", "[query]") {
+TEST_CASE("SQLNumResultCols returns correct column count for empty result set.", "[e2e][query]") {
   // Doc: "SQLNumResultCols returns the number of columns in a result set."
   // Doc: "If the statement associated with StatementHandle does not return columns,
   //       SQLNumResultCols sets *ColumnCountPtr to 0."
@@ -102,7 +102,7 @@ TEST_CASE("SQLNumResultCols returns correct column count for empty result set.",
 // DDL / No Result Set
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns 0 after DDL statement.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns 0 after DDL statement.", "[e2e][query]") {
   // Doc: "If the statement associated with StatementHandle does not return columns,
   //       SQLNumResultCols sets *ColumnCountPtr to 0."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#comments
@@ -122,7 +122,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns 0 after DDL statem
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns correct count after calling a stored procedure.",
-                 "[query]") {
+                 "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And a stored procedure exists that returns one column
@@ -144,7 +144,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns correct count afte
 // State Errors
 // =============================================================================
 
-TEST_CASE("SQLNumResultCols returns HY010 when called on freshly allocated statement.", "[query]") {
+TEST_CASE("SQLNumResultCols returns HY010 when called on freshly allocated statement.", "[e2e][query]") {
   // Doc: "(DM) The function was called prior to calling SQLPrepare or SQLExecDirect
   //       for the StatementHandle."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#diagnostics
@@ -175,7 +175,7 @@ TEST_CASE("SQLNumResultCols returns HY010 when called on freshly allocated state
 // After SQLPrepare (before SQLExecute)
 // =============================================================================
 
-TEST_CASE("SQLNumResultCols returns column count after SQLPrepare.", "[query]") {
+TEST_CASE("SQLNumResultCols returns column count after SQLPrepare.", "[e2e][query]") {
   // Doc: "SQLNumResultCols can be called successfully only when the statement is
   //       in the prepared, executed, or positioned state."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#comments
@@ -199,7 +199,7 @@ TEST_CASE("SQLNumResultCols returns column count after SQLPrepare.", "[query]") 
 // Re-execution
 // =============================================================================
 
-TEST_CASE("SQLNumResultCols updates column count after re-execution with different query.", "[query]") {
+TEST_CASE("SQLNumResultCols updates column count after re-execution with different query.", "[e2e][query]") {
   // Doc: "SQLNumResultCols returns the number of columns in a result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#summary
 
@@ -235,7 +235,7 @@ TEST_CASE("SQLNumResultCols updates column count after re-execution with differe
 // IRD Consistency
 // =============================================================================
 
-TEST_CASE("SQLNumResultCols returns same value as SQL_DESC_COUNT of the IRD.", "[query]") {
+TEST_CASE("SQLNumResultCols returns same value as SQL_DESC_COUNT of the IRD.", "[e2e][query]") {
   // Doc: "The number of columns returned by SQLNumResultCols is the same value
   //       as the SQL_DESC_COUNT field of the IRD."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlnumresultcols-function#comments
@@ -271,7 +271,8 @@ TEST_CASE("SQLNumResultCols returns same value as SQL_DESC_COUNT of the IRD.", "
 // UNLOAD (COPY INTO location)
 // =============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns 3 for COPY INTO stage with DETAILED_OUTPUT.", "[query]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns 3 for COPY INTO stage with DETAILED_OUTPUT.",
+                 "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And a temporary stage and a table with 3 rows exist
@@ -304,7 +305,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQLNumResultCols returns 3 for COPY INTO st
 TEST_CASE_METHOD(
     ConnSchemaFixture,
     "SQLNumResultCols returns DETAILED_OUTPUT columns and one row per file for partitioned COPY INTO unload.",
-    "[query]") {
+    "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And a temporary stage and a table with 3 rows in partition a and 4 rows in partition b exist
@@ -352,7 +353,8 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture,
-                 "SQLNumResultCols returns 3 and SQLFetch returns no rows for an empty COPY INTO unload.", "[query]") {
+                 "SQLNumResultCols returns 3 and SQLFetch returns no rows for an empty COPY INTO unload.",
+                 "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And a temporary stage and an empty table exist
@@ -377,7 +379,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "SQLExecDirect fails with native error 2003 for COPY INTO a missing stage.",
-                 "[query]") {
+                 "[e2e][query]") {
   // Given Snowflake client is logged in
 
   // And a table with one row exists and the stage does not

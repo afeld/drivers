@@ -7,7 +7,8 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIMESTAMP basic values", "[timestamp_ltz][conversion][c_timestamp]") {
+TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIMESTAMP basic values",
+          "[e2e][types][timestamp_ltz][conversion][c_timestamp]") {
   // Given Snowflake client is logged in with a known session timezone
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -107,7 +108,7 @@ TEST_CASE("TIMESTAMP_LTZ to SQL_C_TYPE_TIMESTAMP basic values", "[timestamp_ltz]
   }
 }
 
-TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_TYPE_TIMESTAMP", "[timestamp_ltz][conversion][c_timestamp][null]") {
+TEST_CASE("TIMESTAMP_LTZ NULL to SQL_C_TYPE_TIMESTAMP", "[e2e][types][timestamp_ltz][conversion][c_timestamp][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

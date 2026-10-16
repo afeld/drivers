@@ -45,7 +45,7 @@ void verify_row_count_and_sequential_numbering(StatementHandleWrapper& stmt, int
   REQUIRE(row_count == expected_row_count);
 }
 
-TEST_CASE("should process one million row result set", "[large_result_set]") {
+TEST_CASE("should process one million row result set", "[e2e][query][large_result_set]") {
   // Given Snowflake client is logged in
   auto conn = get_connection();
 
@@ -61,7 +61,7 @@ TEST_CASE("should process one million row result set", "[large_result_set]") {
   verify_row_count_and_sequential_numbering(stmt, 1000000);
 }
 
-TEST_CASE("should process ten thousand string rows when initial chunk is empty", "[large_result_set]") {
+TEST_CASE("should process ten thousand string rows when initial chunk is empty", "[e2e][query][large_result_set]") {
   // Given Snowflake client is logged in
   auto conn = get_connection();
 

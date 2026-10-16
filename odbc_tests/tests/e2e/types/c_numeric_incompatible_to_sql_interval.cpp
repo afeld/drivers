@@ -27,7 +27,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to SQL_INTERVAL_YEAR_TO_MONTH",
-                 "[c_numeric][incompatible][sql_interval]") {
+                 "[e2e][types][c_numeric][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER("BD#72",
                   "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind "
                   "semantics");
@@ -46,7 +46,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SLONG bound to SQL_INTE
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SBIGINT bound to SQL_INTERVAL_DAY_TO_SECOND",
-                 "[c_numeric][incompatible][sql_interval]") {
+                 "[e2e][types][c_numeric][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(
       "BD#72",
       "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind semantics");
@@ -63,7 +63,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SBIGINT bound to SQL_IN
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SSHORT bound to SQL_INTERVAL_DAY_TO_MINUTE",
-                 "[c_numeric][incompatible][sql_interval]") {
+                 "[e2e][types][c_numeric][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(
       "BD#72",
       "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind semantics");
@@ -80,7 +80,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_SSHORT bound to SQL_INT
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_UTINYINT bound to SQL_INTERVAL_DAY_TO_HOUR",
-                 "[c_numeric][incompatible][sql_interval]") {
+                 "[e2e][types][c_numeric][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(
       "BD#72",
       "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind semantics");
@@ -97,7 +97,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_UTINYINT bound to SQL_I
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_ULONG bound to SQL_INTERVAL_HOUR_TO_SECOND",
-                 "[c_numeric][incompatible][sql_interval]") {
+                 "[e2e][types][c_numeric][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(
       "BD#72",
       "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind semantics");
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_ULONG bound to SQL_INTE
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_NUMERIC bound to SQL_INTERVAL_HOUR_TO_MINUTE",
-                 "[c_numeric][incompatible][sql_interval]") {
+                 "[e2e][types][c_numeric][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(
       "BD#72",
       "Reference driver does not implement ODBC Appendix D numeric C -> single-field SQL_INTERVAL bind semantics");

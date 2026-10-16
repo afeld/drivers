@@ -72,7 +72,7 @@ SQLRETURN poll_execute(SQLHSTMT stmt) {
 // ATTRIBUTE SETUP
 // =============================================================================
 
-TEST_CASE("should enable async execution on statement", "[query][async]") {
+TEST_CASE("should enable async execution on statement", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -85,7 +85,7 @@ TEST_CASE("should enable async execution on statement", "[query][async]") {
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::Succeeded());
 }
 
-TEST_CASE("should disable async execution on statement", "[query][async]") {
+TEST_CASE("should disable async execution on statement", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -100,7 +100,7 @@ TEST_CASE("should disable async execution on statement", "[query][async]") {
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::Succeeded());
 }
 
-TEST_CASE("should get async enable attribute value after setting it", "[query][async]") {
+TEST_CASE("should get async enable attribute value after setting it", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -118,7 +118,7 @@ TEST_CASE("should get async enable attribute value after setting it", "[query][a
   CHECK(value == SQL_ASYNC_ENABLE_ON);
 }
 
-TEST_CASE("should reject connection-level async", "[query][async]") {
+TEST_CASE("should reject connection-level async", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -132,7 +132,7 @@ TEST_CASE("should reject connection-level async", "[query][async]") {
                OdbcMatchers::IsError() && OdbcMatchers::HasSqlState(expected_async_dbc_enable_sqlstate()));
 }
 
-TEST_CASE("should handle disabling connection-level async", "[query][async]") {
+TEST_CASE("should handle disabling connection-level async", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -170,7 +170,7 @@ TEST_CASE("should handle disabling connection-level async", "[query][async]") {
 
 // [flaky]: the old reference driver can abort (simba_abort / pthread_mutex_lock)
 // when this long-running async query races with parallel ctest workers.
-TEST_CASE("should return SQL_STILL_EXECUTING for long query", "[query][async][flaky]") {
+TEST_CASE("should return SQL_STILL_EXECUTING for long query", "[e2e][query][async][flaky]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -188,7 +188,7 @@ TEST_CASE("should return SQL_STILL_EXECUTING for long query", "[query][async][fl
   poll_exec_direct(stmt.getHandle(), kLongQuery);
 }
 
-TEST_CASE("should complete async execution via polling and retrieve data", "[query][async]") {
+TEST_CASE("should complete async execution via polling and retrieve data", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -212,7 +212,7 @@ TEST_CASE("should complete async execution via polling and retrieve data", "[que
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 42);
 }
 
-TEST_CASE("should execute and retrieve result set asynchronously", "[query][async]") {
+TEST_CASE("should execute and retrieve result set asynchronously", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -246,7 +246,7 @@ TEST_CASE("should execute and retrieve result set asynchronously", "[query][asyn
 // ASYNC + STATEMENT REUSE
 // =============================================================================
 
-TEST_CASE("should allow re-execution after async completion", "[query][async]") {
+TEST_CASE("should allow re-execution after async completion", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -277,7 +277,7 @@ TEST_CASE("should allow re-execution after async completion", "[query][async]") 
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 99);
 }
 
-TEST_CASE("should allow disabling async after completion", "[query][async]") {
+TEST_CASE("should allow disabling async after completion", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -311,7 +311,7 @@ TEST_CASE("should allow disabling async after completion", "[query][async]") {
 // ASYNC PREPARE + EXECUTE
 // =============================================================================
 
-TEST_CASE("should prepare asynchronously and poll to completion", "[query][async]") {
+TEST_CASE("should prepare asynchronously and poll to completion", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -328,7 +328,7 @@ TEST_CASE("should prepare asynchronously and poll to completion", "[query][async
   REQUIRE_THAT(OdbcResult(ret, stmt), OdbcMatchers::Succeeded());
 }
 
-TEST_CASE("should execute prepared statement asynchronously", "[query][async]") {
+TEST_CASE("should execute prepared statement asynchronously", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled and a prepared statement
   Connection conn;
   auto stmt = conn.createStatement();
@@ -358,7 +358,7 @@ TEST_CASE("should execute prepared statement asynchronously", "[query][async]") 
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 123);
 }
 
-TEST_CASE("should prepare and execute with bound parameters asynchronously", "[query][async]") {
+TEST_CASE("should prepare and execute with bound parameters asynchronously", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -394,7 +394,7 @@ TEST_CASE("should prepare and execute with bound parameters asynchronously", "[q
   CHECK(get_data<SQL_C_LONG>(stmt, 1) == 456);
 }
 
-TEST_CASE("should re-execute prepared statement multiple times asynchronously", "[query][async]") {
+TEST_CASE("should re-execute prepared statement multiple times asynchronously", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled and a prepared statement
   Connection conn;
   auto stmt = conn.createStatement();
@@ -438,7 +438,7 @@ TEST_CASE("should re-execute prepared statement multiple times asynchronously", 
   }
 }
 
-TEST_CASE("should preserve prepared state after async execute and cursor close", "[query][async]") {
+TEST_CASE("should preserve prepared state after async execute and cursor close", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled and a prepared SELECT
   Connection conn;
   auto stmt = conn.createStatement();
@@ -484,7 +484,7 @@ TEST_CASE("should preserve prepared state after async execute and cursor close",
 // ASYNC CANCEL
 // =============================================================================
 
-TEST_CASE("should cancel async execution with HY008", "[query][async][cancel]") {
+TEST_CASE("should cancel async execution with HY008", "[e2e][query][async][cancel]") {
   SKIP_OLD_DRIVER("BD#32",
                   "Reference driver's SQLCancel does not interrupt in-progress async operations, so the "
                   "cancellation asserted here is unobservable; the query would only end by running to natural "
@@ -510,7 +510,7 @@ TEST_CASE("should cancel async execution with HY008", "[query][async][cancel]") 
   CHECK(get_sqlstate(stmt) == "HY008");
 }
 
-TEST_CASE("should treat SQLCancel on idle async-enabled statement as no-op", "[query][async][cancel]") {
+TEST_CASE("should treat SQLCancel on idle async-enabled statement as no-op", "[e2e][query][async][cancel]") {
   // Given Snowflake client is logged in with async enabled but no query in progress
   Connection conn;
   auto stmt = conn.createStatement();
@@ -535,7 +535,7 @@ TEST_CASE("should treat SQLCancel on idle async-enabled statement as no-op", "[q
 // CROSS-THREAD CANCEL
 // =============================================================================
 
-TEST_CASE("should cancel from another thread with HY008", "[query][async][cross_thread]") {
+TEST_CASE("should cancel from another thread with HY008", "[e2e][query][async][cross_thread]") {
   SKIP_IODBC(
       "iODBC DM posts S1010 on cross-thread SQLCancel instead of HY008 "
       "(BD#70); 274/274 fail on macos-arm-aws-iodbc, 0 fails elsewhere");
@@ -569,7 +569,7 @@ TEST_CASE("should cancel from another thread with HY008", "[query][async][cross_
 // ASYNC ERROR PATHS
 // =============================================================================
 
-TEST_CASE("should return SQL_ERROR asynchronously for invalid SQL", "[query][async]") {
+TEST_CASE("should return SQL_ERROR asynchronously for invalid SQL", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -592,7 +592,7 @@ TEST_CASE("should return SQL_ERROR asynchronously for invalid SQL", "[query][asy
 // when a non-permitted call races the still-executing async query under parallel
 // ctest workers, crashing the test subprocess. Same class as the long-query async
 // case above. Tagged flaky so the blocking reference run is not destabilized.
-TEST_CASE("should reject non-permitted function call during async execution", "[query][async][flaky]") {
+TEST_CASE("should reject non-permitted function call during async execution", "[e2e][query][async][flaky]") {
   // Given Snowflake client is logged in with async enabled and a query in progress
   Connection conn;
   auto stmt = conn.createStatement();
@@ -623,7 +623,7 @@ TEST_CASE("should reject non-permitted function call during async execution", "[
   poll_exec_direct(stmt.getHandle(), kLongQuery);
 }
 
-TEST_CASE("should clear diagnostic records between async polls", "[query][async]") {
+TEST_CASE("should clear diagnostic records between async polls", "[e2e][query][async]") {
   // Given Snowflake client is logged in with async enabled
   Connection conn;
   auto stmt = conn.createStatement();
@@ -657,7 +657,7 @@ TEST_CASE("should clear diagnostic records between async polls", "[query][async]
 // SQLGETINFO REPORTING
 // =============================================================================
 
-TEST_CASE("should report SQL_AM_STATEMENT for SQL_ASYNC_MODE", "[query][async]") {
+TEST_CASE("should report SQL_AM_STATEMENT for SQL_ASYNC_MODE", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -671,7 +671,7 @@ TEST_CASE("should report SQL_AM_STATEMENT for SQL_ASYNC_MODE", "[query][async]")
   CHECK(mode == SQL_AM_STATEMENT);
 }
 
-TEST_CASE("should report no limit for SQL_MAX_ASYNC_CONCURRENT_STATEMENTS", "[query][async]") {
+TEST_CASE("should report no limit for SQL_MAX_ASYNC_CONCURRENT_STATEMENTS", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -686,7 +686,7 @@ TEST_CASE("should report no limit for SQL_MAX_ASYNC_CONCURRENT_STATEMENTS", "[qu
   CHECK(max_stmts == 0);
 }
 
-TEST_CASE("should report SQL_ASYNC_DBC_FUNCTIONS capability", "[query][async]") {
+TEST_CASE("should report SQL_ASYNC_DBC_FUNCTIONS capability", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -702,7 +702,7 @@ TEST_CASE("should report SQL_ASYNC_DBC_FUNCTIONS capability", "[query][async]") 
   NEW_DRIVER_ONLY("BD#163") { CHECK(dbc_funcs == SQL_ASYNC_DBC_NOT_CAPABLE); }
 }
 
-TEST_CASE("should report SQL_ASYNC_NOTIFICATION_NOT_CAPABLE", "[query][async]") {
+TEST_CASE("should report SQL_ASYNC_NOTIFICATION_NOT_CAPABLE", "[e2e][query][async]") {
   // Given Snowflake client is logged in
   Connection conn;
 

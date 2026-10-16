@@ -43,7 +43,7 @@ constexpr const char* kBd55VarcharIntervalFetch = "BD#55";
 }  // namespace
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as single-field SQL_C_INTERVAL_*",
-                 "[datatype][string][conversion][interval]") {
+                 "[e2e][types][datatype][string][conversion][interval]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying bare integer values for each interval field is fetched
   auto stmt = conn.execute_fetch(
@@ -102,7 +102,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as single-field SQL_C_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should preserve negative sign across SQL_C_INTERVAL_* targets",
-                 "[datatype][string][conversion][interval]") {
+                 "[e2e][types][datatype][string][conversion][interval]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying negative interval literals is fetched
   auto stmt = conn.execute_fetch(
@@ -149,7 +149,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should preserve negative sign across SQL_C_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch zero VARCHAR as SQL_C_INTERVAL_* with unset sign",
-                 "[datatype][string][conversion][interval]") {
+                 "[e2e][types][datatype][string][conversion][interval]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying zero interval values is fetched
   auto stmt = conn.execute_fetch(
@@ -201,7 +201,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch zero VARCHAR as SQL_C_INTERVAL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as composite SQL_C_INTERVAL_YEAR_TO_MONTH",
-                 "[datatype][string][conversion][interval]") {
+                 "[e2e][types][datatype][string][conversion][interval]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying year-month interval literals is fetched
   auto stmt =
@@ -230,7 +230,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as composite SQL_C_INT
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as composite day-time SQL_C_INTERVAL_*",
-                 "[datatype][string][conversion][interval]") {
+                 "[e2e][types][datatype][string][conversion][interval]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying day-time interval literals is fetched
   auto stmt = conn.execute_fetch(
@@ -294,7 +294,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as composite day-time 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR with fractional seconds as SQL_C_INTERVAL_*",
-                 "[datatype][string][conversion][interval][fractional]") {
+                 "[e2e][types][datatype][string][conversion][interval][fractional]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying fractional-second interval literals is fetched
   auto stmt = conn.execute_fetch(
@@ -335,7 +335,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR with fractional second
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should trim whitespace in VARCHAR -> SQL_C_INTERVAL_*",
-                 "[datatype][string][conversion][interval][edge]") {
+                 "[e2e][types][datatype][string][conversion][interval][edge]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying interval literals padded with whitespace is fetched
   auto stmt = conn.execute_fetch("SELECT '  5  ' AS pad_year, '  3-6  ' AS pad_year_month");
@@ -358,7 +358,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should trim whitespace in VARCHAR -> SQL_C_
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should truncate trailing fields with SQLSTATE 01S07",
-                 "[datatype][string][conversion][interval][truncation]") {
+                 "[e2e][types][datatype][string][conversion][interval][truncation]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying literals wider than the target qualifier is fetched
   auto stmt = conn.execute_fetch(
@@ -386,7 +386,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should truncate trailing fields with SQLSTA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should truncate trailing fields in compound day-time intervals",
-                 "[datatype][string][conversion][interval][truncation]") {
+                 "[e2e][types][datatype][string][conversion][interval][truncation]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying broader day-time literals than the target qualifier is fetched
   auto stmt = conn.execute_fetch(
@@ -422,7 +422,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should truncate trailing fields in compound
 // the universal driver follows Appendix D and surfaces the truncated value
 // with SQLSTATE 01S07.
 TEST_CASE_METHOD(ConnSchemaFixture, "should warn 01S07 when fractional digits are dropped",
-                 "[datatype][string][conversion][interval][truncation][fractional]") {
+                 "[e2e][types][datatype][string][conversion][interval][truncation][fractional]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying fractional literals targeted at integer-only qualifiers is fetched
   auto stmt = conn.execute_fetch("SELECT '5.5' AS half_year");
@@ -445,7 +445,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should warn 01S07 when fractional digits ar
 // invalid (22018); the universal driver treats the zero fraction as carrying
 // no information and returns SQL_SUCCESS.
 TEST_CASE_METHOD(ConnSchemaFixture, "should not warn when fractional component is exactly zero",
-                 "[datatype][string][conversion][interval][truncation][fractional]") {
+                 "[e2e][types][datatype][string][conversion][interval][truncation][fractional]") {
   // Regression test for the audit fix: a literal like '5.0' carries a
   // syntactic fraction but its magnitude is zero, so no information is lost
   // when fetched as an integer-only qualifier. The universal driver returns
@@ -477,7 +477,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should not warn when fractional component i
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail with 22015 when leading-field precision is exceeded",
-                 "[datatype][string][conversion][interval][precision]") {
+                 "[e2e][types][datatype][string][conversion][interval][precision]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying leading-field magnitudes wider than precision = 2 is fetched
   auto stmt = conn.execute_fetch(
@@ -497,7 +497,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail with 22015 when leading-field p
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fail with 22015 when composite leading field exceeds precision",
-                 "[datatype][string][conversion][interval][precision]") {
+                 "[e2e][types][datatype][string][conversion][interval][precision]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying composite literals with overflowed leading fields is fetched
   auto stmt = conn.execute_fetch(
@@ -517,7 +517,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fail with 22015 when composite leadi
 // the universal driver honours the override and shifts the 22015 boundary
 // accordingly.
 TEST_CASE_METHOD(ConnSchemaFixture, "should respect SQL_DESC_DATETIME_INTERVAL_PRECISION override on the ARD",
-                 "[datatype][string][conversion][interval][precision][descriptor]") {
+                 "[e2e][types][datatype][string][conversion][interval][precision][descriptor]") {
   // The default leading precision is 2 (so values >= 100 overflow). Setting
   // SQL_DESC_DATETIME_INTERVAL_PRECISION on the ARD must be honoured by the
   // VARCHAR -> SQL_C_INTERVAL_* parser; we exercise both an enlargement
@@ -602,7 +602,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should respect SQL_DESC_DATETIME_INTERVAL_P
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed VARCHAR with SQLSTATE 22018",
-                 "[datatype][string][conversion][interval][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][failure]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying inputs that aren't valid interval literals is fetched
   auto stmt = conn.execute_fetch(
@@ -617,7 +617,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed VARCHAR with SQLSTA
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed year-month VARCHAR with SQLSTATE 22018",
-                 "[datatype][string][conversion][interval][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][failure]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying malformed year-month literals is fetched
   auto stmt = conn.execute_fetch(
@@ -632,7 +632,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed year-month VARCHAR 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed day-time VARCHAR with SQLSTATE 22018",
-                 "[datatype][string][conversion][interval][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][failure]") {
   // Given Snowflake client is logged in
   // When A VARCHAR row carrying malformed day-time literals is fetched
   auto stmt = conn.execute_fetch(
@@ -652,7 +652,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed day-time VARCHAR wi
 // reports SQL_NO_DATA on subsequent SQLGetData calls because the column data
 // is already consumed.
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject bare integer for every composite SQL_C_INTERVAL_* target",
-                 "[datatype][string][conversion][interval][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][failure]") {
   // Given Snowflake client is logged in
   // When A VARCHAR carrying a bare integer is fetched as each composite target
   auto stmt = conn.execute_fetch("SELECT '5' AS bare");
@@ -686,7 +686,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject bare integer for every compos
 // default precision. Both drivers reject YEAR_TO_MONTH month >= 12, the
 // reference driver with 22018 and the universal driver with 22015.
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject out-of-range field magnitudes with SQLSTATE 22015",
-                 "[datatype][string][conversion][interval][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][failure]") {
   // Per the SQLGetData diagnostics table, SQLSTATE 22015 ("Interval field
   // overflow") fires when "there was no representation of the value of the
   // SQL type in the interval C type". An interval C structure cannot
@@ -733,7 +733,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject out-of-range field magnitudes
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should accept boundary field magnitudes",
-                 "[datatype][string][conversion][interval][edge]") {
+                 "[e2e][types][datatype][string][conversion][interval][edge]") {
   // The ANSI ceiling enforced by the driver is exclusive: 24/60/12 are
   // rejected (see the 22015 case above) while the inclusive max of
   // 23/59/11 must round-trip cleanly. Pins the boundary behavior for
@@ -781,7 +781,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should accept boundary field magnitudes",
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should return SQL_NULL_DATA when VARCHAR is NULL",
-                 "[datatype][string][conversion][interval][null]") {
+                 "[e2e][types][datatype][string][conversion][interval][null]") {
   // Given Snowflake client is logged in
   // When A NULL VARCHAR is fetched as SQL_C_INTERVAL_YEAR
   auto stmt = conn.execute_fetch("SELECT NULL::STRING AS null_interval");
@@ -800,7 +800,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should return SQL_NULL_DATA when VARCHAR is
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as SQL_C_INTERVAL_YEAR via SQLBindCol",
-                 "[datatype][string][conversion][interval][bindcol]") {
+                 "[e2e][types][datatype][string][conversion][interval][bindcol]") {
   // Given Snowflake client is logged in
   // When SQLBindCol binds a SQL_INTERVAL_STRUCT to the result of a VARCHAR query
   auto stmt = conn.createStatement();
@@ -822,7 +822,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch VARCHAR as SQL_C_INTERVAL_YEAR
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed VARCHAR via SQLBindCol with SQLSTATE 22018",
-                 "[datatype][string][conversion][interval][bindcol][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][bindcol][failure]") {
   // Given Snowflake client is logged in
   // When SQLBindCol binds an interval struct against a malformed VARCHAR
   auto stmt = conn.createStatement();
@@ -848,7 +848,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject malformed VARCHAR via SQLBind
 // (SQLFetch + SQLBindCol vs. SQLGetData), so we pin both surfaces to confirm
 // they emit the same SQLSTATE.
 TEST_CASE_METHOD(ConnSchemaFixture, "should report 22015 on out-of-range trailing field via SQLBindCol",
-                 "[datatype][string][conversion][interval][bindcol][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][bindcol][failure]") {
   // Given Snowflake client is logged in
   // When SQLBindCol binds SQL_C_INTERVAL_HOUR_TO_MINUTE against '25:61'
   // (canonical-shape literal whose trailing minute=61 is outside ANSI 0..=59)
@@ -890,7 +890,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should report 22015 on out-of-range trailin
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch negative composite VARCHAR as SQL_C_INTERVAL_DAY_TO_SECOND",
-                 "[datatype][string][conversion][interval][negative]") {
+                 "[e2e][types][datatype][string][conversion][interval][negative]") {
   // Given a VARCHAR carrying a negative day-to-second interval literal
   auto stmt = conn.execute_fetch("SELECT '-2 08:15:30.250000' AS neg_day_second");
 
@@ -908,7 +908,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch negative composite VARCHAR as 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch negative composite VARCHAR as SQL_C_INTERVAL_HOUR_TO_SECOND",
-                 "[datatype][string][conversion][interval][negative]") {
+                 "[e2e][types][datatype][string][conversion][interval][negative]") {
   // Given a VARCHAR carrying a negative hour-to-second interval literal
   auto stmt = conn.execute_fetch("SELECT '-12:30:45' AS neg_hour_second");
 
@@ -924,7 +924,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch negative composite VARCHAR as 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should fetch negative composite VARCHAR as SQL_C_INTERVAL_MINUTE_TO_SECOND",
-                 "[datatype][string][conversion][interval][negative]") {
+                 "[e2e][types][datatype][string][conversion][interval][negative]") {
   // Given a VARCHAR carrying a negative minute-to-second interval literal with fractional seconds
   auto stmt = conn.execute_fetch("SELECT '-45:30.750000' AS neg_minute_second");
 
@@ -940,7 +940,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should fetch negative composite VARCHAR as 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should set sign bit on negative fractional-only SQL_C_INTERVAL_SECOND",
-                 "[datatype][string][conversion][interval][negative][fractional]") {
+                 "[e2e][types][datatype][string][conversion][interval][negative][fractional]") {
   // Given a VARCHAR whose magnitude lives entirely in the fractional part
   auto stmt = conn.execute_fetch("SELECT '-0.5' AS neg_half_second");
 
@@ -956,7 +956,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should set sign bit on negative fractional-
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should warn 01S07 on sub-microsecond fractional truncation",
-                 "[datatype][string][conversion][interval][truncation][fractional]") {
+                 "[e2e][types][datatype][string][conversion][interval][truncation][fractional]") {
   // Given VARCHARs whose fractional parts carry more than 6 significant digits
   auto stmt = conn.execute_fetch(
       "SELECT '12:30:45.1234567' AS hour_second_extra, "
@@ -990,7 +990,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should warn 01S07 on sub-microsecond fracti
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should reject malformed VARCHAR for representative composite SQL_C_INTERVAL_* targets",
-                 "[datatype][string][conversion][interval][negative][failure]") {
+                 "[e2e][types][datatype][string][conversion][interval][negative][failure]") {
   // The four day-time-only composite targets (DAY_TO_HOUR / DAY_TO_SECOND /
   // HOUR_TO_SECOND / MINUTE_TO_SECOND) are already covered by
   // `should reject malformed day-time VARCHAR with SQLSTATE 22018` above; this

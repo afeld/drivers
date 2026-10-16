@@ -78,7 +78,7 @@ void check_wchar_hex_literal_round_trip(Connection& conn, const std::string& col
 // ----------------------------------------------------------------------------
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR uppercase hex literal to SQL_BINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   // When the uppercase hex literal "DEADBEEF" is bound as SQL_C_CHAR -> SQL_BINARY and executed
   // Then the driver decodes the literal and the round-trip returns 4 bytes 0xDE 0xAD 0xBE 0xEF
@@ -87,7 +87,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR uppercase hex litera
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR lowercase hex literal to SQL_BINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   // When the lowercase hex literal "deadbeef" is bound as SQL_C_CHAR -> SQL_BINARY and executed
   // Then the driver decodes the literal case-insensitively and the round-trip returns 4 bytes 0xDE 0xAD 0xBE 0xEF
@@ -96,7 +96,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR lowercase hex litera
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR mixed-case hex literal to SQL_BINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   // When the mixed-case hex literal "DeAdBeEf" is bound as SQL_C_CHAR -> SQL_BINARY and executed
   // Then the driver decodes the literal case-insensitively and the round-trip returns 4 bytes 0xDE 0xAD 0xBE 0xEF
@@ -105,7 +105,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR mixed-case hex liter
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR hex literal to SQL_VARBINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary VARBINARY column exists
   // When the hex literal "DEADBEEF" is bound as SQL_C_CHAR -> SQL_VARBINARY and executed
   // Then the round-trip returns 4 bytes 0xDE 0xAD 0xBE 0xEF
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR hex literal to SQL_V
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR hex literal to SQL_LONGVARBINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists (Snowflake exposes BINARY as the
   // single variable-length binary class for which SQL_LONGVARBINARY is the
   // ODBC alias)
@@ -130,7 +130,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR hex literal to SQL_L
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should bind SQL_C_CHAR odd-length hex literal to SQL_BINARY dropping the leftover nibble",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   conn.execute("CREATE TEMPORARY TABLE t (col BINARY)");
 
@@ -158,7 +158,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR non-hex characters bound to SQL_BINARY",
-                 "[c_char][conversion][sql_binary][negative]") {
+                 "[e2e][types][c_char][conversion][sql_binary][negative]") {
   // Given a temporary BINARY column exists
   conn.execute("CREATE TEMPORARY TABLE t (col BINARY)");
 
@@ -182,7 +182,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_CHAR non-hex characters
 // ----------------------------------------------------------------------------
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR uppercase hex literal to SQL_BINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   // When the UTF-16 uppercase hex literal L"DEADBEEF" is bound as SQL_C_WCHAR -> SQL_BINARY and executed
   // Then the driver transcodes to ASCII, decodes the literal, and the round-trip returns 4 bytes 0xDE 0xAD 0xBE 0xEF
@@ -191,7 +191,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR uppercase hex liter
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR lowercase hex literal to SQL_BINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   // When the UTF-16 lowercase hex literal L"deadbeef" is bound as SQL_C_WCHAR -> SQL_BINARY and executed
   // Then the driver transcodes and decodes case-insensitively, returning 4 bytes 0xDE 0xAD 0xBE 0xEF on round-trip
@@ -200,7 +200,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR lowercase hex liter
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR hex literal to SQL_VARBINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary VARBINARY column exists
   // When the UTF-16 hex literal L"DEADBEEF" is bound as SQL_C_WCHAR -> SQL_VARBINARY and executed
   // Then the round-trip returns 4 bytes 0xDE 0xAD 0xBE 0xEF
@@ -209,7 +209,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR hex literal to SQL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR hex literal to SQL_LONGVARBINARY and read back bytes",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists (Snowflake exposes BINARY as the
   // single variable-length binary class for which SQL_LONGVARBINARY is the
   // ODBC alias)
@@ -225,7 +225,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR hex literal to SQL_
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should bind SQL_C_WCHAR odd-length hex literal to SQL_BINARY dropping the leftover nibble",
-                 "[c_char][conversion][sql_binary]") {
+                 "[e2e][types][c_char][conversion][sql_binary]") {
   // Given a temporary BINARY column exists
   conn.execute("CREATE TEMPORARY TABLE t (col BINARY)");
 

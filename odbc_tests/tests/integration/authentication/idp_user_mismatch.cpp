@@ -28,7 +28,7 @@ using Catch::Matchers::ContainsSubstring;
 /// which the old driver cannot reach here - suppressing the browser launch
 /// relies on SF_TEST_BROWSER_OPENER, which only sf_core reads.
 TEST_CASE("should reject external browser login when the IdP user differs from the connection user",
-          "[external_browser_auth][idp_user_mismatch]") {
+          "[integration][authentication][external_browser_auth][idp_user_mismatch]") {
   SKIP_OLD_DRIVER("BD#140", "Old driver has no SF_TEST_BROWSER_OPENER override, so it cannot run the mocked flow");
   EnvOverride browser_env("SF_TEST_BROWSER_OPENER", "noop");
 

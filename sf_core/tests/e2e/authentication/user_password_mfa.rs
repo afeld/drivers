@@ -55,7 +55,7 @@ fn should_authenticate_using_username_password_with_appended_totp_passcode() {
 
 #[test]
 #[ignore = "E2E will be enabled within: SNOW-3252862"]
-fn should_fail_authentication_when_wrong_password_is_provided() {
+fn should_fail_mfa_authentication_when_wrong_password_is_provided() {
     //Given Authentication is set to username_password_mfa and user is provided but password is skipped or invalid
     let client = SnowflakeTestClient::with_default_params();
     set_auth_to_user_password_mfa(&client);

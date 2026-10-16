@@ -10,7 +10,7 @@
 #include "get_data.hpp"
 #include "odbc_matchers.hpp"
 
-TEST_CASE_METHOD(ConnSchemaFixture, "SQL_C_BIT spec compliance", "[fixed][conversion][c_bit]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "SQL_C_BIT spec compliance", "[e2e][types][fixed][conversion][c_bit]") {
   // Given A Snowflake connection is established
   {
     INFO("0 and 1 succeed");
@@ -71,7 +71,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "SQL_C_BIT spec compliance", "[fixed][conver
   }
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_BIT", "[fixed][conversion][c_bit][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "NUMBER NULL to SQL_C_BIT", "[e2e][types][fixed][conversion][c_bit][null]") {
   // Given A Snowflake connection is established
   // When A NULL NUMBER value is queried
   auto stmt = conn.execute_fetch("SELECT NULL::NUMBER(10,0)");

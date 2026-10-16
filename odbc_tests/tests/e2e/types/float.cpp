@@ -36,7 +36,7 @@ constexpr double FLOAT_REALISTIC_MAX = 1.79769313486231e+308;
 // TYPE CASTING
 // ============================================================================
 
-TEST_CASE("should cast float values to appropriate type for float and synonyms", "[float]") {
+TEST_CASE("should cast float values to appropriate type for float and synonyms", "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -100,7 +100,7 @@ TEST_CASE("should cast float values to appropriate type for float and synonyms",
 // SELECT WITH LITERALS (no tables)
 // ============================================================================
 
-TEST_CASE("should select float literals for float and synonyms", "[float]") {
+TEST_CASE("should select float literals for float and synonyms", "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -115,7 +115,7 @@ TEST_CASE("should select float literals for float and synonyms", "[float]") {
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 5) == Catch::Approx(-123.456));
 }
 
-TEST_CASE("should handle special float values from literals for float and synonyms", "[float]") {
+TEST_CASE("should handle special float values from literals for float and synonyms", "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -128,7 +128,7 @@ TEST_CASE("should handle special float values from literals for float and synony
   CHECK(is_negative_infinity_str(get_data<SQL_C_CHAR>(stmt, 3)));
 }
 
-TEST_CASE("should handle float case boundary values from literals for float and synonyms", "[float]") {
+TEST_CASE("should handle float case boundary values from literals for float and synonyms", "[e2e][types][float]") {
   SKIP_FOR_JSON_RESULT_SET("JSON format loses precision for Double.MAX_VALUE boundary values");
 
   // Given Snowflake client is logged in
@@ -157,7 +157,7 @@ TEST_CASE("should handle float case boundary values from literals for float and 
   }
 }
 
-TEST_CASE("should handle float precision boundary values from literals for float and synonyms", "[float]") {
+TEST_CASE("should handle float precision boundary values from literals for float and synonyms", "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -169,7 +169,8 @@ TEST_CASE("should handle float precision boundary values from literals for float
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 2) == Catch::Approx(1234567890123456.0));
 }
 
-TEST_CASE("should handle realistic large float case boundary values from literals for float and synonyms", "[float]") {
+TEST_CASE("should handle realistic large float case boundary values from literals for float and synonyms",
+          "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -188,7 +189,7 @@ TEST_CASE("should handle realistic large float case boundary values from literal
   CHECK_FALSE(std::isinf(val2));
 }
 
-TEST_CASE("should handle NULL values from literals for float and synonyms", "[float]") {
+TEST_CASE("should handle NULL values from literals for float and synonyms", "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -201,7 +202,8 @@ TEST_CASE("should handle NULL values from literals for float and synonyms", "[fl
   CHECK(get_data_optional<SQL_C_DOUBLE>(stmt, 3) == std::nullopt);
 }
 
-TEST_CASE("should download large result set with multiple chunks from GENERATOR for float and synonyms", "[float]") {
+TEST_CASE("should download large result set with multiple chunks from GENERATOR for float and synonyms",
+          "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -236,7 +238,7 @@ TEST_CASE("should download large result set with multiple chunks from GENERATOR 
 // TABLE OPERATIONS
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select floats from table for float and synonyms", "[float]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select floats from table for float and synonyms", "[e2e][types][float]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists with values [0.0, 123.456, -789.012, 1.23e5, -9.87e-3]
@@ -266,7 +268,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select floats from table for float a
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 1) == Catch::Approx(-0.00987));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle special float values from table for float and synonyms", "[float]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle special float values from table for float and synonyms",
+                 "[e2e][types][float]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists with values [NaN, inf, -inf, 42.0, -42.0]
@@ -300,7 +303,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle special float values from tab
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should handle float boundary values from table for float and synonyms",
-                 "[float]") {
+                 "[e2e][types][float]") {
   SKIP_FOR_JSON_RESULT_SET("JSON format loses precision for Double.MAX_VALUE boundary values");
   // Given Snowflake client is logged in
 
@@ -338,7 +341,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle float boundary values from ta
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 1) == Catch::Approx(123456789012345.0));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table for float and synonyms", "[float]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table for float and synonyms",
+                 "[e2e][types][float]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists with values [NULL, 123.456, NULL, -789.012]
@@ -364,7 +368,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should handle NULL values from table for fl
   CHECK(get_data<SQL_C_DOUBLE>(stmt, 1) == Catch::Approx(-789.012));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select large result set from table for float and synonyms", "[float]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select large result set from table for float and synonyms",
+                 "[e2e][types][float]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists with 50000 sequential values
@@ -401,7 +406,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select large result set from table f
 // PARAMETER BINDING
 // ============================================================================
 
-TEST_CASE("should select float using parameter binding for float and synonyms", "[float]") {
+TEST_CASE("should select float using parameter binding for float and synonyms", "[e2e][types][float]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -454,7 +459,8 @@ TEST_CASE("should select float using parameter binding for float and synonyms", 
   CHECK(get_data_optional<SQL_C_DOUBLE>(stmt2, 1) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert float using parameter binding for float and synonyms", "[float]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert float using parameter binding for float and synonyms",
+                 "[e2e][types][float]") {
   // Given Snowflake client is logged in
 
   // And Table with <type> column exists

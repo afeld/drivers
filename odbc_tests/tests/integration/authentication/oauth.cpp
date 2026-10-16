@@ -127,7 +127,8 @@ std::string concat_diag_messages_lower(const std::vector<DiagRec>& records) {
 // OAuth Client Credentials (CC) — required-parameter validation
 // =============================================================================
 
-TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when client_id is missing", "[oauth_int]") {
+TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when client_id is missing",
+          "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests OAuth CC required-param validation");
 
   // Given Authentication is set to OAUTH_CLIENT_CREDENTIALS without oauth_client_id
@@ -148,7 +149,8 @@ TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when client_id is missing", "[oa
   CHECK(diag_contains_missing(records, "oauth_client_id"));
 }
 
-TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when client_secret is missing", "[oauth_int]") {
+TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when client_secret is missing",
+          "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests OAuth CC required-param validation");
 
   // Given Authentication is set to OAUTH_CLIENT_CREDENTIALS without oauth_client_secret
@@ -169,7 +171,8 @@ TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when client_secret is missing", 
   CHECK(diag_contains_missing(records, "oauth_client_secret"));
 }
 
-TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when token_request_url is missing", "[oauth_int]") {
+TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when token_request_url is missing",
+          "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests OAuth CC required-param validation");
 
   // Given Authentication is set to OAUTH_CLIENT_CREDENTIALS without oauth_token_request_url
@@ -194,7 +197,7 @@ TEST_CASE("should fail OAUTH_CLIENT_CREDENTIALS when token_request_url is missin
 // Legacy AUTHENTICATOR=OAUTH (pre-acquired access token)
 // =============================================================================
 
-TEST_CASE("should forward AUTHENTICATOR=OAUTH with TOKEN to core", "[oauth_int]") {
+TEST_CASE("should forward AUTHENTICATOR=OAUTH with TOKEN to core", "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests legacy OAuth token forwarding");
 
   // Given Authentication is set to legacy OAUTH with a pre-acquired access token
@@ -214,7 +217,7 @@ TEST_CASE("should forward AUTHENTICATOR=OAUTH with TOKEN to core", "[oauth_int]"
   CHECK_FALSE(diag_contains_missing(records, "token"));
 }
 
-TEST_CASE("should fail AUTHENTICATOR=OAUTH when TOKEN is missing", "[oauth_int]") {
+TEST_CASE("should fail AUTHENTICATOR=OAUTH when TOKEN is missing", "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests legacy OAuth required-param validation");
 
   // Given Authentication is set to legacy OAUTH without a TOKEN
@@ -235,7 +238,7 @@ TEST_CASE("should fail AUTHENTICATOR=OAUTH when TOKEN is missing", "[oauth_int]"
 // AUTHENTICATOR value handling (case-insensitivity, unknown values)
 // =============================================================================
 
-TEST_CASE("should accept lowercase oauth authenticator value", "[oauth_int]") {
+TEST_CASE("should accept lowercase oauth authenticator value", "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests legacy OAuth authenticator normalisation");
 
   // Given Authentication is set to lowercase oauth with a TOKEN
@@ -257,7 +260,7 @@ TEST_CASE("should accept lowercase oauth authenticator value", "[oauth_int]") {
   CHECK(lower.find("unknown authenticator") == std::string::npos);
 }
 
-TEST_CASE("should fail when AUTHENTICATOR is an unknown OAuth-like value", "[oauth_int]") {
+TEST_CASE("should fail when AUTHENTICATOR is an unknown OAuth-like value", "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: tests unknown OAuth authenticator rejection");
 
   // Given Authentication is set to a typo of an OAuth flow name
@@ -286,7 +289,7 @@ TEST_CASE("should fail when AUTHENTICATOR is an unknown OAuth-like value", "[oau
 // Secret redaction in driver logs
 // =============================================================================
 
-TEST_CASE("should not echo OAUTH_CLIENT_SECRET in diagnostics", "[oauth_int]") {
+TEST_CASE("should not echo OAUTH_CLIENT_SECRET in diagnostics", "[integration][authentication][oauth_int]") {
   SKIP_OLD_DRIVER("", "New-driver-only: secret redaction in OAuth diagnostics");
 
   // Given Authentication is set to OAUTH_CLIENT_CREDENTIALS with a distinctive client secret literal

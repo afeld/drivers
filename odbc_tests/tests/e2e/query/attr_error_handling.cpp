@@ -9,7 +9,7 @@
 #include "get_diag_rec.hpp"
 #include "sf_odbc.h"
 
-TEST_CASE("SQLGetStmtAttr with negative buffer length returns HY090.") {
+TEST_CASE("SQLGetStmtAttr with negative buffer length returns HY090.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -24,7 +24,7 @@ TEST_CASE("SQLGetStmtAttr with negative buffer length returns HY090.") {
   NEW_DRIVER_ONLY("BD#53") { CHECK(get_sqlstate(stmt) == "HY090"); }
 }
 
-TEST_CASE("SQLGetStmtAttr string attribute truncation returns SQL_SUCCESS_WITH_INFO.") {
+TEST_CASE("SQLGetStmtAttr string attribute truncation returns SQL_SUCCESS_WITH_INFO.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -48,7 +48,7 @@ TEST_CASE("SQLGetStmtAttr string attribute truncation returns SQL_SUCCESS_WITH_I
   CHECK(len > static_cast<SQLINTEGER>(sizeof(wbuf)));
 }
 
-TEST_CASE("SQLGetStmtAttr with invalid attribute identifier returns HY092.") {
+TEST_CASE("SQLGetStmtAttr with invalid attribute identifier returns HY092.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -63,7 +63,7 @@ TEST_CASE("SQLGetStmtAttr with invalid attribute identifier returns HY092.") {
   CHECK(get_sqlstate(stmt) == "HY092");
 }
 
-TEST_CASE("SQLGetConnectAttr with negative buffer length returns HY090.") {
+TEST_CASE("SQLGetConnectAttr with negative buffer length returns HY090.", "[e2e][query]") {
   // Given Snowflake client is logged in
   Connection conn;
 

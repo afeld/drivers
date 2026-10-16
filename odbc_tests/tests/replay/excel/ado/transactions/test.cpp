@@ -15,7 +15,7 @@
 // SNOW-4160000: retry HYT00 on this replay's 15s login timeout (Windows CI).
 #define SQLDriverConnect sql_driver_connect_retry_hyt00
 
-TEST_CASE("Replay: excel vba_ado transactions", "[excel][vba_ado][transactions]") {
+TEST_CASE("Replay: excel vba_ado transactions", "[replay][excel][vba_ado][transactions]") {
   auto config = DataSourceConfig::Snowflake().install();
 
   SQLHENV env0 = SQL_NULL_HENV;

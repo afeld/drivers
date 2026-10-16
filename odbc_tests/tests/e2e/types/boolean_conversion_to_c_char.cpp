@@ -14,7 +14,7 @@
 // SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("should convert boolean to SQL_C_CHAR", "[datatype][boolean][conversion][char]") {
+TEST_CASE("should convert boolean to SQL_C_CHAR", "[e2e][types][datatype][boolean][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -30,7 +30,7 @@ TEST_CASE("should convert boolean to SQL_C_CHAR", "[datatype][boolean][conversio
 // SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("should convert boolean to SQL_C_WCHAR", "[datatype][boolean][conversion][char]") {
+TEST_CASE("should convert boolean to SQL_C_WCHAR", "[e2e][types][datatype][boolean][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -46,7 +46,8 @@ TEST_CASE("should convert boolean to SQL_C_WCHAR", "[datatype][boolean][conversi
 // SQLBindCol — SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("should convert boolean using SQLBindCol for SQL_C_CHAR", "[datatype][boolean][conversion][char]") {
+TEST_CASE("should convert boolean using SQLBindCol for SQL_C_CHAR",
+          "[e2e][types][datatype][boolean][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -80,7 +81,7 @@ TEST_CASE("should convert boolean using SQLBindCol for SQL_C_CHAR", "[datatype][
 // NULL handling
 // ============================================================================
 
-TEST_CASE("should handle NULL boolean with c_type", "[datatype][boolean][conversion][char]") {
+TEST_CASE("should handle NULL boolean with c_type", "[e2e][types][datatype][boolean][conversion][char]") {
   // Given Snowflake client is logged in
   Connection conn;
 

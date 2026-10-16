@@ -77,7 +77,7 @@ void bind_time(const StatementHandleWrapper& stmt, SQLUSMALLINT param, SQL_TIME_
 
 }  // namespace
 
-TEST_CASE("should cast time values to appropriate type", "[time]") {
+TEST_CASE("should cast time values to appropriate type", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -93,7 +93,7 @@ TEST_CASE("should cast time values to appropriate type", "[time]") {
   require_time(get_data<SQL_C_TYPE_TIME>(stmt, 3), 23, 59, 59);
 }
 
-TEST_CASE("should select time values", "[time]") {
+TEST_CASE("should select time values", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -126,7 +126,7 @@ TEST_CASE("should select time values", "[time]") {
   }
 }
 
-TEST_CASE("should handle time precision scale", "[time]") {
+TEST_CASE("should handle time precision scale", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -156,7 +156,7 @@ TEST_CASE("should handle time precision scale", "[time]") {
   }
 }
 
-TEST_CASE("should preserve nanosecond precision for time", "[time]") {
+TEST_CASE("should preserve nanosecond precision for time", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -167,7 +167,7 @@ TEST_CASE("should preserve nanosecond precision for time", "[time]") {
   require_time_ts(get_data<SQL_C_TYPE_TIMESTAMP>(stmt, 1), 10, 30, 0, 123456789);
 }
 
-TEST_CASE("should handle NULL values for time", "[time]") {
+TEST_CASE("should handle NULL values for time", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -180,7 +180,7 @@ TEST_CASE("should handle NULL values for time", "[time]") {
   require_time(get_data<SQL_C_TYPE_TIME>(stmt, 3), 23, 59, 59);
 }
 
-TEST_CASE("should download large result set with multiple chunks for time", "[time]") {
+TEST_CASE("should download large result set with multiple chunks for time", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -197,7 +197,7 @@ TEST_CASE("should download large result set with multiple chunks for time", "[ti
   require_sequential_times(stmt, 100000);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for time", "[time]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for time", "[e2e][types][time]") {
   // Given Snowflake client is logged in
 
   struct Case {
@@ -266,7 +266,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select values from table for time", 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multiple chunks from table for time",
-                 "[time]") {
+                 "[e2e][types][time]") {
   // Given Snowflake client is logged in
 
   // And Table with TIME column exists with 100000 sequential time values starting from 00:00:00
@@ -285,7 +285,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should download large result set with multi
   require_sequential_times(stmt, 100000);
 }
 
-TEST_CASE("should select time using parameter binding", "[time]") {
+TEST_CASE("should select time using parameter binding", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -312,7 +312,7 @@ TEST_CASE("should select time using parameter binding", "[time]") {
   require_time(get_data<SQL_C_TYPE_TIME>(stmt, 3), 23, 59, 59);
 }
 
-TEST_CASE("should select null time using parameter binding", "[time]") {
+TEST_CASE("should select null time using parameter binding", "[e2e][types][time]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -332,7 +332,7 @@ TEST_CASE("should select null time using parameter binding", "[time]") {
   REQUIRE(get_data_optional<SQL_C_TYPE_TIME>(stmt, 1) == std::nullopt);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert time using parameter binding", "[time]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert time using parameter binding", "[e2e][types][time]") {
   // Given Snowflake client is logged in
 
   // And Table with TIME column exists
@@ -374,7 +374,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert time using parameter binding"
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should insert time with fractional seconds using parameter binding", "[time]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should insert time with fractional seconds using parameter binding",
+                 "[e2e][types][time]") {
   // Given Snowflake client is logged in
 
   // And Table with TIME column exists

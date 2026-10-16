@@ -13,7 +13,7 @@
 // BASIC INTEGER CONVERSIONS
 // ============================================================================
 
-TEST_CASE("DECFLOAT to integer C types", "[decfloat][conversion][c_integer]") {
+TEST_CASE("DECFLOAT to integer C types", "[e2e][types][decfloat][conversion][c_integer]") {
   // Given Snowflake client is logged in
   Connection conn;
   const std::string query = "SELECT 42::DECFLOAT";
@@ -71,7 +71,7 @@ TEST_CASE("DECFLOAT to integer C types", "[decfloat][conversion][c_integer]") {
 // FRACTIONAL TRUNCATION
 // ============================================================================
 
-TEST_CASE("DECFLOAT fractional truncation to integer C types", "[decfloat][conversion][c_integer]") {
+TEST_CASE("DECFLOAT fractional truncation to integer C types", "[e2e][types][decfloat][conversion][c_integer]") {
   // Given Snowflake client is logged in
   Connection conn;
   const std::string query = "SELECT 123.456::DECFLOAT";
@@ -93,7 +93,7 @@ TEST_CASE("DECFLOAT fractional truncation to integer C types", "[decfloat][conve
 // OVERFLOW
 // ============================================================================
 
-TEST_CASE("DECFLOAT overflow to integer C types", "[decfloat][conversion][c_integer][overflow]") {
+TEST_CASE("DECFLOAT overflow to integer C types", "[e2e][types][decfloat][conversion][c_integer][overflow]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -118,7 +118,7 @@ TEST_CASE("DECFLOAT overflow to integer C types", "[decfloat][conversion][c_inte
 // TYPE BOUNDARIES
 // ============================================================================
 
-TEST_CASE("DECFLOAT integer type boundaries", "[decfloat][conversion][c_integer][limits]") {
+TEST_CASE("DECFLOAT integer type boundaries", "[e2e][types][decfloat][conversion][c_integer][limits]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -183,7 +183,7 @@ TEST_CASE("DECFLOAT integer type boundaries", "[decfloat][conversion][c_integer]
 // PER-TYPE OVERFLOW (22003)
 // ============================================================================
 
-TEST_CASE("DECFLOAT per-type integer overflow", "[decfloat][conversion][c_integer][22003]") {
+TEST_CASE("DECFLOAT per-type integer overflow", "[e2e][types][decfloat][conversion][c_integer][22003]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -256,7 +256,8 @@ TEST_CASE("DECFLOAT per-type integer overflow", "[decfloat][conversion][c_intege
 // FRACTIONAL TRUNCATION - ALL TYPES
 // ============================================================================
 
-TEST_CASE("DECFLOAT fractional truncation for all integer types", "[decfloat][conversion][c_integer][01S07]") {
+TEST_CASE("DECFLOAT fractional truncation for all integer types",
+          "[e2e][types][decfloat][conversion][c_integer][01S07]") {
   // Given Snowflake client is logged in
   Connection conn;
   const std::string query = "SELECT 123.789::DECFLOAT";
@@ -281,7 +282,7 @@ TEST_CASE("DECFLOAT fractional truncation for all integer types", "[decfloat][co
 // POSITIVE EXPONENT
 // ============================================================================
 
-TEST_CASE("DECFLOAT with positive exponent to integer", "[decfloat][conversion][c_integer]") {
+TEST_CASE("DECFLOAT with positive exponent to integer", "[e2e][types][decfloat][conversion][c_integer]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -306,7 +307,7 @@ TEST_CASE("DECFLOAT with positive exponent to integer", "[decfloat][conversion][
 // TINY VALUE TRUNCATION
 // ============================================================================
 
-TEST_CASE("DECFLOAT tiny value to integer truncates to zero", "[decfloat][conversion][c_integer][01S07]") {
+TEST_CASE("DECFLOAT tiny value to integer truncates to zero", "[e2e][types][decfloat][conversion][c_integer][01S07]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -320,7 +321,7 @@ TEST_CASE("DECFLOAT tiny value to integer truncates to zero", "[decfloat][conver
 // SQLBindCol
 // ============================================================================
 
-TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_LONG", "[decfloat][conversion][c_integer][bindcol]") {
+TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_LONG", "[e2e][types][decfloat][conversion][c_integer][bindcol]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -350,7 +351,7 @@ TEST_CASE("DECFLOAT using SQLBindCol for SQL_C_LONG", "[decfloat][conversion][c_
 // NULL handling
 // ============================================================================
 
-TEST_CASE("DECFLOAT NULL to integer C types", "[decfloat][conversion][c_integer][null]") {
+TEST_CASE("DECFLOAT NULL to integer C types", "[e2e][types][decfloat][conversion][c_integer][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

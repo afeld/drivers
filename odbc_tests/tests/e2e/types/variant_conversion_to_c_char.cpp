@@ -28,7 +28,7 @@ static void check_json_eq(const std::string& actual, const std::string& expected
 // SQL_C_CHAR
 // ============================================================================
 
-TEST_CASE("VARIANT to SQL_C_CHAR", "[variant][conversion][c_char]") {
+TEST_CASE("VARIANT to SQL_C_CHAR", "[e2e][types][variant][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -53,7 +53,7 @@ TEST_CASE("VARIANT to SQL_C_CHAR", "[variant][conversion][c_char]") {
   CHECK(bool_f == "false");
 }
 
-TEST_CASE("VARIANT to SQL_C_CHAR nested", "[variant][conversion][c_char]") {
+TEST_CASE("VARIANT to SQL_C_CHAR nested", "[e2e][types][variant][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -66,7 +66,7 @@ TEST_CASE("VARIANT to SQL_C_CHAR nested", "[variant][conversion][c_char]") {
   check_json_eq(arr_of_obj, R"([{"x":1},{"y":2}])");
 }
 
-TEST_CASE("VARIANT to SQL_C_CHAR with special characters", "[variant][conversion][c_char]") {
+TEST_CASE("VARIANT to SQL_C_CHAR with special characters", "[e2e][types][variant][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -81,7 +81,7 @@ TEST_CASE("VARIANT to SQL_C_CHAR with special characters", "[variant][conversion
   CHECK(json2.is<picojson::object>());
 }
 
-TEST_CASE("VARIANT to SQL_C_CHAR truncation", "[variant][conversion][c_char][01004]") {
+TEST_CASE("VARIANT to SQL_C_CHAR truncation", "[e2e][types][variant][conversion][c_char][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -98,7 +98,7 @@ TEST_CASE("VARIANT to SQL_C_CHAR truncation", "[variant][conversion][c_char][010
   CHECK(records[0].sqlState == "01004");
 }
 
-TEST_CASE("VARIANT NULL to SQL_C_CHAR", "[variant][conversion][c_char][null]") {
+TEST_CASE("VARIANT NULL to SQL_C_CHAR", "[e2e][types][variant][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -109,7 +109,7 @@ TEST_CASE("VARIANT NULL to SQL_C_CHAR", "[variant][conversion][c_char][null]") {
   check_null_via_get_data(stmt, 1, SQL_C_CHAR);
 }
 
-TEST_CASE("VARIANT to SQL_C_CHAR scalar values", "[variant][conversion][c_char]") {
+TEST_CASE("VARIANT to SQL_C_CHAR scalar values", "[e2e][types][variant][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -128,7 +128,7 @@ TEST_CASE("VARIANT to SQL_C_CHAR scalar values", "[variant][conversion][c_char]"
   CHECK(str_val == "\"hello\"");
 }
 
-TEST_CASE("VARIANT to SQL_C_CHAR parse_json NULL", "[variant][conversion][c_char]") {
+TEST_CASE("VARIANT to SQL_C_CHAR parse_json NULL", "[e2e][types][variant][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -145,7 +145,7 @@ TEST_CASE("VARIANT to SQL_C_CHAR parse_json NULL", "[variant][conversion][c_char
 // SQL_C_WCHAR
 // ============================================================================
 
-TEST_CASE("VARIANT to SQL_C_WCHAR", "[variant][conversion][c_char]") {
+TEST_CASE("VARIANT to SQL_C_WCHAR", "[e2e][types][variant][conversion][c_char]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -158,7 +158,7 @@ TEST_CASE("VARIANT to SQL_C_WCHAR", "[variant][conversion][c_char]") {
   check_json_eq(sf::wide::utf32_to_utf8(empty), "{}");
 }
 
-TEST_CASE("VARIANT to SQL_C_WCHAR truncation", "[variant][conversion][c_char][01004]") {
+TEST_CASE("VARIANT to SQL_C_WCHAR truncation", "[e2e][types][variant][conversion][c_char][01004]") {
   // Given Snowflake client is logged in
   Connection conn;
 
@@ -175,7 +175,7 @@ TEST_CASE("VARIANT to SQL_C_WCHAR truncation", "[variant][conversion][c_char][01
   CHECK(records[0].sqlState == "01004");
 }
 
-TEST_CASE("VARIANT NULL to SQL_C_WCHAR", "[variant][conversion][c_char][null]") {
+TEST_CASE("VARIANT NULL to SQL_C_WCHAR", "[e2e][types][variant][conversion][c_char][null]") {
   // Given Snowflake client is logged in
   Connection conn;
 

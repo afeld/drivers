@@ -16,7 +16,7 @@ using namespace pg_utils;
 
 // SNOW-3704966 (BD#92): GET into a missing local directory. The universal driver
 // creates the directory tree before writing (like Python/JDBC); legacy ODBC fails.
-TEST_CASE("should create the local destination directory when it is missing on GET", "[put_get]") {
+TEST_CASE("should create the local destination directory when it is missing on GET", "[e2e][put_get]") {
   // Given a CSV file uploaded to a temporary stage
   Connection conn;
   const std::string stage = create_stage(conn, unique_stage_name("ODBCTST_GET_MKDIR"));

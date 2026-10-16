@@ -34,7 +34,7 @@ CursorShape captureShape(StatementHandleWrapper& stmt) {
 }  // namespace
 
 TEST_CASE("should report correct cursor shape for each result set in a DDL + DML + DDL batch",
-          "[query][multistatement]") {
+          "[e2e][query][multistatement]") {
   // SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT reaches the driver under iODBC
   // via the SetStmtOption shim
   // Given Snowflake client is logged in
@@ -91,7 +91,7 @@ TEST_CASE("should report correct cursor shape for each result set in a DDL + DML
   CHECK(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("should not open a cursor for any statement in a TCL-only batch", "[query][multistatement]") {
+TEST_CASE("should not open a cursor for any statement in a TCL-only batch", "[e2e][query][multistatement]") {
   // SQL_SF_STMT_ATTR_MULTI_STATEMENT_COUNT reaches the driver under iODBC
   // via the SetStmtOption shim.
   // Given Snowflake client is logged in

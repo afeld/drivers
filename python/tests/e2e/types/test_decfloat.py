@@ -134,7 +134,7 @@ class TestDecfloatLiteral:
         assert result == expected
         assert_type(result, Decimal)
 
-    def test_should_handle_null_values_from_literals(self, execute_query):
+    def test_should_handle_null_values_from_literals_for_decfloat(self, execute_query):
         # Given Snowflake client is logged in
         pass
 
@@ -146,7 +146,7 @@ class TestDecfloatLiteral:
         assert result == (None, Decimal("42.5"), None)
         assert_type(result, Decimal, can_be_none=True)
 
-    def test_should_download_large_result_set_with_multiple_chunks_from_generator(self, execute_query):
+    def test_should_download_large_result_set_with_multiple_chunks_from_generator_for_decfloat(self, execute_query):
         # Given Snowflake client is logged in
         pass
 
@@ -269,7 +269,7 @@ class TestDecfloatTable:
         assert result == extreme_values
         assert_type(result, Decimal)
 
-    def test_should_handle_null_values_from_table(self, execute_query, tmp_schema):
+    def test_should_handle_null_values_from_table_for_decfloat(self, execute_query, tmp_schema):
         # Given Snowflake client is logged in
         pass
 
@@ -286,7 +286,9 @@ class TestDecfloatTable:
         assert values == [None, Decimal("123.456"), None, Decimal("-789.012")]
         assert_type(values, Decimal, can_be_none=True)
 
-    def test_should_download_large_result_set_with_multiple_chunks_from_table(self, execute_query, tmp_schema):
+    def test_should_download_large_result_set_with_multiple_chunks_from_table_for_decfloat(
+        self, execute_query, tmp_schema
+    ):
         # Given Snowflake client is logged in
         pass
 

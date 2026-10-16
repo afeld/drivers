@@ -10,7 +10,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_DOUBLE and read back",
-                 "[c_numeric][conversion][sql_real]") {
+                 "[e2e][types][c_numeric][conversion][sql_real]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_dbl (col FLOAT)");
@@ -41,7 +41,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC to SQL_DOUBLE and
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC with scale to SQL_DOUBLE",
-                 "[c_numeric][conversion][sql_real]") {
+                 "[e2e][types][c_numeric][conversion][sql_real]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_dbl_sc (col FLOAT)");
@@ -73,7 +73,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC with scale to SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind large SQL_C_NUMERIC exceeding 64-bit to SQL_DOUBLE",
-                 "[c_numeric][conversion][sql_real]") {
+                 "[e2e][types][c_numeric][conversion][sql_real]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_dbl_big (col FLOAT)");
@@ -105,7 +105,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind large SQL_C_NUMERIC exceeding 6
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_NUMERIC with NULL indicator to SQL_DOUBLE",
-                 "[c_numeric][conversion][sql_real]") {
+                 "[e2e][types][c_numeric][conversion][sql_real]") {
   // Given Snowflake client is logged in
 
   conn.execute("CREATE TEMPORARY TABLE t_num_dbl_null (col FLOAT)");

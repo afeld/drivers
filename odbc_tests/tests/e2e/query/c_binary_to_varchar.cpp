@@ -5,7 +5,7 @@
 #include "get_data.hpp"
 #include "odbc_cast.hpp"
 
-TEST_CASE("should bind SQL_C_BINARY to SQL_VARCHAR.", "[query][bind_parameter][c_binary_to_varchar]") {
+TEST_CASE("should bind SQL_C_BINARY to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_binary_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();

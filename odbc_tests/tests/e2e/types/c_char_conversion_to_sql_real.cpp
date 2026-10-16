@@ -10,7 +10,7 @@
 #include "odbc_cast.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR float string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -31,7 +31,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR float string to SQL_
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR integer string to SQL_REAL",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -51,7 +51,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR integer string to SQ
   CHECK_THAT(get_data<SQL_C_DOUBLE>(fetch_stmt, 1), Catch::Matchers::WithinAbs(100.0, 0.001));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_FLOAT synonym", "[c_char][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_FLOAT synonym",
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -71,7 +72,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to SQL_FLOAT synonym
   CHECK_THAT(get_data<SQL_C_DOUBLE>(fetch_stmt, 1), Catch::Matchers::WithinAbs(1.23, 0.001));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to FLOAT4 column", "[c_char][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to FLOAT4 column",
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT4)");
 
@@ -91,7 +93,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to FLOAT4 column", "
   CHECK_THAT(get_data<SQL_C_DOUBLE>(fetch_stmt, 1), Catch::Matchers::WithinAbs(5.5, 0.001));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to FLOAT8 column", "[c_char][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to FLOAT8 column",
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT8)");
 
@@ -112,7 +115,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to FLOAT8 column", "
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to DOUBLE PRECISION column",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col DOUBLE PRECISION)");
 
@@ -132,7 +135,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to DOUBLE PRECISION 
   CHECK_THAT(get_data<SQL_C_DOUBLE>(fetch_stmt, 1), Catch::Matchers::WithinAbs(2.22, 0.001));
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to REAL column", "[c_char][conversion][sql_real]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to REAL column",
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col REAL)");
 
@@ -153,7 +157,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR to REAL column", "[c
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR float string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -174,7 +178,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR float string to SQL
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR integer string to SQL_REAL",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -195,7 +199,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR integer string to S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -215,7 +219,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR with NULL indicator 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR with NULL indicator to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -235,7 +239,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR with NULL indicator
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR Infinity string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -258,7 +262,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR Infinity string to S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR negative Infinity string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -281,7 +285,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR negative Infinity st
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR NaN string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -302,7 +306,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_CHAR NaN string to SQL_DO
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR Infinity string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -325,7 +329,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR Infinity string to 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR negative Infinity string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 
@@ -348,7 +352,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR negative Infinity s
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_WCHAR NaN string to SQL_DOUBLE",
-                 "[c_char][conversion][sql_real]") {
+                 "[e2e][types][c_char][conversion][sql_real]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col FLOAT)");
 

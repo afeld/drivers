@@ -11,7 +11,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i32 to SQL_INTEGER and read back",
-                 "[c_binary][conversion][sql_fixed]") {
+                 "[e2e][types][c_binary][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -33,7 +33,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i32 to SQL_INTEGER
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i64 to SQL_BIGINT and read back",
-                 "[c_binary][conversion][sql_fixed]") {
+                 "[e2e][types][c_binary][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -54,7 +54,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i64 to SQL_BIGINT 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i16 to SQL_SMALLINT and read back",
-                 "[c_binary][conversion][sql_fixed]") {
+                 "[e2e][types][c_binary][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -76,7 +76,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i16 to SQL_SMALLIN
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i8 to SQL_TINYINT and read back",
-                 "[c_binary][conversion][sql_fixed]") {
+                 "[e2e][types][c_binary][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -98,7 +98,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY i8 to SQL_TINYINT 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY negative i32 to SQL_INTEGER and read back",
-                 "[c_binary][conversion][sql_fixed]") {
+                 "[e2e][types][c_binary][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 
@@ -120,7 +120,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_BINARY negative i32 to SQ
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BINARY with wrong size for SQL_INTEGER",
-                 "[c_binary][conversion][sql_fixed]") {
+                 "[e2e][types][c_binary][conversion][sql_fixed]") {
   // Given Snowflake client is logged in
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
 

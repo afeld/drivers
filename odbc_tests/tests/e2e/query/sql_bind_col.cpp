@@ -16,7 +16,7 @@
 // Basic Binding Behavior
 // =============================================================================
 
-TEST_CASE("SQLBindCol binds a column and SQLFetch returns data in bound buffer.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol binds a column and SQLFetch returns data in bound buffer.", "[e2e][query][bind_col]") {
   // Doc: "SQLBindCol is used to associate, or bind, columns in the result set
   //       to data buffers and length/indicator buffers in the application."
   // Doc: "When the application calls SQLFetch, SQLFetchScroll, or SQLSetPos to
@@ -46,7 +46,7 @@ TEST_CASE("SQLBindCol binds a column and SQLFetch returns data in bound buffer."
   CHECK(indicator == sizeof(SQLINTEGER));
 }
 
-TEST_CASE("SQLBindCol returns SQL_SUCCESS on successful binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns SQL_SUCCESS on successful binding.", "[e2e][query][bind_col]") {
   // Doc: "Returns SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_ERROR, or SQL_INVALID_HANDLE."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#returns
 
@@ -63,7 +63,7 @@ TEST_CASE("SQLBindCol returns SQL_SUCCESS on successful binding.", "[query][bind
   CHECK(ret == SQL_SUCCESS);
 }
 
-TEST_CASE("SQLBindCol binds multiple columns in a result set.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol binds multiple columns in a result set.", "[e2e][query][bind_col]") {
   // Doc: "SQLBindCol is used to associate, or bind, columns in the result set
   //       to data buffers and length/indicator buffers in the application."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#comments
@@ -105,7 +105,7 @@ TEST_CASE("SQLBindCol binds multiple columns in a result set.", "[query][bind_co
 // Column Numbering
 // =============================================================================
 
-TEST_CASE("SQLBindCol uses 1-based column numbering when bookmarks are not used.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol uses 1-based column numbering when bookmarks are not used.", "[e2e][query][bind_col]") {
   // Doc: "Columns are numbered in increasing column order starting at 0, where
   //       column 0 is the bookmark column. If bookmarks are not used - that is,
   //       the SQL_ATTR_USE_BOOKMARKS statement attribute is set to SQL_UB_OFF -
@@ -142,7 +142,7 @@ TEST_CASE("SQLBindCol uses 1-based column numbering when bookmarks are not used.
 // Binding Before and After Execute
 // =============================================================================
 
-TEST_CASE("SQLBindCol can be called before SQLExecDirect.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol can be called before SQLExecDirect.", "[e2e][query][bind_col]") {
   // Doc: "The use of these buffers is deferred; that is, the application binds
   //       them in SQLBindCol but the driver accesses them from other functions -
   //       namely SQLBulkOperations, SQLFetch, SQLFetchScroll, or SQLSetPos."
@@ -169,7 +169,7 @@ TEST_CASE("SQLBindCol can be called before SQLExecDirect.", "[query][bind_col]")
   CHECK(indicator == sizeof(SQLINTEGER));
 }
 
-TEST_CASE("SQLBindCol can be called after SQLExecDirect.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol can be called after SQLExecDirect.", "[e2e][query][bind_col]") {
   // Doc: "A column can be bound, unbound, or rebound at any time, even after
   //       data has been fetched from the result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#binding-unbinding-and-rebinding-columns
@@ -199,7 +199,7 @@ TEST_CASE("SQLBindCol can be called after SQLExecDirect.", "[query][bind_col]") 
 // Unbinding Columns
 // =============================================================================
 
-TEST_CASE("SQLBindCol unbinds a column when TargetValuePtr is null pointer.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol unbinds a column when TargetValuePtr is null pointer.", "[e2e][query][bind_col]") {
   // Doc: "If TargetValuePtr is a null pointer, the driver unbinds the data buffer
   //       for the column."
   // Doc: "To unbind a single column, an application calls SQLBindCol with
@@ -231,7 +231,7 @@ TEST_CASE("SQLBindCol unbinds a column when TargetValuePtr is null pointer.", "[
   CHECK(value == 0);
 }
 
-TEST_CASE("SQLBindCol returns SQL_SUCCESS when unbinding an already unbound column.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns SQL_SUCCESS when unbinding an already unbound column.", "[e2e][query][bind_col]") {
   // Doc: "If ColumnNumber refers to an unbound column, SQLBindCol still returns
   //       SQL_SUCCESS."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#unbinding-columns
@@ -251,7 +251,7 @@ TEST_CASE("SQLBindCol returns SQL_SUCCESS when unbinding an already unbound colu
   CHECK(ret == SQL_SUCCESS);
 }
 
-TEST_CASE("SQLFreeStmt with SQL_UNBIND unbinds all columns.", "[query][bind_col]") {
+TEST_CASE("SQLFreeStmt with SQL_UNBIND unbinds all columns.", "[e2e][query][bind_col]") {
   // Doc: "To unbind all columns, an application calls SQLFreeStmt with fOption
   //       set to SQL_UNBIND. This can also be accomplished by setting the
   //       SQL_DESC_COUNT field of the ARD to zero."
@@ -287,7 +287,7 @@ TEST_CASE("SQLFreeStmt with SQL_UNBIND unbinds all columns.", "[query][bind_col]
   CHECK(col2 == 0);
 }
 
-TEST_CASE("SQLBindCol can unbind data buffer while keeping indicator bound.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol can unbind data buffer while keeping indicator bound.", "[e2e][query][bind_col]") {
   // Doc: "An application can unbind the data buffer for a column but still have
   //       a length/indicator buffer bound for the column, if the TargetValuePtr
   //       argument in the call to SQLBindCol is a null pointer but the
@@ -322,7 +322,7 @@ TEST_CASE("SQLBindCol can unbind data buffer while keeping indicator bound.", "[
 // Rebinding Columns
 // =============================================================================
 
-TEST_CASE("SQLBindCol replaces old binding when called on already bound column.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol replaces old binding when called on already bound column.", "[e2e][query][bind_col]") {
   // Doc: "Call SQLBindCol to specify a new binding for a column that is already
   //       bound. The driver overwrites the old binding with the new one."
   // Doc: "The new binding takes effect the next time that a function that uses
@@ -360,7 +360,7 @@ TEST_CASE("SQLBindCol replaces old binding when called on already bound column."
   CHECK(indicator1 == 0);
 }
 
-TEST_CASE("SQLBindCol rebinding takes effect on next fetch, not the current one.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol rebinding takes effect on next fetch, not the current one.", "[e2e][query][bind_col]") {
   // Doc: "The new binding takes effect the next time that a function that uses
   //       bindings is called. For example, suppose an application binds the
   //       columns in a result set and calls SQLFetch. The driver returns the data
@@ -407,7 +407,7 @@ TEST_CASE("SQLBindCol rebinding takes effect on next fetch, not the current one.
   CHECK(value1 == 0);
 }
 
-TEST_CASE("SQLBindCol can rebind after data has been fetched from result set.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol can rebind after data has been fetched from result set.", "[e2e][query][bind_col]") {
   // Doc: "A column can be bound, unbound, or rebound at any time, even after
   //       data has been fetched from the result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#binding-unbinding-and-rebinding-columns
@@ -442,7 +442,7 @@ TEST_CASE("SQLBindCol can rebind after data has been fetched from result set.", 
 // BufferLength Behavior
 // =============================================================================
 
-TEST_CASE("SQLBindCol counts null terminator when returning character data.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol counts null terminator when returning character data.", "[e2e][query][bind_col]") {
   // Doc: "The driver uses BufferLength to avoid writing past the end of the
   //       *TargetValuePtr buffer when it returns variable-length data, such as
   //       character or binary data. Notice that the driver counts the
@@ -472,7 +472,7 @@ TEST_CASE("SQLBindCol counts null terminator when returning character data.", "[
   CHECK(indicator == 5);
 }
 
-TEST_CASE("SQLBindCol truncates character data when buffer is too small.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol truncates character data when buffer is too small.", "[e2e][query][bind_col]") {
   // Doc: "*TargetValuePtr must therefore contain space for the null-termination
   //       character or the driver will truncate the data."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -503,7 +503,7 @@ TEST_CASE("SQLBindCol truncates character data when buffer is too small.", "[que
   CHECK(indicator == 11);
 }
 
-TEST_CASE("SQLBindCol ignores BufferLength for fixed-length data types.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol ignores BufferLength for fixed-length data types.", "[e2e][query][bind_col]") {
   // Doc: "When the driver returns fixed-length data, such as an integer or a
   //       date structure, the driver ignores BufferLength and assumes the buffer
   //       is large enough to hold the data."
@@ -530,7 +530,7 @@ TEST_CASE("SQLBindCol ignores BufferLength for fixed-length data types.", "[quer
   CHECK(indicator == sizeof(SQLINTEGER));
 }
 
-TEST_CASE("SQLBindCol returns HY090 when BufferLength is less than 0.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns HY090 when BufferLength is less than 0.", "[e2e][query][bind_col]") {
   // Doc: "SQLBindCol returns SQLSTATE HY090 (Invalid string or buffer length)
   //       when BufferLength is less than 0 but not when BufferLength is 0."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -557,7 +557,7 @@ TEST_CASE("SQLBindCol returns HY090 when BufferLength is less than 0.", "[query]
   }
 }
 
-TEST_CASE("SQLBindCol does not return error when BufferLength is 0 for non-character type.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol does not return error when BufferLength is 0 for non-character type.", "[e2e][query][bind_col]") {
   // Doc: "SQLBindCol returns SQLSTATE HY090 (Invalid string or buffer length)
   //       when BufferLength is less than 0 but not when BufferLength is 0."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -579,7 +579,7 @@ TEST_CASE("SQLBindCol does not return error when BufferLength is 0 for non-chara
 // StrLen_or_IndPtr (Length/Indicator) Behavior
 // =============================================================================
 
-TEST_CASE("SQLBindCol returns data length in StrLen_or_IndPtr for non-null data.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns data length in StrLen_or_IndPtr for non-null data.", "[e2e][query][bind_col]") {
   // Doc: "SQLFetch, SQLFetchScroll, SQLBulkOperations, and SQLSetPos can return
   //       the following values in the length/indicator buffer:
   //       - The length of the data available to return"
@@ -606,7 +606,7 @@ TEST_CASE("SQLBindCol returns data length in StrLen_or_IndPtr for non-null data.
   CHECK(std::string((char*)buffer) == "test string");
 }
 
-TEST_CASE("SQLBindCol returns SQL_NULL_DATA in StrLen_or_IndPtr for NULL values.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns SQL_NULL_DATA in StrLen_or_IndPtr for NULL values.", "[e2e][query][bind_col]") {
   // Doc: "SQLFetch, SQLFetchScroll, SQLBulkOperations, and SQLSetPos can return
   //       the following values in the length/indicator buffer:
   //       - SQL_NULL_DATA"
@@ -632,7 +632,7 @@ TEST_CASE("SQLBindCol returns SQL_NULL_DATA in StrLen_or_IndPtr for NULL values.
   CHECK(indicator == SQL_NULL_DATA);
 }
 
-TEST_CASE("SQLBindCol with null StrLen_or_IndPtr succeeds for non-null data.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol with null StrLen_or_IndPtr succeeds for non-null data.", "[e2e][query][bind_col]") {
   // Doc: "If StrLen_or_IndPtr is a null pointer, no length or indicator value
   //       is used. This is an error when fetching data and the data is NULL."
   // (Implied: it is NOT an error for non-NULL data)
@@ -661,7 +661,7 @@ TEST_CASE("SQLBindCol with null StrLen_or_IndPtr succeeds for non-null data.", "
 // Data Type Conversion (TargetType)
 // =============================================================================
 
-TEST_CASE("SQLBindCol converts data to the specified TargetType.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol converts data to the specified TargetType.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer. When it is retrieving data from the data
   //       source with SQLFetch, SQLFetchScroll, SQLBulkOperations, or
@@ -689,7 +689,7 @@ TEST_CASE("SQLBindCol converts data to the specified TargetType.", "[query][bind
   CHECK(indicator == 5);
 }
 
-TEST_CASE("SQLBindCol returns HY003 for invalid TargetType.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns HY003 for invalid TargetType.", "[e2e][query][bind_col]") {
   // Doc: "HY003 - Invalid application buffer type: The argument TargetType was
   //       neither a valid data type nor SQL_C_DEFAULT."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#diagnostics
@@ -717,7 +717,7 @@ TEST_CASE("SQLBindCol returns HY003 for invalid TargetType.", "[query][bind_col]
   }
 }
 
-TEST_CASE("SQLBindCol supports SQL_C_DEFAULT as TargetType.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_DEFAULT as TargetType.", "[e2e][query][bind_col]") {
   // Doc: "When the application specifies a TargetType of SQL_DEFAULT, SQLBindCol
   //       can be applied to a column of a different data type from the one
   //       intended by the application."
@@ -744,7 +744,7 @@ TEST_CASE("SQLBindCol supports SQL_C_DEFAULT as TargetType.", "[query][bind_col]
 // Descriptor Interaction
 // =============================================================================
 
-TEST_CASE("SQLBindCol updates SQL_DESC_COUNT on the ARD.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol updates SQL_DESC_COUNT on the ARD.", "[e2e][query][bind_col]") {
   // Doc: "Calls SQLGetDescField to get this descriptor's SQL_DESC_COUNT field,
   //       and if the value in the ColumnNumber argument exceeds the value of
   //       SQL_DESC_COUNT, calls SQLSetDescField to increase the value of
@@ -778,7 +778,7 @@ TEST_CASE("SQLBindCol updates SQL_DESC_COUNT on the ARD.", "[query][bind_col]") 
   CHECK(desc_count == 3);
 }
 
-TEST_CASE("SQLBindCol sets SQL_DESC_COUNT only when increasing.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol sets SQL_DESC_COUNT only when increasing.", "[e2e][query][bind_col]") {
   // Doc: "SQLBindCol sets SQL_DESC_COUNT to the value of the ColumnNumber
   //       argument only when this would increase the value of SQL_DESC_COUNT."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#implicit-resetting-of-count-field
@@ -816,7 +816,7 @@ TEST_CASE("SQLBindCol sets SQL_DESC_COUNT only when increasing.", "[query][bind_
   CHECK(desc_count == 3);
 }
 
-TEST_CASE("SQLBindCol decreases SQL_DESC_COUNT when unbinding highest bound column.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol decreases SQL_DESC_COUNT when unbinding highest bound column.", "[e2e][query][bind_col]") {
   // Doc: "If the value in the TargetValuePtr argument is a null pointer and the
   //       value in the ColumnNumber argument is equal to SQL_DESC_COUNT (that is,
   //       when unbinding the highest bound column), then SQL_DESC_COUNT is set to
@@ -859,7 +859,7 @@ TEST_CASE("SQLBindCol decreases SQL_DESC_COUNT when unbinding highest bound colu
 }
 
 TEST_CASE("SQLBindCol decreases SQL_DESC_COUNT when TargetValuePtr is null even if StrLen_or_IndPtr is not null.",
-          "[query][bind_col]") {
+          "[e2e][query][bind_col]") {
   // Doc: "If TargetValuePtr is a null pointer, the driver unbinds the data buffer
   //       for the column."
   // Doc: "If the value in the TargetValuePtr argument is a null pointer and the
@@ -904,7 +904,7 @@ TEST_CASE("SQLBindCol decreases SQL_DESC_COUNT when TargetValuePtr is null even 
   CHECK(desc_count == 2);
 }
 
-TEST_CASE("SQLBindCol sets descriptor fields on the ARD.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol sets descriptor fields on the ARD.", "[e2e][query][bind_col]") {
   // Doc: "Conceptually, SQLBindCol performs the following steps in sequence:
   //       1. Calls SQLGetStmtAttr to obtain the ARD handle.
   //       ...
@@ -969,7 +969,7 @@ TEST_CASE("SQLBindCol sets descriptor fields on the ARD.", "[query][bind_col]") 
   CHECK(oct_len_ptr == &indicator);
 }
 
-TEST_CASE("SQLBindCol sets ARD descriptor fields for fixed-length type.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol sets ARD descriptor fields for fixed-length type.", "[e2e][query][bind_col]") {
   // Doc: "Conceptually, SQLBindCol performs the following steps in sequence:
   //       ...
   //       3. Calls SQLSetDescField multiple times to assign values to the
@@ -1033,7 +1033,7 @@ TEST_CASE("SQLBindCol sets ARD descriptor fields for fixed-length type.", "[quer
   CHECK(oct_len_ptr == &indicator);
 }
 
-TEST_CASE("SQLBindCol updates ARD descriptor fields on rebind.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol updates ARD descriptor fields on rebind.", "[e2e][query][bind_col]") {
   // Doc: "Call SQLBindCol to specify a new binding for a column that is already
   //       bound. The driver overwrites the old binding with the new one."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#rebinding-columns
@@ -1089,7 +1089,7 @@ TEST_CASE("SQLBindCol updates ARD descriptor fields on rebind.", "[query][bind_c
   CHECK(ind_ptr == &char_indicator);
 }
 
-TEST_CASE("SQLBindCol clears ARD descriptor fields on unbind.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol clears ARD descriptor fields on unbind.", "[e2e][query][bind_col]") {
   // Doc: "If TargetValuePtr is a null pointer, the driver unbinds the data buffer
   //       for the column."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#unbinding-columns
@@ -1138,7 +1138,7 @@ TEST_CASE("SQLBindCol clears ARD descriptor fields on unbind.", "[query][bind_co
   CHECK(oct_len_ptr == (SQLLEN*)0xDEAD);
 }
 
-TEST_CASE("SQLBindCol sets ARD descriptor fields for multiple columns.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol sets ARD descriptor fields for multiple columns.", "[e2e][query][bind_col]") {
   // Doc: "Conceptually, SQLBindCol performs the following steps in sequence:
   //       ...
   //       3. Calls SQLSetDescField multiple times to assign values to the
@@ -1219,7 +1219,7 @@ TEST_CASE("SQLBindCol sets ARD descriptor fields for multiple columns.", "[query
 // Column-Wise Binding
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports column-wise binding with arrays.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports column-wise binding with arrays.", "[e2e][query][bind_col]") {
   // Doc: "In column-wise binding, the application binds separate data and
   //       length/indicator arrays to each column."
   // Doc: "To use column-wise binding, the application first sets the
@@ -1264,7 +1264,7 @@ TEST_CASE("SQLBindCol supports column-wise binding with arrays.", "[query][bind_
 // Row-Wise Binding
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports row-wise binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports row-wise binding.", "[e2e][query][bind_col]") {
   // Doc: "In row-wise binding, the application defines a structure that contains
   //       data and length/indicator buffers for each column to be bound."
   // Doc: "Sets the SQL_ATTR_ROW_BIND_TYPE statement attribute to the size of the
@@ -1321,7 +1321,7 @@ TEST_CASE("SQLBindCol supports row-wise binding.", "[query][bind_col]") {
 // Binding Offsets
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports binding offsets via SQL_ATTR_ROW_BIND_OFFSET_PTR.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports binding offsets via SQL_ATTR_ROW_BIND_OFFSET_PTR.", "[e2e][query][bind_col]") {
   // Doc: "Using a binding offset has basically the same effect as rebinding a
   //       column by calling SQLBindCol. The difference is that a new call to
   //       SQLBindCol specifies new addresses for the data buffer and
@@ -1371,7 +1371,7 @@ TEST_CASE("SQLBindCol supports binding offsets via SQL_ATTR_ROW_BIND_OFFSET_PTR.
   CHECK(rows[1].indicator == sizeof(SQLBIGINT));
 }
 
-TEST_CASE("SQLBindCol binding offset of 0 uses originally bound addresses.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol binding offset of 0 uses originally bound addresses.", "[e2e][query][bind_col]") {
   // Doc: "In particular, if the offset is set to 0 or if the statement attribute
   //       is set to a null pointer, the driver uses the originally bound
   //       addresses."
@@ -1407,7 +1407,7 @@ TEST_CASE("SQLBindCol binding offset of 0 uses originally bound addresses.", "[q
 // Binding Arrays (Block Cursors)
 // =============================================================================
 
-TEST_CASE("SQLBindCol binds arrays when SQL_ATTR_ROW_ARRAY_SIZE > 1.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol binds arrays when SQL_ATTR_ROW_ARRAY_SIZE > 1.", "[e2e][query][bind_col]") {
   // Doc: "If the rowset size (the value of the SQL_ATTR_ROW_ARRAY_SIZE statement
   //       attribute) is greater than 1, the application binds arrays of buffers
   //       instead of single buffers."
@@ -1450,7 +1450,7 @@ TEST_CASE("SQLBindCol binds arrays when SQL_ATTR_ROW_ARRAY_SIZE > 1.", "[query][
 // Error Conditions (SQLSTATE Diagnostics)
 // =============================================================================
 
-TEST_CASE("SQLBindCol returns 07009 when ColumnNumber exceeds max columns.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns 07009 when ColumnNumber exceeds max columns.", "[e2e][query][bind_col]") {
   // Doc: "07009 - Invalid descriptor index: The value specified for the argument
   //       ColumnNumber exceeded the maximum number of columns in the result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#diagnostics
@@ -1478,7 +1478,7 @@ TEST_CASE("SQLBindCol returns 07009 when ColumnNumber exceeds max columns.", "[q
   }
 }
 
-TEST_CASE("SQLBindCol returns SQL_INVALID_HANDLE for invalid statement handle.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol returns SQL_INVALID_HANDLE for invalid statement handle.", "[e2e][query][bind_col]") {
   // Doc: "Returns SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_ERROR, or
   //       SQL_INVALID_HANDLE."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#returns
@@ -1499,7 +1499,7 @@ TEST_CASE("SQLBindCol returns SQL_INVALID_HANDLE for invalid statement handle.",
 // Columns Not Required to Be Bound
 // =============================================================================
 
-TEST_CASE("SQLBindCol is not required - columns can be retrieved with SQLGetData.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol is not required - columns can be retrieved with SQLGetData.", "[e2e][query][bind_col]") {
   // Doc: "Notice that columns do not have to be bound to retrieve data from
   //       them. An application can also call SQLGetData to retrieve data from
   //       columns."
@@ -1531,7 +1531,7 @@ TEST_CASE("SQLBindCol is not required - columns can be retrieved with SQLGetData
   CHECK(std::string((char*)str_value) == "hello");
 }
 
-TEST_CASE("SQLBindCol can bind some columns while SQLGetData retrieves others.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol can bind some columns while SQLGetData retrieves others.", "[e2e][query][bind_col]") {
   // Doc: "Although it is possible to bind some columns in a row and call
   //       SQLGetData for others, this is subject to some restrictions."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#comments
@@ -1569,7 +1569,7 @@ TEST_CASE("SQLBindCol can bind some columns while SQLGetData retrieves others.",
 // Various C Data Types
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports SQL_C_CHAR binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_CHAR binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -1595,7 +1595,7 @@ TEST_CASE("SQLBindCol supports SQL_C_CHAR binding.", "[query][bind_col]") {
   CHECK(indicator == 9);
 }
 
-TEST_CASE("SQLBindCol supports SQL_C_SBIGINT binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_SBIGINT binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -1621,7 +1621,7 @@ TEST_CASE("SQLBindCol supports SQL_C_SBIGINT binding.", "[query][bind_col]") {
   CHECK(indicator == sizeof(SQLBIGINT));
 }
 
-TEST_CASE("SQLBindCol supports SQL_C_DOUBLE binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_DOUBLE binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -1647,7 +1647,7 @@ TEST_CASE("SQLBindCol supports SQL_C_DOUBLE binding.", "[query][bind_col]") {
   CHECK(indicator == sizeof(SQLDOUBLE));
 }
 
-TEST_CASE("SQLBindCol supports SQL_C_TYPE_DATE binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_TYPE_DATE binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -1674,7 +1674,7 @@ TEST_CASE("SQLBindCol supports SQL_C_TYPE_DATE binding.", "[query][bind_col]") {
   CHECK(date_value.day == 15);
 }
 
-TEST_CASE("SQLBindCol supports SQL_C_TYPE_TIMESTAMP binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_TYPE_TIMESTAMP binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -1708,7 +1708,7 @@ TEST_CASE("SQLBindCol supports SQL_C_TYPE_TIMESTAMP binding.", "[query][bind_col
 // SQL_NO_TOTAL Indicator
 // =============================================================================
 
-TEST_CASE("SQLBindCol indicator returns full data length when buffer causes truncation.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol indicator returns full data length when buffer causes truncation.", "[e2e][query][bind_col]") {
   // Doc: "SQLFetch, SQLFetchScroll, SQLBulkOperations, and SQLSetPos can return
   //       the following values in the length/indicator buffer:
   //       - The length of the data available to return
@@ -1743,7 +1743,7 @@ TEST_CASE("SQLBindCol indicator returns full data length when buffer causes trun
 // Binding Persistence Across Statements
 // =============================================================================
 
-TEST_CASE("SQLBindCol binding persists across SQLFreeStmt SQL_CLOSE and re-execute.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol binding persists across SQLFreeStmt SQL_CLOSE and re-execute.", "[e2e][query][bind_col]") {
   // Doc: "The binding remains in effect until it is replaced by a new binding,
   //       the column is unbound, or the statement is freed."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#binding-columns
@@ -1781,7 +1781,7 @@ TEST_CASE("SQLBindCol binding persists across SQLFreeStmt SQL_CLOSE and re-execu
   CHECK(indicator == sizeof(SQLINTEGER));
 }
 
-TEST_CASE("SQLBindCol binding is removed by SQLFreeStmt SQL_UNBIND.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol binding is removed by SQLFreeStmt SQL_UNBIND.", "[e2e][query][bind_col]") {
   // Doc: "The binding remains in effect until it is replaced by a new binding,
   //       the column is unbound, or the statement is freed."
   // Doc: "To unbind all columns, an application calls SQLFreeStmt with fOption
@@ -1816,7 +1816,7 @@ TEST_CASE("SQLBindCol binding is removed by SQLFreeStmt SQL_UNBIND.", "[query][b
 // Setting SQL_DESC_COUNT to 0 unbinds all columns
 // =============================================================================
 
-TEST_CASE("Setting SQL_DESC_COUNT to 0 on the ARD unbinds all columns.", "[query][bind_col]") {
+TEST_CASE("Setting SQL_DESC_COUNT to 0 on the ARD unbinds all columns.", "[e2e][query][bind_col]") {
   // Doc: "To unbind all columns, an application calls SQLFreeStmt with fOption
   //       set to SQL_UNBIND. This can also be accomplished by setting the
   //       SQL_DESC_COUNT field of the ARD to zero."
@@ -1852,7 +1852,7 @@ TEST_CASE("Setting SQL_DESC_COUNT to 0 on the ARD unbinds all columns.", "[query
   CHECK(val2 == 0);
 }
 
-TEST_CASE("Setting SQL_DESC_COUNT to 1 on the ARD unbinds columns above 1.", "[query][bind_col]") {
+TEST_CASE("Setting SQL_DESC_COUNT to 1 on the ARD unbinds columns above 1.", "[e2e][query][bind_col]") {
   // Doc: "To unbind all columns, an application calls SQLFreeStmt with fOption
   //       set to SQL_UNBIND. This can also be accomplished by setting the
   //       SQL_DESC_COUNT field of the ARD to zero."
@@ -1903,7 +1903,7 @@ TEST_CASE("Setting SQL_DESC_COUNT to 1 on the ARD unbinds columns above 1.", "[q
 }
 
 TEST_CASE("Setting SQL_DESC_COUNT greater than number of bound columns does not affect existing bindings.",
-          "[query][bind_col]") {
+          "[e2e][query][bind_col]") {
   // Doc: "SQL_DESC_COUNT is not the count of columns that are bound...
   //       An application can allocate space for descriptors at any time by calling
   //       SQLSetDescField to set the SQL_DESC_COUNT field."
@@ -1973,7 +1973,7 @@ TEST_CASE("Setting SQL_DESC_COUNT greater than number of bound columns does not 
   CHECK(val2 == 20);
 }
 
-TEST_CASE("Setting SQL_DESC_COUNT to -1 on the ARD returns an error.", "[query][bind_col]") {
+TEST_CASE("Setting SQL_DESC_COUNT to -1 on the ARD returns an error.", "[e2e][query][bind_col]") {
   // Doc: "SQL_DESC_COUNT is the count of the highest-numbered column that is
   //       bound. It is a SQLUSMALLINT value and should be non-negative."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlsetdescfield-function
@@ -2014,7 +2014,7 @@ TEST_CASE("Setting SQL_DESC_COUNT to -1 on the ARD returns an error.", "[query][
 // SQLBindCol with various data conversions
 // =============================================================================
 
-TEST_CASE("SQLBindCol converts string to integer type.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol converts string to integer type.", "[e2e][query][bind_col]") {
   // Doc: "When it is retrieving data from the data source with SQLFetch...
   //       the driver converts the data to this type."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -2044,7 +2044,7 @@ TEST_CASE("SQLBindCol converts string to integer type.", "[query][bind_col]") {
 // Binding with only some columns bound
 // =============================================================================
 
-TEST_CASE("SQLBindCol allows binding non-consecutive columns.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol allows binding non-consecutive columns.", "[e2e][query][bind_col]") {
   // Doc: "SQLBindCol is used to associate, or bind, columns in the result set
   //       to data buffers..."
   // (Columns can be selectively bound; unbound columns are skipped)
@@ -2080,7 +2080,7 @@ TEST_CASE("SQLBindCol allows binding non-consecutive columns.", "[query][bind_co
 // SQLBindCol with SQL_C_NUMERIC
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports SQL_C_NUMERIC binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_NUMERIC binding.", "[e2e][query][bind_col]") {
   // Doc: "If the TargetType argument is SQL_C_NUMERIC, the default precision
   //       (driver-defined) and default scale (0), as set in the SQL_DESC_PRECISION
   //       and SQL_DESC_SCALE fields of the ARD, are used for the data.
@@ -2143,7 +2143,7 @@ TEST_CASE("SQLBindCol supports SQL_C_NUMERIC binding.", "[query][bind_col]") {
 // SQLBindCol used with SQLFetchScroll
 // =============================================================================
 
-TEST_CASE("SQLBindCol works with SQLFetchScroll.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol works with SQLFetchScroll.", "[e2e][query][bind_col]") {
   // Doc: "SQLBindCol is used to associate, or bind, columns in the result set to data buffers
   //       and length/indicator buffers in the application." The driver returns the data for the
   //       bound columns in the specified buffers when SQLFetch, SQLFetchScroll, or SQLSetPos is called.
@@ -2188,7 +2188,7 @@ TEST_CASE("SQLBindCol works with SQLFetchScroll.", "[query][bind_col]") {
 // Binary data binding
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports SQL_C_BINARY binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_BINARY binding.", "[e2e][query][bind_col]") {
   // Doc: "The driver uses BufferLength to avoid writing past the end of the
   //       *TargetValuePtr buffer when it returns variable-length data, such as
   //       character or binary data."
@@ -2219,7 +2219,7 @@ TEST_CASE("SQLBindCol supports SQL_C_BINARY binding.", "[query][bind_col]") {
 // Binding with SQLSMALLINT (SQL_C_SHORT)
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports SQL_C_SHORT binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_SHORT binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -2249,7 +2249,7 @@ TEST_CASE("SQLBindCol supports SQL_C_SHORT binding.", "[query][bind_col]") {
 // SQLBindCol with SQL_C_FLOAT
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports SQL_C_FLOAT binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_FLOAT binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments
@@ -2279,7 +2279,7 @@ TEST_CASE("SQLBindCol supports SQL_C_FLOAT binding.", "[query][bind_col]") {
 // SQLBindCol with SQL_C_BIT
 // =============================================================================
 
-TEST_CASE("SQLBindCol supports SQL_C_BIT binding.", "[query][bind_col]") {
+TEST_CASE("SQLBindCol supports SQL_C_BIT binding.", "[e2e][query][bind_col]") {
   // Doc: "TargetType [Input] The identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function#arguments

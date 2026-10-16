@@ -113,7 +113,7 @@ fi
 
 CTEST_ARGS=()
 if [[ -n "${CTEST_FILTER:-}" ]]; then
-    CTEST_ARGS+=(-R "$CTEST_FILTER")
+    CTEST_ARGS+=(-L "$CTEST_FILTER" --no-tests=error)
 fi
 
 JUNIT_FILE=""

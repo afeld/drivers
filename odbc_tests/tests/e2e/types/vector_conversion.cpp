@@ -27,7 +27,7 @@ static picojson::value parse_json(const std::string& text) {
 // SQL_C_WCHAR round-trip
 // ============================================================================
 
-TEST_CASE("VECTOR to SQL_C_WCHAR returns parseable JSON array", "[datatype][vector][conversion][c_wchar]") {
+TEST_CASE("VECTOR to SQL_C_WCHAR returns parseable JSON array", "[e2e][types][datatype][vector][conversion][c_wchar]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -47,7 +47,8 @@ TEST_CASE("VECTOR to SQL_C_WCHAR returns parseable JSON array", "[datatype][vect
   CHECK(arr[2].get<double>() == 30.0);
 }
 
-TEST_CASE("FLOAT VECTOR to SQL_C_WCHAR returns parseable JSON array", "[datatype][vector][conversion][c_wchar]") {
+TEST_CASE("FLOAT VECTOR to SQL_C_WCHAR returns parseable JSON array",
+          "[e2e][types][datatype][vector][conversion][c_wchar]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -70,7 +71,7 @@ TEST_CASE("FLOAT VECTOR to SQL_C_WCHAR returns parseable JSON array", "[datatype
 // SQL_C_BINARY round-trip
 // ============================================================================
 
-TEST_CASE("VECTOR to SQL_C_BINARY returns UTF-8 JSON bytes", "[datatype][vector][conversion][c_binary]") {
+TEST_CASE("VECTOR to SQL_C_BINARY returns UTF-8 JSON bytes", "[e2e][types][datatype][vector][conversion][c_binary]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -95,7 +96,8 @@ TEST_CASE("VECTOR to SQL_C_BINARY returns UTF-8 JSON bytes", "[datatype][vector]
 // Truncation — SQLSTATE 01004
 // ============================================================================
 
-TEST_CASE("VECTOR SQL_C_CHAR truncation returns 01004", "[datatype][vector][conversion][truncation][01004]") {
+TEST_CASE("VECTOR SQL_C_CHAR truncation returns 01004",
+          "[e2e][types][datatype][vector][conversion][truncation][01004]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in
@@ -118,7 +120,7 @@ TEST_CASE("VECTOR SQL_C_CHAR truncation returns 01004", "[datatype][vector][conv
 // SQL_DESC_TYPE_NAME
 // ============================================================================
 
-TEST_CASE("VECTOR SQL_DESC_TYPE_NAME reports VECTOR", "[datatype][vector][conversion][descriptor]") {
+TEST_CASE("VECTOR SQL_DESC_TYPE_NAME reports VECTOR", "[e2e][types][datatype][vector][conversion][descriptor]") {
   SKIP_OLD_DRIVER("BD#119", "Reference driver has no VECTOR support");
 
   // Given Snowflake client is logged in

@@ -16,7 +16,7 @@
 namespace fs = std::filesystem;
 using namespace pg_utils;
 
-TEST_CASE("should upload file when source path contains dotdot segments", "[put_get]") {
+TEST_CASE("should upload file when source path contains dotdot segments", "[e2e][put_get]") {
   // Given A source file exists in a temporary directory
   TempTestDir temp_dir("odbc_put_dotdot_");
   fs::path sub_dir = temp_dir.path() / "sub";
@@ -38,7 +38,7 @@ TEST_CASE("should upload file when source path contains dotdot segments", "[put_
   CHECK(get_data<SQL_C_CHAR>(stmt, PUT_ROW_TARGET_IDX) == "dotdot_data.csv");
 }
 
-TEST_CASE("should upload file when source path is relative to working directory", "[put_get]") {
+TEST_CASE("should upload file when source path is relative to working directory", "[e2e][put_get]") {
   // Create under CWD so fs::relative stays same-root on Windows (system temp can live
   // on another drive, which makes lexically_relative return an empty path).
   const fs::path cwd = fs::current_path();
@@ -77,7 +77,7 @@ TEST_CASE("should upload file when source path is relative to working directory"
   CHECK(get_data<SQL_C_CHAR>(stmt, PUT_ROW_TARGET_IDX) == "relative_data.csv");
 }
 
-TEST_CASE("should upload file at symlinked source path", "[put_get]") {
+TEST_CASE("should upload file at symlinked source path", "[e2e][put_get]") {
   // Symlinks are a Unix feature; on Windows this scenario is not applicable.
   UNIX_ONLY {
     // Given A source file and a symlink pointing to it exist in a temporary directory
@@ -103,7 +103,7 @@ TEST_CASE("should upload file at symlinked source path", "[put_get]") {
   }
 }
 
-TEST_CASE("should upload file when source path starts with tilde", "[put_get]") {
+TEST_CASE("should upload file when source path starts with tilde", "[e2e][put_get]") {
   const fs::path home = user_home_dir();
   if (home.empty()) {
     SKIP("Home directory is not set in the environment");

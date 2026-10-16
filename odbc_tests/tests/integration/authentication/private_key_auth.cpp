@@ -94,7 +94,8 @@ void verify_connection_fails_with_missing_private_key_error(ConnectionHandleWrap
 // Integration test: missing parameter error
 // ============================================================================
 
-TEST_CASE("should fail JWT authentication when no private file provided", "[private_key_auth]") {
+TEST_CASE("should fail JWT authentication when no private file provided",
+          "[integration][authentication][private_key_auth]") {
   // Given Authentication is set to JWT
   std::string connection_string = get_jwt_connection_string_without_private_key();
 

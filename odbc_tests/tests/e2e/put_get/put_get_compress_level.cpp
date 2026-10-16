@@ -10,7 +10,7 @@
 
 using namespace pg_utils;
 
-TEST_CASE("should compress PUT files smaller at gzip level 9 than at level 1", "[put_get]") {
+TEST_CASE("should compress PUT files smaller at gzip level 9 than at level 1", "[e2e][put_get]") {
   TempTestDir src_dir("odbc_put_compresslv_");
   const auto file = src_dir.path() / "compressible.csv";
   {

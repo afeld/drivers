@@ -192,7 +192,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "REAL NaN to CHAR produces NaN string", "[e2
   CHECK(result == "NaN");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_CHAR", "[real][conversion][c_char][null]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "REAL NULL to SQL_C_CHAR", "[e2e][types][real][conversion][c_char][null]") {
   // Given A Snowflake connection
 
   // When A NULL FLOAT value is queried

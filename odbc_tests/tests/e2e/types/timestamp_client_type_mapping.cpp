@@ -7,7 +7,8 @@
 #include "Connection.hpp"
 #include "conversion_checks.hpp"
 
-TEST_CASE("CLIENT_TIMESTAMP_TYPE_MAPPING=TIMESTAMP_NTZ maps untyped timestamp to NTZ", "[timestamp][type_mapping]") {
+TEST_CASE("CLIENT_TIMESTAMP_TYPE_MAPPING=TIMESTAMP_NTZ maps untyped timestamp to NTZ",
+          "[e2e][types][timestamp][type_mapping]") {
   // Given Snowflake client is logged in with NTZ timestamp mapping
   Connection conn;
   conn.execute("ALTER SESSION SET CLIENT_TIMESTAMP_TYPE_MAPPING = 'TIMESTAMP_NTZ'");
@@ -25,7 +26,8 @@ TEST_CASE("CLIENT_TIMESTAMP_TYPE_MAPPING=TIMESTAMP_NTZ maps untyped timestamp to
   CHECK(ts.second == 45);
 }
 
-TEST_CASE("CLIENT_TIMESTAMP_TYPE_MAPPING=TIMESTAMP_LTZ maps untyped timestamp to LTZ", "[timestamp][type_mapping]") {
+TEST_CASE("CLIENT_TIMESTAMP_TYPE_MAPPING=TIMESTAMP_LTZ maps untyped timestamp to LTZ",
+          "[e2e][types][timestamp][type_mapping]") {
   // Given Snowflake client is logged in with LTZ timestamp mapping and UTC timezone
   Connection conn;
   conn.execute("ALTER SESSION SET CLIENT_TIMESTAMP_TYPE_MAPPING = 'TIMESTAMP_LTZ'");
@@ -44,7 +46,7 @@ TEST_CASE("CLIENT_TIMESTAMP_TYPE_MAPPING=TIMESTAMP_LTZ maps untyped timestamp to
   CHECK(ts.second == 45);
 }
 
-TEST_CASE("TIMESTAMP_TYPE_MAPPING changes column type for TIMESTAMP", "[timestamp][type_mapping]") {
+TEST_CASE("TIMESTAMP_TYPE_MAPPING changes column type for TIMESTAMP", "[e2e][types][timestamp][type_mapping]") {
   // Given Snowflake client is logged in with NTZ type mapping
   Connection conn;
   conn.execute("ALTER SESSION SET TIMESTAMP_TYPE_MAPPING = 'TIMESTAMP_NTZ'");

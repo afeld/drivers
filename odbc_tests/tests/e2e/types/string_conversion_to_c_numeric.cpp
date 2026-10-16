@@ -28,7 +28,7 @@ static long long numeric_val_to_int(const SQL_NUMERIC_STRUCT& num) {
 static unsigned int to_unsigned_int(char c) { return static_cast<unsigned int>((unsigned char)c); }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should convert string literals to SQL_C_NUMERIC",
-                 "[datatype][string][conversion][numeric]") {
+                 "[e2e][types][datatype][string][conversion][numeric]") {
   // Given Snowflake client is logged in
 
   // When Query selecting various numeric string formats is executed

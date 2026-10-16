@@ -45,7 +45,7 @@ void reject_bit_to_interval(Connection& conn, SQLSMALLINT interval_type) {
 }  // namespace
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to SQL_INTERVAL_YEAR",
-                 "[c_bit][incompatible][sql_interval]") {
+                 "[e2e][types][c_bit][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(
       "BD#72",
       "Reference driver does not implement SQL_INTERVAL_* parameter binding, so it does not return the spec 07006 "
@@ -57,7 +57,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to SQL_INTERV
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_BIT bound to SQL_INTERVAL_DAY_TO_SECOND",
-                 "[c_bit][incompatible][sql_interval]") {
+                 "[e2e][types][c_bit][incompatible][sql_interval]") {
   SKIP_OLD_DRIVER(
       "BD#72",
       "Reference driver does not implement SQL_INTERVAL_* parameter binding, so it does not return the spec 07006 "

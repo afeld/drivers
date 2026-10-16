@@ -28,7 +28,8 @@ using external_browser_test::get_external_browser_connection_string;
 // Happy Path
 // =============================================================================
 
-TEST_CASE("should login with external browser using simulated callback", "[external_browser_auth]") {
+TEST_CASE("should login with external browser using simulated callback",
+          "[integration][authentication][external_browser_auth]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -78,7 +79,8 @@ TEST_CASE("should login with external browser using simulated callback", "[exter
 // Error Handling - Authenticator Request Failures
 // =============================================================================
 
-TEST_CASE("should fail when authenticator-request returns forbidden", "[external_browser_auth]") {
+TEST_CASE("should fail when authenticator-request returns forbidden",
+          "[integration][authentication][external_browser_auth]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -107,7 +109,8 @@ TEST_CASE("should fail when authenticator-request returns forbidden", "[external
   CHECK(has_relevant_error);
 }
 
-TEST_CASE("should fail when authenticator-request returns logical failure", "[external_browser_auth]") {
+TEST_CASE("should fail when authenticator-request returns logical failure",
+          "[integration][authentication][external_browser_auth]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -140,7 +143,8 @@ TEST_CASE("should fail when authenticator-request returns logical failure", "[ex
 // Error Handling - Timeout (no browser callback)
 // =============================================================================
 
-TEST_CASE("should fail with timeout when no browser callback arrives", "[external_browser_auth]") {
+TEST_CASE("should fail with timeout when no browser callback arrives",
+          "[integration][authentication][external_browser_auth]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif
@@ -196,7 +200,8 @@ TEST_CASE("should fail with timeout when no browser callback arrives", "[externa
 // Error Handling - Login Failure After Successful Browser Flow
 // =============================================================================
 
-TEST_CASE("should fail when login request is rejected after browser callback", "[external_browser_auth]") {
+TEST_CASE("should fail when login request is rejected after browser callback",
+          "[integration][authentication][external_browser_auth]") {
 #ifdef _WIN32
   SKIP("WireMock tests not yet validated on Windows");
 #endif

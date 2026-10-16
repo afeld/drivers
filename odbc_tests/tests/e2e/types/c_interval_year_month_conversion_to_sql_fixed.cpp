@@ -54,7 +54,7 @@ void bind_interval_and_execute(StatementHandleWrapper& stmt, SQLSMALLINT c_type,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR to exact-numeric SQL targets and read back",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [sql_type, column_size, years] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLULEN, SQLUINTEGER>({
       {SQL_TINYINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(5)},
       {SQL_SMALLINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(200)},
@@ -86,7 +86,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_YEAR to exact-nu
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MONTH to exact-numeric SQL targets and read back",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [sql_type, column_size, months] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLULEN, SQLUINTEGER>({
       {SQL_TINYINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(11)},
       {SQL_SMALLINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(240)},
@@ -121,7 +121,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MONTH to exact-n
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative year-month interval to SQL_INTEGER and read back",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [c_type, magnitude] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLUINTEGER>({
       {SQL_C_INTERVAL_YEAR, static_cast<SQLUINTEGER>(7)},
       {SQL_C_INTERVAL_MONTH, static_cast<SQLUINTEGER>(8)},
@@ -154,7 +154,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative year-month interval to
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_INTERVAL_YEAR overflow into NUMBER(3,0)",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   // Given a narrow NUMBER(3,0) column
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(3,0))");
 
@@ -175,7 +175,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_INTERVAL_YEAR overflow 
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_INTERVAL_YEAR_TO_MONTH bound to SQL_INTEGER with 07006",
-                 "[c_interval][incompatible][sql_fixed]") {
+                 "[e2e][types][c_interval][incompatible][sql_fixed]") {
   // Given a prepared statement targeting a NUMBER column and a SQL_C_INTERVAL_YEAR_TO_MONTH struct (1y, 6m)
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER)");
   auto stmt = conn.createStatement();
@@ -194,7 +194,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_INTERVAL_YEAR_TO_MONTH 
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind year-month interval with NULL indicator to SQL_INTEGER",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   const SQLSMALLINT c_type = GENERATE(SQL_C_INTERVAL_YEAR, SQL_C_INTERVAL_MONTH);
   CAPTURE(c_type);
 

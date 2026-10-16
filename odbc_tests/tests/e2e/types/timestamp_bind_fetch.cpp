@@ -15,7 +15,7 @@
 #include "odbc_matchers.hpp"
 
 TEST_CASE("TIMESTAMP_NTZ round-trip via SQL_C_TYPE_TIMESTAMP bind and fetch",
-          "[timestamp_ntz][bind_fetch][round_trip]") {
+          "[e2e][types][timestamp_ntz][bind_fetch][round_trip]") {
   // Given Snowflake client is logged in and a temporary table with a TIMESTAMP_NTZ column exists
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -60,7 +60,8 @@ TEST_CASE("TIMESTAMP_NTZ round-trip via SQL_C_TYPE_TIMESTAMP bind and fetch",
   CHECK(ts_out.fraction == 123456789);
 }
 
-TEST_CASE("TIMESTAMP_NTZ round-trip via SQL_C_CHAR string bind", "[timestamp_ntz][bind_fetch][round_trip]") {
+TEST_CASE("TIMESTAMP_NTZ round-trip via SQL_C_CHAR string bind",
+          "[e2e][types][timestamp_ntz][bind_fetch][round_trip]") {
   // Given Snowflake client is logged in and a temporary table exists
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -98,7 +99,7 @@ TEST_CASE("TIMESTAMP_NTZ round-trip via SQL_C_CHAR string bind", "[timestamp_ntz
   CHECK(ts_out.fraction == 500000000);
 }
 
-TEST_CASE("TIMESTAMP_NTZ round-trip NULL via bind parameter", "[timestamp_ntz][bind_fetch][null]") {
+TEST_CASE("TIMESTAMP_NTZ round-trip NULL via bind parameter", "[e2e][types][timestamp_ntz][bind_fetch][null]") {
   // Given Snowflake client is logged in and a temporary table exists
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -128,7 +129,8 @@ TEST_CASE("TIMESTAMP_NTZ round-trip NULL via bind parameter", "[timestamp_ntz][b
   check_null_via_get_data(select_stmt, 1, SQL_C_TYPE_TIMESTAMP);
 }
 
-TEST_CASE("TIMESTAMP_NTZ round-trip multiple rows with re-execution", "[timestamp_ntz][bind_fetch][round_trip]") {
+TEST_CASE("TIMESTAMP_NTZ round-trip multiple rows with re-execution",
+          "[e2e][types][timestamp_ntz][bind_fetch][round_trip]") {
   // Given Snowflake client is logged in and a temporary table exists
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -197,7 +199,7 @@ TEST_CASE("TIMESTAMP_NTZ round-trip multiple rows with re-execution", "[timestam
 }
 
 TEST_CASE("TIMESTAMP_LTZ round-trip via SQL_C_TYPE_TIMESTAMP bind and fetch",
-          "[timestamp_ltz][bind_fetch][round_trip]") {
+          "[e2e][types][timestamp_ltz][bind_fetch][round_trip]") {
   // Given Snowflake client is logged in and a temporary table with a TIMESTAMP_LTZ column exists
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");
@@ -241,7 +243,8 @@ TEST_CASE("TIMESTAMP_LTZ round-trip via SQL_C_TYPE_TIMESTAMP bind and fetch",
   CHECK(ts_out.fraction == 500000000);
 }
 
-TEST_CASE("TIMESTAMP_TZ round-trip via SQL_C_TYPE_TIMESTAMP bind and fetch", "[timestamp_tz][bind_fetch][round_trip]") {
+TEST_CASE("TIMESTAMP_TZ round-trip via SQL_C_TYPE_TIMESTAMP bind and fetch",
+          "[e2e][types][timestamp_tz][bind_fetch][round_trip]") {
   // Given Snowflake client is logged in and a temporary table with a TIMESTAMP_TZ column exists
   Connection conn;
   conn.execute("ALTER SESSION SET TIMEZONE = 'UTC'");

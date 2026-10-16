@@ -60,7 +60,7 @@ void bind_interval_and_execute(StatementHandleWrapper& stmt, SQLSMALLINT c_type,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY to exact-numeric SQL targets and read back",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [sql_type, column_size, days] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLULEN, SQLUINTEGER>({
       {SQL_TINYINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(15)},
       {SQL_SMALLINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(365)},
@@ -92,7 +92,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_DAY to exact-num
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR to exact-numeric SQL targets and read back",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [sql_type, column_size, hours] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLULEN, SQLUINTEGER>({
       {SQL_TINYINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(8)},
       {SQL_SMALLINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(240)},
@@ -124,7 +124,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_HOUR to exact-nu
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE to exact-numeric SQL targets and read back",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [sql_type, column_size, minutes] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLULEN, SQLUINTEGER>({
       {SQL_TINYINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(30)},
       {SQL_SMALLINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(1440)},
@@ -163,7 +163,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind SQL_C_INTERVAL_MINUTE to exact-
 
 TEST_CASE_METHOD(ConnSchemaFixture,
                  "should bind SQL_C_INTERVAL_SECOND to exact-numeric SQL targets and truncate fraction",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [sql_type, column_size, seconds,
         fraction] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLULEN, SQLUINTEGER, SQLUINTEGER>({
       {SQL_TINYINT, static_cast<SQLULEN>(0), static_cast<SQLUINTEGER>(45), static_cast<SQLUINTEGER>(999'999'999)},
@@ -225,7 +225,7 @@ TEST_CASE_METHOD(ConnSchemaFixture,
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative day-time interval to SQL_INTEGER and read back",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   auto [c_type, magnitude] = GENERATE(Catch::Generators::table<SQLSMALLINT, SQLUINTEGER>({
       {SQL_C_INTERVAL_DAY, static_cast<SQLUINTEGER>(15)},
       {SQL_C_INTERVAL_HOUR, static_cast<SQLUINTEGER>(8)},
@@ -266,7 +266,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should bind negative day-time interval to S
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_INTERVAL_DAY overflow into NUMBER(3,0)",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   // Given a narrow NUMBER(3,0) column
   conn.execute("CREATE TEMPORARY TABLE t (col NUMBER(3,0))");
 
@@ -287,7 +287,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject SQL_C_INTERVAL_DAY overflow i
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should reject compound day-time interval bound to SQL_INTEGER with 07006",
-                 "[c_interval][incompatible][sql_fixed]") {
+                 "[e2e][types][c_interval][incompatible][sql_fixed]") {
   const SQLSMALLINT c_type =
       GENERATE(SQL_C_INTERVAL_DAY_TO_HOUR, SQL_C_INTERVAL_DAY_TO_MINUTE, SQL_C_INTERVAL_DAY_TO_SECOND,
                SQL_C_INTERVAL_HOUR_TO_MINUTE, SQL_C_INTERVAL_HOUR_TO_SECOND, SQL_C_INTERVAL_MINUTE_TO_SECOND);
@@ -311,7 +311,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should reject compound day-time interval bo
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should bind day-time interval with NULL indicator to SQL_INTEGER",
-                 "[c_interval][conversion][sql_fixed]") {
+                 "[e2e][types][c_interval][conversion][sql_fixed]") {
   const SQLSMALLINT c_type =
       GENERATE(SQL_C_INTERVAL_DAY, SQL_C_INTERVAL_HOUR, SQL_C_INTERVAL_MINUTE, SQL_C_INTERVAL_SECOND);
   CAPTURE(c_type);

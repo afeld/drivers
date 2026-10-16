@@ -13,7 +13,7 @@
 // SNOW-4160000: retry HYT00 on this replay's 15s login timeout (Windows CI).
 #define SQLDriverConnect sql_driver_connect_retry_hyt00
 
-TEST_CASE("Replay: excel powerquery navigator simultaneous_refresh", "[excel][powerquery][navigator]") {
+TEST_CASE("Replay: excel powerquery navigator simultaneous_refresh", "[replay][excel][powerquery][navigator]") {
   // clang-format off
   auto config = DataSourceConfig::Snowflake().install();
 

@@ -16,7 +16,7 @@
 // Basic Retrieval Behavior
 // =============================================================================
 
-TEST_CASE("SQLGetData retrieves data for a single column after SQLFetch.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves data for a single column after SQLFetch.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData retrieves data for a single column in the result set or for
   //       a single parameter after SQLParamData returns SQL_PARAM_DATA_AVAILABLE."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#summary
@@ -42,7 +42,8 @@ TEST_CASE("SQLGetData retrieves data for a single column after SQLFetch.", "[que
   CHECK(indicator == sizeof(SQLINTEGER));
 }
 
-TEST_CASE("SQLGetData can be called multiple times to retrieve variable-length data in parts.", "[query][get_data]") {
+TEST_CASE("SQLGetData can be called multiple times to retrieve variable-length data in parts.",
+          "[e2e][query][get_data]") {
   // Doc: "It can be called multiple times to retrieve variable-length data in parts."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#summary
 
@@ -84,7 +85,7 @@ TEST_CASE("SQLGetData can be called multiple times to retrieve variable-length d
   CHECK(std::string((char*)buffer3) == "hat will be retrieved in parts");
 }
 
-TEST_CASE("SQLGetData can only be called after rows have been fetched.", "[query][get_data]") {
+TEST_CASE("SQLGetData can only be called after rows have been fetched.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData returns the data in a specified column. SQLGetData can be called
   //       only after one or more rows have been fetched from the result set by SQLFetch,
   //       SQLFetchScroll, or SQLExtendedFetch."
@@ -106,7 +107,7 @@ TEST_CASE("SQLGetData can only be called after rows have been fetched.", "[query
   CHECK(get_sqlstate(stmt) == "24000");
 }
 
-TEST_CASE("SQLGetData can retrieve data after SQLFetchScroll.", "[query][get_data]") {
+TEST_CASE("SQLGetData can retrieve data after SQLFetchScroll.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData can be called only after one or more rows have been fetched from
   //       the result set by SQLFetch, SQLFetchScroll, or SQLExtendedFetch."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#comments
@@ -133,7 +134,7 @@ TEST_CASE("SQLGetData can retrieve data after SQLFetchScroll.", "[query][get_dat
   CHECK(indicator == sizeof(SQLBIGINT));
 }
 
-TEST_CASE("SQLGetData retrieves data for multiple columns.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves data for multiple columns.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData retrieves data for a single column in the result set..."
   // (Called once per column for multiple columns)
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#summary
@@ -173,7 +174,7 @@ TEST_CASE("SQLGetData retrieves data for multiple columns.", "[query][get_data]"
 // Return Values
 // =============================================================================
 
-TEST_CASE("SQLGetData returns SQL_SUCCESS on successful retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_SUCCESS on successful retrieval.", "[e2e][query][get_data]") {
   // Doc: "Returns: SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_NO_DATA,
   //       SQL_STILL_EXECUTING, SQL_ERROR, or SQL_INVALID_HANDLE."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#returns
@@ -192,7 +193,7 @@ TEST_CASE("SQLGetData returns SQL_SUCCESS on successful retrieval.", "[query][ge
   CHECK(value == 42);
 }
 
-TEST_CASE("SQLGetData returns SQL_INVALID_HANDLE for invalid statement handle.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_INVALID_HANDLE for invalid statement handle.", "[e2e][query][get_data]") {
   // Doc: "Returns: SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_NO_DATA,
   //       SQL_STILL_EXECUTING, SQL_ERROR, or SQL_INVALID_HANDLE."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#returns
@@ -213,7 +214,7 @@ TEST_CASE("SQLGetData returns SQL_INVALID_HANDLE for invalid statement handle.",
 // TargetType Conversion
 // =============================================================================
 
-TEST_CASE("SQLGetData converts data to the specified TargetType.", "[query][get_data]") {
+TEST_CASE("SQLGetData converts data to the specified TargetType.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // Doc: "Otherwise, the C data type specified in SQLGetData overrides the C data
@@ -235,7 +236,7 @@ TEST_CASE("SQLGetData converts data to the specified TargetType.", "[query][get_
   CHECK(indicator == 5);
 }
 
-TEST_CASE("SQLGetData with SQL_C_DEFAULT selects default C type based on SQL type.", "[query][get_data]") {
+TEST_CASE("SQLGetData with SQL_C_DEFAULT selects default C type based on SQL type.", "[e2e][query][get_data]") {
   // Doc: "If TargetType is SQL_C_DEFAULT, the driver selects the default C data
   //       type based on the SQL data type of the source."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -261,7 +262,7 @@ TEST_CASE("SQLGetData with SQL_C_DEFAULT selects default C type based on SQL typ
   CHECK(indicator == 2);
 }
 
-TEST_CASE("SQLGetData overrides SQLBindCol type when a different TargetType is specified.", "[query][get_data]") {
+TEST_CASE("SQLGetData overrides SQLBindCol type when a different TargetType is specified.", "[e2e][query][get_data]") {
   // Doc: "If TargetType is SQL_ARD_TYPE, the driver uses the type identifier
   //       specified in the SQL_DESC_CONCISE_TYPE field of the ARD... Otherwise,
   //       the C data type specified in SQLGetData overrides the C data type
@@ -297,7 +298,7 @@ TEST_CASE("SQLGetData overrides SQLBindCol type when a different TargetType is s
 // TargetValuePtr (Output Buffer)
 // =============================================================================
 
-TEST_CASE("SQLGetData returns HY009 when TargetValuePtr is null.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns HY009 when TargetValuePtr is null.", "[e2e][query][get_data]") {
   // Doc: "TargetValuePtr cannot be NULL."
   // Doc: "HY009 - Invalid use of null pointer: (DM) The argument TargetValuePtr
   //       was a null pointer."
@@ -321,7 +322,7 @@ TEST_CASE("SQLGetData returns HY009 when TargetValuePtr is null.", "[query][get_
 // BufferLength Behavior
 // =============================================================================
 
-TEST_CASE("SQLGetData counts null terminator when returning character data.", "[query][get_data]") {
+TEST_CASE("SQLGetData counts null terminator when returning character data.", "[e2e][query][get_data]") {
   // Doc: "The driver uses BufferLength to avoid writing past the end of the
   //       *TargetValuePtr buffer when returning variable-length data, such as
   //       character or binary data. Note that the driver counts the
@@ -346,7 +347,7 @@ TEST_CASE("SQLGetData counts null terminator when returning character data.", "[
   CHECK(indicator == 5);
 }
 
-TEST_CASE("SQLGetData truncates character data when buffer is too small.", "[query][get_data]") {
+TEST_CASE("SQLGetData truncates character data when buffer is too small.", "[e2e][query][get_data]") {
   // Doc: "If the length of character data (including the null-termination character)
   //       exceeds BufferLength, SQLGetData truncates the data to BufferLength less
   //       the length of a null-termination character. It then null-terminates the data."
@@ -373,7 +374,7 @@ TEST_CASE("SQLGetData truncates character data when buffer is too small.", "[que
   OLD_DRIVER_ONLY("BD#23") { CHECK((indicator == 11 || indicator == SQL_NO_TOTAL)); }
 }
 
-TEST_CASE("SQLGetData truncates binary data to BufferLength bytes.", "[query][get_data]") {
+TEST_CASE("SQLGetData truncates binary data to BufferLength bytes.", "[e2e][query][get_data]") {
   // Doc: "If the length of binary data exceeds the length of the data buffer,
   //       SQLGetData truncates it to BufferLength bytes."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
@@ -398,7 +399,7 @@ TEST_CASE("SQLGetData truncates binary data to BufferLength bytes.", "[query][ge
   CHECK(memcmp(buffer, "Hel", 3) == 0);
 }
 
-TEST_CASE("SQLGetData ignores BufferLength for fixed-length data types.", "[query][get_data]") {
+TEST_CASE("SQLGetData ignores BufferLength for fixed-length data types.", "[e2e][query][get_data]") {
   // Doc: "When the driver returns fixed-length data, such as an integer or a date
   //       structure, the driver ignores BufferLength and assumes the buffer is
   //       large enough to hold the data. It is therefore important for the
@@ -421,7 +422,7 @@ TEST_CASE("SQLGetData ignores BufferLength for fixed-length data types.", "[quer
   CHECK(indicator == sizeof(SQLINTEGER));
 }
 
-TEST_CASE("SQLGetData returns HY090 when BufferLength is less than 0.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns HY090 when BufferLength is less than 0.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData returns SQLSTATE HY090 (Invalid string or buffer length) when
   //       BufferLength is less than 0 but not when BufferLength is 0."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -448,7 +449,7 @@ TEST_CASE("SQLGetData returns HY090 when BufferLength is less than 0.", "[query]
   }
 }
 
-TEST_CASE("SQLGetData does not return error when BufferLength is 0.", "[query][get_data]") {
+TEST_CASE("SQLGetData does not return error when BufferLength is 0.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData returns SQLSTATE HY090 (Invalid string or buffer length) when
   //       BufferLength is less than 0 but not when BufferLength is 0."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -470,7 +471,7 @@ TEST_CASE("SQLGetData does not return error when BufferLength is 0.", "[query][g
 // StrLen_or_IndPtr (Length/Indicator)
 // =============================================================================
 
-TEST_CASE("SQLGetData returns data length in StrLen_or_IndPtr for character data.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns data length in StrLen_or_IndPtr for character data.", "[e2e][query][get_data]") {
   // Doc: "For character or binary data, this is the length of the data after
   //       conversion and before truncation due to BufferLength."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
@@ -490,7 +491,7 @@ TEST_CASE("SQLGetData returns data length in StrLen_or_IndPtr for character data
   CHECK(std::string((char*)buffer) == "test string");
 }
 
-TEST_CASE("SQLGetData returns type size in StrLen_or_IndPtr for fixed-length data.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns type size in StrLen_or_IndPtr for fixed-length data.", "[e2e][query][get_data]") {
   // Doc: "For all other data types, this is the length of the data after
   //       conversion; that is, it is the size of the type to which the data was
   //       converted."
@@ -510,7 +511,7 @@ TEST_CASE("SQLGetData returns type size in StrLen_or_IndPtr for fixed-length dat
   CHECK(indicator == sizeof(SQLINTEGER));
 }
 
-TEST_CASE("SQLGetData returns SQL_NULL_DATA in StrLen_or_IndPtr for NULL values.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_NULL_DATA in StrLen_or_IndPtr for NULL values.", "[e2e][query][get_data]") {
   // Doc: "Sets *StrLen_or_IndPtr to SQL_NULL_DATA if the data is NULL."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
 
@@ -528,7 +529,7 @@ TEST_CASE("SQLGetData returns SQL_NULL_DATA in StrLen_or_IndPtr for NULL values.
   CHECK(indicator == SQL_NULL_DATA);
 }
 
-TEST_CASE("SQLGetData returns 22002 when NULL data fetched without indicator pointer.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 22002 when NULL data fetched without indicator pointer.", "[e2e][query][get_data]") {
   // Doc: "If the data is NULL and StrLen_or_IndPtr was a null pointer, SQLGetData
   //       returns SQLSTATE 22002 (Indicator variable required but not supplied)."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
@@ -546,7 +547,7 @@ TEST_CASE("SQLGetData returns 22002 when NULL data fetched without indicator poi
   CHECK(get_sqlstate(stmt) == "22002");
 }
 
-TEST_CASE("SQLGetData with null StrLen_or_IndPtr succeeds for non-null data.", "[query][get_data]") {
+TEST_CASE("SQLGetData with null StrLen_or_IndPtr succeeds for non-null data.", "[e2e][query][get_data]") {
   // Doc: "If this is a null pointer, no length or indicator value is returned."
   // (Implied: not an error for non-NULL data)
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -568,7 +569,7 @@ TEST_CASE("SQLGetData with null StrLen_or_IndPtr succeeds for non-null data.", "
 // Retrieving Variable-Length Data in Parts
 // =============================================================================
 
-TEST_CASE("SQLGetData retrieves character data in parts with multiple calls.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves character data in parts with multiple calls.", "[e2e][query][get_data]") {
   // Doc: "To retrieve data from a column in parts, the application calls SQLGetData
   //       multiple times in succession for the same column. On each call, SQLGetData
   //       returns the next part of the data."
@@ -614,7 +615,7 @@ TEST_CASE("SQLGetData retrieves character data in parts with multiple calls.", "
   CHECK(result == "ABCDEFGHIJ");
 }
 
-TEST_CASE("SQLGetData returns SQL_NO_DATA after all data for a column has been retrieved.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_NO_DATA after all data for a column has been retrieved.", "[e2e][query][get_data]") {
   // Doc: "Returns SQL_NO_DATA if it has already returned all of the data for the column."
   // Doc: "If SQLGetData is called after this, it returns SQL_NO_DATA."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-variable-length-data-in-parts
@@ -635,7 +636,8 @@ TEST_CASE("SQLGetData returns SQL_NO_DATA after all data for a column has been r
   REQUIRE(ret == SQL_NO_DATA);
 }
 
-TEST_CASE("SQLGetData returns SQL_NO_DATA for fixed-length data after first successful call.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_NO_DATA for fixed-length data after first successful call.",
+          "[e2e][query][get_data]") {
   // Doc: "SQLGetData cannot be used to return fixed-length data in parts. If
   //       SQLGetData is called more than one time in a row for a column containing
   //       fixed-length data, it returns SQL_NO_DATA for all calls after the first."
@@ -661,7 +663,7 @@ TEST_CASE("SQLGetData returns SQL_NO_DATA for fixed-length data after first succ
 // Interaction with Bound Columns
 // =============================================================================
 
-TEST_CASE("SQLGetData can be called on unbound columns after bound columns.", "[query][get_data]") {
+TEST_CASE("SQLGetData can be called on unbound columns after bound columns.", "[e2e][query][get_data]") {
   // Doc: "It is possible to bind some columns in a row and call SQLGetData for
   //       others, although this is subject to some restrictions."
   // Doc: "If the driver does not support extensions to SQLGetData, the function
@@ -701,7 +703,7 @@ TEST_CASE("SQLGetData can be called on unbound columns after bound columns.", "[
 // Column Ordering Restrictions
 // =============================================================================
 
-TEST_CASE("SQLGetData retrieves data in increasing column number order.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves data in increasing column number order.", "[e2e][query][get_data]") {
   // Doc: "Furthermore, within a row of data, the value of the Col_or_Param_Num
   //       argument in each call to SQLGetData must be greater than or equal to
   //       the value of Col_or_Param_Num in the previous call; that is, data must
@@ -734,7 +736,7 @@ TEST_CASE("SQLGetData retrieves data in increasing column number order.", "[quer
 // SQL_GETDATA_EXTENSIONS - SQL_GD_ANY_COLUMN
 // =============================================================================
 
-TEST_CASE("SQLGetInfo returns SQL_GETDATA_EXTENSIONS bitmask.", "[query][get_data]") {
+TEST_CASE("SQLGetInfo returns SQL_GETDATA_EXTENSIONS bitmask.", "[e2e][query][get_data]") {
   // Doc: "To determine what restrictions a driver relaxes, an application calls
   //       SQLGetInfo with any of the following SQL_GETDATA_EXTENSIONS options:
   //       SQL_GD_OUTPUT_PARAMS, SQL_GD_ANY_COLUMN, SQL_GD_ANY_ORDER, SQL_GD_BLOCK,
@@ -767,7 +769,7 @@ TEST_CASE("SQLGetInfo returns SQL_GETDATA_EXTENSIONS bitmask.", "[query][get_dat
 // Successive Calls Reset Prior Column Offsets
 // =============================================================================
 
-TEST_CASE("SQLGetData for a different column resets prior column offset.", "[query][get_data]") {
+TEST_CASE("SQLGetData for a different column resets prior column offset.", "[e2e][query][get_data]") {
   // Doc: "Successive calls to SQLGetData will retrieve data from the last column
   //       requested; prior offsets become invalid. For example, when the following
   //       sequence is performed:
@@ -817,7 +819,7 @@ TEST_CASE("SQLGetData for a different column resets prior column offset.", "[que
 // Error Conditions (SQLSTATE Diagnostics)
 // =============================================================================
 
-TEST_CASE("SQLGetData returns 07006 when data cannot be converted to TargetType.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 07006 when data cannot be converted to TargetType.", "[e2e][query][get_data]") {
   // Doc: "07006 - Restricted data type attribute violation: The data value of a
   //       column in the result set cannot be converted to the C data type
   //       specified by the argument TargetType."
@@ -840,7 +842,7 @@ TEST_CASE("SQLGetData returns 07006 when data cannot be converted to TargetType.
   CHECK(sqlstate == "07006");
 }
 
-TEST_CASE("SQLGetData returns 07009 when Col_or_Param_Num is 0 and bookmarks are off.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 07009 when Col_or_Param_Num is 0 and bookmarks are off.", "[e2e][query][get_data]") {
   // Doc: "07009 - Invalid descriptor index: The value specified for the argument
   //       Col_or_Param_Num was 0, and the SQL_ATTR_USE_BOOKMARKS statement
   //       attribute was set to SQL_UB_OFF."
@@ -870,7 +872,7 @@ TEST_CASE("SQLGetData returns 07009 when Col_or_Param_Num is 0 and bookmarks are
   CHECK(get_sqlstate(stmt) == "07009");
 }
 
-TEST_CASE("SQLGetData returns 07009 when Col_or_Param_Num exceeds result set columns.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 07009 when Col_or_Param_Num exceeds result set columns.", "[e2e][query][get_data]") {
   // Doc: "07009 - Invalid descriptor index: The value specified for the argument
   //       Col_or_Param_Num was greater than the number of columns in the result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#diagnostics
@@ -889,7 +891,7 @@ TEST_CASE("SQLGetData returns 07009 when Col_or_Param_Num exceeds result set col
   CHECK(get_sqlstate(stmt) == "07009");
 }
 
-TEST_CASE("SQLGetData returns 24000 when cursor is positioned after end of result set.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 24000 when cursor is positioned after end of result set.", "[e2e][query][get_data]") {
   // Doc: "24000 - Invalid cursor state: ... the cursor was positioned before the
   //       start of the result set or after the end of the result set."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#diagnostics
@@ -939,7 +941,7 @@ TEST_CASE("SQLGetData returns 24000 when cursor is positioned after end of resul
 // Data Type Conversions
 // =============================================================================
 
-TEST_CASE("SQLGetData supports SQL_C_CHAR retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_CHAR retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -959,7 +961,7 @@ TEST_CASE("SQLGetData supports SQL_C_CHAR retrieval.", "[query][get_data]") {
   CHECK(indicator == 9);
 }
 
-TEST_CASE("SQLGetData supports SQL_C_SBIGINT retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_SBIGINT retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -979,7 +981,7 @@ TEST_CASE("SQLGetData supports SQL_C_SBIGINT retrieval.", "[query][get_data]") {
   CHECK(indicator == sizeof(SQLBIGINT));
 }
 
-TEST_CASE("SQLGetData supports SQL_C_DOUBLE retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_DOUBLE retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -999,7 +1001,7 @@ TEST_CASE("SQLGetData supports SQL_C_DOUBLE retrieval.", "[query][get_data]") {
   CHECK(indicator == sizeof(SQLDOUBLE));
 }
 
-TEST_CASE("SQLGetData supports SQL_C_FLOAT retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_FLOAT retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -1019,7 +1021,7 @@ TEST_CASE("SQLGetData supports SQL_C_FLOAT retrieval.", "[query][get_data]") {
   CHECK(indicator == sizeof(SQLREAL));
 }
 
-TEST_CASE("SQLGetData supports SQL_C_SHORT retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_SHORT retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -1039,7 +1041,7 @@ TEST_CASE("SQLGetData supports SQL_C_SHORT retrieval.", "[query][get_data]") {
   CHECK(indicator == sizeof(SQLSMALLINT));
 }
 
-TEST_CASE("SQLGetData supports SQL_C_BIT retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_BIT retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -1058,7 +1060,7 @@ TEST_CASE("SQLGetData supports SQL_C_BIT retrieval.", "[query][get_data]") {
   CHECK(value == 1);
 }
 
-TEST_CASE("SQLGetData supports SQL_C_TYPE_DATE retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_TYPE_DATE retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -1079,7 +1081,7 @@ TEST_CASE("SQLGetData supports SQL_C_TYPE_DATE retrieval.", "[query][get_data]")
   CHECK(date_value.day == 15);
 }
 
-TEST_CASE("SQLGetData supports SQL_C_TYPE_TIMESTAMP retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_TYPE_TIMESTAMP retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -1103,7 +1105,7 @@ TEST_CASE("SQLGetData supports SQL_C_TYPE_TIMESTAMP retrieval.", "[query][get_da
   CHECK(ts_value.second == 45);
 }
 
-TEST_CASE("SQLGetData supports SQL_C_BINARY retrieval.", "[query][get_data]") {
+TEST_CASE("SQLGetData supports SQL_C_BINARY retrieval.", "[e2e][query][get_data]") {
   // Doc: "TargetType [Input] The type identifier of the C data type of the
   //       *TargetValuePtr buffer."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -1127,7 +1129,7 @@ TEST_CASE("SQLGetData supports SQL_C_BINARY retrieval.", "[query][get_data]") {
 // Numeric Value Out of Range
 // =============================================================================
 
-TEST_CASE("SQLGetData returns 22003 when numeric value is out of range for target type.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 22003 when numeric value is out of range for target type.", "[e2e][query][get_data]") {
   // Doc: "22003 - Numeric value out of range: Returning the numeric value (as
   //       numeric or string) for the column would have caused the whole (as
   //       opposed to fractional) part of the number to be truncated."
@@ -1152,7 +1154,7 @@ TEST_CASE("SQLGetData returns 22003 when numeric value is out of range for targe
 // Fractional Truncation
 // =============================================================================
 
-TEST_CASE("SQLGetData returns 01S07 when fractional part is truncated.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 01S07 when fractional part is truncated.", "[e2e][query][get_data]") {
   // Doc: "01S07 - Fractional truncation: The data returned for one or more columns
   //       was truncated. For numeric data types, the fractional part of the number
   //       was truncated."
@@ -1181,7 +1183,7 @@ TEST_CASE("SQLGetData returns 01S07 when fractional part is truncated.", "[query
 // SQL_SUCCESS_WITH_INFO and SQLSTATE 01004 (Data Truncated)
 // =============================================================================
 
-TEST_CASE("SQLGetData returns 01004 when string data is truncated.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns 01004 when string data is truncated.", "[e2e][query][get_data]") {
   // Doc: "01004 - String data, right truncated: Not all of the data for the
   //       specified column, Col_or_Param_Num, could be retrieved in a single
   //       call to the function."
@@ -1204,7 +1206,7 @@ TEST_CASE("SQLGetData returns 01004 when string data is truncated.", "[query][ge
   CHECK(std::string((char*)buffer) == "This ");
 }
 
-TEST_CASE("SQLGetData returns SQL_SUCCESS on the last part of truncated data.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_SUCCESS on the last part of truncated data.", "[e2e][query][get_data]") {
   // Doc: "When it returns the last part of the data, SQLGetData returns SQL_SUCCESS.
   //       Neither SQL_NO_TOTAL nor zero can be returned on the last valid call to
   //       retrieve data from a column."
@@ -1237,7 +1239,8 @@ TEST_CASE("SQLGetData returns SQL_SUCCESS on the last part of truncated data.", 
 // SQLGetData with Block Cursors (SQL_GD_BLOCK)
 // =============================================================================
 
-TEST_CASE("SQLGetData cannot be called when SQL_ATTR_ROW_ARRAY_SIZE is set and SQL_GD_BLOCK is not supported.") {
+TEST_CASE("SQLGetData cannot be called when SQL_ATTR_ROW_ARRAY_SIZE is set and SQL_GD_BLOCK is not supported.",
+          "[e2e][query]") {
   // Doc: "If no extensions are supported, SQLGetData cannot be called if the
   //       rowset size is greater than 1."
   // Doc: "SQL_GD_BLOCK. If this option is returned by SQLGetInfo for the
@@ -1283,7 +1286,7 @@ TEST_CASE("SQLGetData cannot be called when SQL_ATTR_ROW_ARRAY_SIZE is set and S
 // SQLGetData for Multiple Rows
 // =============================================================================
 
-TEST_CASE("SQLGetData retrieves correct data on each successive row after SQLFetch.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves correct data on each successive row after SQLFetch.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData returns the data in a specified column. SQLGetData can be
   //       called only after one or more rows have been fetched from the result
   //       set by SQLFetch, SQLFetchScroll, or SQLExtendedFetch."
@@ -1320,7 +1323,7 @@ TEST_CASE("SQLGetData retrieves correct data on each successive row after SQLFet
 // SQLGetData with SQL_ARD_TYPE
 // =============================================================================
 
-TEST_CASE("SQLGetData with SQL_ARD_TYPE uses the type from the ARD descriptor.", "[query][get_data]") {
+TEST_CASE("SQLGetData with SQL_ARD_TYPE uses the type from the ARD descriptor.", "[e2e][query][get_data]") {
   // Doc: "If TargetType is SQL_ARD_TYPE, the driver uses the type identifier
   //       specified in the SQL_DESC_CONCISE_TYPE field of the ARD."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#arguments
@@ -1369,7 +1372,7 @@ TEST_CASE("SQLGetData with SQL_ARD_TYPE uses the type from the ARD descriptor.",
 // SQLGetData with SQL_ARD_TYPE and unmodified ARD returns error
 // =============================================================================
 
-TEST_CASE("SQLGetData with SQL_ARD_TYPE returns 07009 error when ARD is unmodified.", "[query][get_data]") {
+TEST_CASE("SQLGetData with SQL_ARD_TYPE returns 07009 error when ARD is unmodified.", "[e2e][query][get_data]") {
   // Doc: "If TargetType is SQL_ARD_TYPE, the driver uses the type identifier
   //       specified in the SQL_DESC_CONCISE_TYPE field of the ARD."
   // Note: when no descriptor fields have been set, SQL_DESC_CONCISE_TYPE defaults to
@@ -1411,7 +1414,7 @@ TEST_CASE("SQLGetData with SQL_ARD_TYPE returns 07009 error when ARD is unmodifi
 // SQLGetData does not interact directly with descriptor fields
 // =============================================================================
 
-TEST_CASE("SQLGetData does not modify ARD descriptor fields.", "[query][get_data]") {
+TEST_CASE("SQLGetData does not modify ARD descriptor fields.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData does not interact directly with any descriptor fields."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#descriptors-and-sqlgetdata
 
@@ -1450,7 +1453,7 @@ TEST_CASE("SQLGetData does not modify ARD descriptor fields.", "[query][get_data
 // SQLGetData after SQLFreeStmt SQL_CLOSE
 // =============================================================================
 
-TEST_CASE("SQLGetData works after SQLFreeStmt SQL_CLOSE and re-execute.", "[query][get_data]") {
+TEST_CASE("SQLGetData works after SQLFreeStmt SQL_CLOSE and re-execute.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData can be called only after one or more rows have been fetched
   //       from the result set..."
   // (Verifies SQLGetData works correctly on a new result set after cursor close)
@@ -1493,7 +1496,7 @@ TEST_CASE("SQLGetData works after SQLFreeStmt SQL_CLOSE and re-execute.", "[quer
 // SQLGetData with NULL data in various types
 // =============================================================================
 
-TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL value regardless of TargetType.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL value regardless of TargetType.", "[e2e][query][get_data]") {
   // Doc: "Sets *StrLen_or_IndPtr to SQL_NULL_DATA if the data is NULL."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
 
@@ -1530,7 +1533,8 @@ TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL value regardless of TargetT
 // SQLGetData on same column returns same data before next fetch
 // =============================================================================
 
-TEST_CASE("SQLGetData retrieves same data for same column on same row with SQL_GD_ANY_ORDER.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves same data for same column on same row with SQL_GD_ANY_ORDER.",
+          "[e2e][query][get_data]") {
   // Doc: "SQL_GD_ANY_ORDER. If this option is returned, SQLGetData can be called
   //       for unbound columns in any order."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#using-sqlgetdata
@@ -1568,7 +1572,7 @@ TEST_CASE("SQLGetData retrieves same data for same column on same row with SQL_G
 // SQLGetData with SQL_GD_BOUND
 // =============================================================================
 
-TEST_CASE("SQLGetData on a bound column when SQL_GD_BOUND is supported.", "[query][get_data]") {
+TEST_CASE("SQLGetData on a bound column when SQL_GD_BOUND is supported.", "[e2e][query][get_data]") {
   // Doc: "SQL_GD_BOUND. If this option is returned, SQLGetData can be called for
   //       bound columns as well as unbound columns."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#using-sqlgetdata
@@ -1613,7 +1617,7 @@ TEST_CASE("SQLGetData on a bound column when SQL_GD_BOUND is supported.", "[quer
 // SQLGetData mixed with SQLFetch and SQLFetchScroll
 // =============================================================================
 
-TEST_CASE("SQLGetData can be mixed with SQLFetch and SQLFetchScroll calls.", "[query][get_data]") {
+TEST_CASE("SQLGetData can be mixed with SQLFetch and SQLFetchScroll calls.", "[e2e][query][get_data]") {
   // Doc: "SQLGetData can be called only after one or more rows have been fetched
   //       from the result set by SQLFetch, SQLFetchScroll, or SQLExtendedFetch."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#comments
@@ -1664,7 +1668,7 @@ TEST_CASE("SQLGetData can be mixed with SQLFetch and SQLFetchScroll calls.", "[q
 // SQLGetData with empty string
 // =============================================================================
 
-TEST_CASE("SQLGetData returns empty string with indicator 0 for empty string column.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns empty string with indicator 0 for empty string column.", "[e2e][query][get_data]") {
   // Doc: "Places the length of the data in *StrLen_or_IndPtr."
   // (For empty string, length should be 0, not SQL_NULL_DATA)
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
@@ -1688,7 +1692,7 @@ TEST_CASE("SQLGetData returns empty string with indicator 0 for empty string col
 // SQLGetData with BufferLength exactly 1 for character data
 // =============================================================================
 
-TEST_CASE("SQLGetData with BufferLength 1 for character data returns only null terminator.", "[query][get_data]") {
+TEST_CASE("SQLGetData with BufferLength 1 for character data returns only null terminator.", "[e2e][query][get_data]") {
   // Doc: "If the data buffer supplied is too small to hold the null-termination
   //       character, SQLGetData returns SQL_SUCCESS_WITH_INFO and SQLSTATE 01004."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
@@ -1718,7 +1722,7 @@ TEST_CASE("SQLGetData with BufferLength 1 for character data returns only null t
 // SQLGetData with integer column in various C types
 // =============================================================================
 
-TEST_CASE("SQLGetData converts same integer to multiple C types.", "[query][get_data]") {
+TEST_CASE("SQLGetData converts same integer to multiple C types.", "[e2e][query][get_data]") {
   // Doc: "Converts the data to the type specified in TargetType."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
 
@@ -1772,7 +1776,7 @@ TEST_CASE("SQLGetData converts same integer to multiple C types.", "[query][get_
 // =============================================================================
 
 TEST_CASE("SQLGetData with BufferLength 0 for SQL_C_CHAR returns data length without writing data.",
-          "[query][get_data]") {
+          "[e2e][query][get_data]") {
   // Doc: "SQLGetData returns SQLSTATE HY090 (Invalid string or buffer length) when
   //       BufferLength is less than 0 but not when BufferLength is 0."
   // Per spec, if BufferLength = 0 and TargetValuePtr != NULL for variable-length types,
@@ -1799,7 +1803,7 @@ TEST_CASE("SQLGetData with BufferLength 0 for SQL_C_CHAR returns data length wit
 }
 
 TEST_CASE("SQLGetData with BufferLength 0 for SQL_C_BINARY returns data length without writing data.",
-          "[query][get_data]") {
+          "[e2e][query][get_data]") {
   // Doc: "SQLGetData returns SQLSTATE HY090 (Invalid string or buffer length) when
   //       BufferLength is less than 0 but not when BufferLength is 0."
   // For SQL_C_BINARY with BufferLength = 0, return the total data length in bytes.
@@ -1828,7 +1832,7 @@ TEST_CASE("SQLGetData with BufferLength 0 for SQL_C_BINARY returns data length w
 // Multi-call SQLGetData for SQL_C_WCHAR
 // =============================================================================
 
-TEST_CASE("SQLGetData retrieves wide string data in parts with SQL_C_WCHAR.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves wide string data in parts with SQL_C_WCHAR.", "[e2e][query][get_data]") {
   // Doc: "It can be called multiple times to retrieve variable-length data in parts."
   // For SQL_C_WCHAR, the offset tracking must account for UTF-16 code unit
   // boundaries (sizeof(SQLWCHAR) per code unit), not byte boundaries.
@@ -1889,7 +1893,7 @@ TEST_CASE("SQLGetData retrieves wide string data in parts with SQL_C_WCHAR.", "[
 // Multi-call SQLGetData for SQL_C_BINARY
 // =============================================================================
 
-TEST_CASE("SQLGetData retrieves binary data in parts with multiple SQL_C_BINARY calls.", "[query][get_data]") {
+TEST_CASE("SQLGetData retrieves binary data in parts with multiple SQL_C_BINARY calls.", "[e2e][query][get_data]") {
   // Doc: "It can be called multiple times to retrieve variable-length data in parts."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-variable-length-data-in-parts
 
@@ -1930,7 +1934,7 @@ TEST_CASE("SQLGetData retrieves binary data in parts with multiple SQL_C_BINARY 
 // SQLGetData NULL handling for additional data types
 // =============================================================================
 
-TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL double column.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL double column.", "[e2e][query][get_data]") {
   // Doc: "Sets *StrLen_or_IndPtr to SQL_NULL_DATA if the data is NULL."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
 
@@ -1948,7 +1952,7 @@ TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL double column.", "[query][g
   CHECK(indicator == SQL_NULL_DATA);
 }
 
-TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL binary column.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL binary column.", "[e2e][query][get_data]") {
   // Doc: "Sets *StrLen_or_IndPtr to SQL_NULL_DATA if the data is NULL."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
 
@@ -1966,7 +1970,7 @@ TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL binary column.", "[query][g
   CHECK(indicator == SQL_NULL_DATA);
 }
 
-TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL wide string column.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL wide string column.", "[e2e][query][get_data]") {
   // Doc: "Sets *StrLen_or_IndPtr to SQL_NULL_DATA if the data is NULL."
   // https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdata-function#retrieving-data-with-sqlgetdata
 
@@ -1988,7 +1992,7 @@ TEST_CASE("SQLGetData returns SQL_NULL_DATA for NULL wide string column.", "[que
 // SQLGetData function sequence error (HY010)
 // =============================================================================
 
-TEST_CASE("SQLGetData returns HY010 when called on a statement with no executed query.", "[query][get_data]") {
+TEST_CASE("SQLGetData returns HY010 when called on a statement with no executed query.", "[e2e][query][get_data]") {
   // Doc: "HY010 - Function sequence error: (DM) The specified StatementHandle was
   //       not in an executed state. The function was called without first calling
   //       SQLExecDirect, SQLExecute, or a catalog function."
@@ -2020,7 +2024,7 @@ TEST_CASE("SQLGetData returns HY010 when called on a statement with no executed 
 // SQLGetData column offset reset with lower column number
 // =============================================================================
 
-TEST_CASE("SQLGetData on a lower column number after partial read resets the offset.", "[query][get_data]") {
+TEST_CASE("SQLGetData on a lower column number after partial read resets the offset.", "[e2e][query][get_data]") {
   // Doc: "Successive calls to SQLGetData will retrieve data from the last column
   //       requested; prior offsets become invalid. For example, when the following
   //       sequence is performed:

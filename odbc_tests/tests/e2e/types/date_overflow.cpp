@@ -16,7 +16,7 @@ constexpr const char* kAddMonthsOverflowQuery =
     "SELECT ADD_MONTHS(c_date, c_int4 - 1184021) FROM t";
 }
 
-TEST_CASE("ADD_MONTHS DATE overflow surfaces a datetime overflow error", "[date][overflow][22007]") {
+TEST_CASE("ADD_MONTHS DATE overflow surfaces a datetime overflow error", "[e2e][types][date][overflow][22007]") {
   // Given a connection
   Connection conn;
   auto stmt = conn.createStatement();

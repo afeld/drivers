@@ -33,7 +33,7 @@
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should cast string values to appropriate type for string and synonyms",
-                 "[datatype][string]") {
+                 "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   // When Query "SELECT 'hello'::<type>, 'Hello World'::<type>, '日本語テスト'::<type>" is executed
@@ -57,7 +57,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should cast string values to appropriate ty
 // SIMPLE SELECTS - LITERALS (Happy path, Corner cases)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select hardcoded string literals", "[datatype][string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select hardcoded string literals", "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   // When Query "SELECT 'hello' AS str1, 'Hello World' AS str2, 'Snowflake Driver Test' AS str3"
@@ -70,7 +70,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select hardcoded string literals", "
   CHECK(get_data<SQL_C_CHAR>(stmt, 3) == "Snowflake Driver Test");
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select string literals with corner case values", "[datatype][string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select string literals with corner case values",
+                 "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   // When Query selecting corner case string literals is executed
@@ -108,7 +109,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select string literals with corner c
 // SIMPLE SELECTS - FROM TABLE (Happy path, Corner cases)
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select hardcoded string values from table", "[datatype][string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select hardcoded string values from table",
+                 "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with VARCHAR column is created
@@ -139,7 +141,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select hardcoded string values from 
   CHECK(row == 3);
 }
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case string values from table", "[datatype][string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case string values from table",
+                 "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with VARCHAR column is created
@@ -199,7 +202,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case string values fro
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should insert and select back hardcoded string values using parameter binding",
-                 "[datatype][string]") {
+                 "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   // And A temporary table with VARCHAR column is created
@@ -233,7 +236,8 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should insert and select back hardcoded str
 // SELECT BINDING TESTS
 // ============================================================================
 
-TEST_CASE_METHOD(ConnSchemaFixture, "should select string literals using parameter binding", "[datatype][string]") {
+TEST_CASE_METHOD(ConnSchemaFixture, "should select string literals using parameter binding",
+                 "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   auto stmt = conn.createStatement();
@@ -272,7 +276,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select string literals using paramet
 }
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case string values using parameter binding",
-                 "[datatype][string]") {
+                 "[e2e][types][datatype][string]") {
   // Given Snowflake client is logged in
 
   // When Query "SELECT ?::VARCHAR" is executed with each corner case string value bound
@@ -383,7 +387,7 @@ TEST_CASE_METHOD(ConnSchemaFixture, "should select corner case string values usi
 // ============================================================================
 
 TEST_CASE_METHOD(ConnSchemaFixture, "should download string data in multiple chunks",
-                 "[datatype][string][large_result_set]") {
+                 "[e2e][types][datatype][string][large_result_set]") {
   // This test ensures proper handling of large result sets that span multiple chunks
   // ~10^6 values ensures data is downloaded in at least two chunks
   // Given Snowflake client is logged in

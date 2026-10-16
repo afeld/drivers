@@ -66,7 +66,8 @@ std::vector<std::pair<std::string, std::string>> mfa_token_cache_attrs() {
 // Passcode flow
 // =============================================================================
 
-TEST_CASE("should authenticate using username password and TOTP passcode", "[mfa_auth][requires_browser]") {
+TEST_CASE("should authenticate using username password and TOTP passcode",
+          "[e2e][authentication][mfa_auth][requires_browser]") {
   REQUIRE_BROWSER("MFA E2E needs the headless browser container for TOTP generation");
 
   // Given Authentication is set to username_password_mfa and user, password and passcode are provided
@@ -83,7 +84,8 @@ TEST_CASE("should authenticate using username password and TOTP passcode", "[mfa
   REQUIRE_ODBC(disconnect_ret, dbc);
 }
 
-TEST_CASE("should authenticate using username password with appended TOTP passcode", "[mfa_auth][requires_browser]") {
+TEST_CASE("should authenticate using username password with appended TOTP passcode",
+          "[e2e][authentication][mfa_auth][requires_browser]") {
   REQUIRE_BROWSER("MFA E2E needs the headless browser container for TOTP generation");
 
   // Given Authentication is set to username_password_mfa and user, password with appended passcode are provided and
@@ -105,7 +107,7 @@ TEST_CASE("should authenticate using username password with appended TOTP passco
 // Token caching flow
 // =============================================================================
 
-TEST_CASE("should reuse cached MFA token without passcode", "[mfa_auth][requires_browser]") {
+TEST_CASE("should reuse cached MFA token without passcode", "[e2e][authentication][mfa_auth][requires_browser]") {
   REQUIRE_BROWSER("MFA E2E needs the headless browser container for TOTP generation");
 
   // Given Authentication is set to username_password_mfa and MFA token has been cached from a previous connection
@@ -137,7 +139,8 @@ TEST_CASE("should reuse cached MFA token without passcode", "[mfa_auth][requires
 // Error cases
 // =============================================================================
 
-TEST_CASE("should fail authentication when wrong password is provided", "[mfa_auth][requires_browser]") {
+TEST_CASE("should fail MFA authentication when wrong password is provided",
+          "[e2e][authentication][mfa_auth][requires_browser]") {
   SKIP("Disabled: bad-secret tests cause pipeline flakiness by blocking the test account");
   REQUIRE_BROWSER("MFA E2E needs the headless browser container for TOTP generation");
 

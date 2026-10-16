@@ -4,7 +4,7 @@
 #include "get_data.hpp"
 #include "odbc_cast.hpp"
 
-TEST_CASE("should bind SQL_C_BIT true to SQL_VARCHAR.", "[query][bind_parameter][c_bit_to_varchar]") {
+TEST_CASE("should bind SQL_C_BIT true to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_bit_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -22,7 +22,7 @@ TEST_CASE("should bind SQL_C_BIT true to SQL_VARCHAR.", "[query][bind_parameter]
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "1");
 }
 
-TEST_CASE("should bind SQL_C_BIT false to SQL_VARCHAR.", "[query][bind_parameter][c_bit_to_varchar]") {
+TEST_CASE("should bind SQL_C_BIT false to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_bit_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
@@ -40,7 +40,7 @@ TEST_CASE("should bind SQL_C_BIT false to SQL_VARCHAR.", "[query][bind_parameter
   CHECK(get_data<SQL_C_CHAR>(stmt, 1) == "0");
 }
 
-TEST_CASE("should bind SQL_C_BIT value > 1 to SQL_VARCHAR.", "[query][bind_parameter][c_bit_to_varchar]") {
+TEST_CASE("should bind SQL_C_BIT value > 1 to SQL_VARCHAR.", "[e2e][query][bind_parameter][c_bit_to_varchar]") {
   // Given Snowflake client is logged in
   Connection conn;
   auto stmt = conn.createStatement();
