@@ -12,7 +12,6 @@ import {
   destroyConnectionAsync,
   executeAsync,
   isRunningNewDriverWithBD,
-  NOT_IMPLEMENTED_IN_NEW_DRIVER,
   randomizeName,
   sendExecute,
   sleepAsync,
@@ -27,6 +26,14 @@ import {
 const NOT_EXECUTING_CODE = '000605';
 const POLL_MS = 250;
 const STATUS_DEADLINE_MS = 30_000;
+const QUERY_REQUEST_DELAY_MS = 15_000;
+const ABORT_DELAY_MS = 2_000;
+const CANCELED_EXECUTE = {
+  name: 'OperationFailedError',
+  code: '000604',
+  sqlState: '57014',
+  message: 'SQL execution canceled',
+};
 
 async function waitForStatus(
   connection: Connection,
@@ -73,7 +80,7 @@ describe('Query Cancellation', () => {
     await destroyConnectionAsync(connection);
   });
 
-  it('cancels a running query', async () => {
+  it('should cancel a running sync query when the server accepts the abort', async () => {
     const queryTag = randomizeName('CANCEL');
     const { statement, completion } = sendExecute(
       connection,
@@ -88,36 +95,45 @@ describe('Query Cancellation', () => {
 
     await cancelStatementAsync(statement as RowStatement);
 
-    expect(await failure).toMatchObject({
-      name: 'OperationFailedError',
-      code: '000604',
-      sqlState: '57014',
-      message: 'SQL execution canceled',
-    });
+    expect(await failure).toMatchObject(CANCELED_EXECUTE);
     expect(
       await waitForStatus(connection, queryId, (status) => !connection.isStillRunning(status)),
     ).toBe('FAILED_WITH_ERROR');
   });
 
-  it('does nothing when the query is already complete', async () => {
+  it('should cancel a finished query when the server says it is not running', async () => {
     const { statement } = await executeAsync(connection, 'select 1');
     if (isRunningNewDriverWithBD('BD#104')) {
       await cancelStatementAsync(statement);
       expect(await connectionGetQueryStatusWithBD(connection, statement.getQueryId()!)).toBe(
         'SUCCESS',
       );
-      return;
+    } else {
+      await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
+        code: NOT_EXECUTING_CODE,
+        sqlState: '01000',
+      } satisfies Partial<SnowflakeError>);
     }
-    await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
-      code: NOT_EXECUTING_CODE,
-      sqlState: '01000',
-    } satisfies Partial<SnowflakeError>);
+  });
+
+  it('should cancel a running async query by query id when the server accepts the abort', async () => {
+    const queryTag = randomizeName('CANCEL_ASYNC');
+    const { statement } = await executeAsync(
+      connection,
+      'select count(*) from table(generator(timeLimit => 60))',
+      { asyncExec: true, parameters: { QUERY_TAG: queryTag } },
+    );
+    const queryId = await waitForRunningQueryId(connection, queryTag);
+
+    await cancelStatementAsync(statement as RowStatement);
+
+    expect(
+      await waitForStatus(connection, queryId, (status) => !connection.isStillRunning(status)),
+    ).toBe('FAILED_WITH_ERROR');
   });
 });
 
-// TODO: the new driver's statement.cancel() resolves without waiting for the server abort,
-// so a failed abort-request is not surfaced and this block is skipped for it.
-describe.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)('Query Cancellation with Wiremock', () => {
+describe('Query Cancellation with Wiremock', () => {
   const queryId = '01baf79b-0108-1a60-0000-01110354a6ce';
   let wiremock: WiremockServer;
 
@@ -146,27 +162,151 @@ describe.skipIf(NOT_IMPLEMENTED_IN_NEW_DRIVER)('Query Cancellation with Wiremock
     await wiremock.destroy();
   });
 
-  it('should throw when the abort request fails', async () => {
+  it('should cancel an async query by query id when the server rejects the abort', async () => {
     await wiremock.stub({
       request: {
         method: 'POST',
         urlPathPattern: `/queries/${queryId}/abort-request.*`,
       },
-      response: jsonResponse(403, {
-        success: false,
-        code: null,
-        message: null,
-        data: null,
-      }),
+      response: {
+        ...jsonResponse(403, {
+          success: false,
+          code: null,
+          message: null,
+          data: null,
+        }),
+        fixedDelayMilliseconds: ABORT_DELAY_MS,
+      },
     });
     const connection = await createLiveConnection(wiremock.connectionOptions);
     const { statement } = await executeAsync(connection, 'select 1', {
       asyncExec: true,
     });
 
-    await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
-      name: 'RequestFailedError',
-      code: 401002,
+    if (isRunningNewDriverWithBD('BD#116')) {
+      const started = Date.now();
+      await cancelStatementAsync(statement);
+      expect(Date.now() - started).toBeLessThan(ABORT_DELAY_MS);
+    } else {
+      await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
+        name: 'RequestFailedError',
+        code: 401002,
+      });
+    }
+  });
+
+  async function holdQueryRequest(): Promise<void> {
+    await wiremock.stub({
+      priority: 1,
+      request: {
+        method: 'POST',
+        urlPathPattern: '/queries/v1/query-request.*',
+      },
+      response: {
+        ...jsonResponse(200, {
+          success: true,
+          code: '333333',
+          data: { queryId },
+        }),
+        fixedDelayMilliseconds: QUERY_REQUEST_DELAY_MS,
+      },
     });
+  }
+
+  async function stubRequestIdAbort(status: number, success: boolean): Promise<void> {
+    await wiremock.stub({
+      request: {
+        method: 'POST',
+        urlPathPattern: '/queries/v1/abort-request.*',
+      },
+      response: {
+        ...jsonResponse(status, {
+          success,
+          code: null,
+          message: null,
+          data: null,
+        }),
+        fixedDelayMilliseconds: ABORT_DELAY_MS,
+      },
+    });
+  }
+
+  async function startBeforeQueryId(asyncExec: boolean): Promise<{
+    statement: RowStatement;
+    failure: Promise<SnowflakeError | undefined>;
+  }> {
+    const connection = await createLiveConnection(wiremock.connectionOptions);
+    const { statement, completion } = sendExecute(
+      connection,
+      'select 1',
+      asyncExec ? { asyncExec: true } : {},
+    );
+    await expect
+      .poll(async () => (await wiremock.findRequests('/queries/v1/query-request.*')).length, {
+        interval: 50,
+        timeout: 2500,
+      })
+      .toBeGreaterThan(0);
+    return {
+      statement: statement as RowStatement,
+      failure: completion.then(
+        () => undefined,
+        (rejection: { error: SnowflakeError }) => rejection.error,
+      ),
+    };
+  }
+
+  it('should cancel an async query before it has a query id when the server accepts the abort', async () => {
+    await holdQueryRequest();
+    await stubRequestIdAbort(200, true);
+    const { statement, failure } = await startBeforeQueryId(true);
+
+    if (isRunningNewDriverWithBD('BD#116')) {
+      const started = Date.now();
+      await cancelStatementAsync(statement);
+      expect(Date.now() - started).toBeLessThan(ABORT_DELAY_MS);
+      expect(await failure).toMatchObject(CANCELED_EXECUTE);
+    } else {
+      await cancelStatementAsync(statement);
+      await failure;
+    }
+  });
+
+  it('should cancel a running sync query when the server rejects the abort', async () => {
+    await holdQueryRequest();
+    await stubRequestIdAbort(403, false);
+    const { statement, failure } = await startBeforeQueryId(false);
+
+    if (isRunningNewDriverWithBD('BD#116')) {
+      const started = Date.now();
+      await cancelStatementAsync(statement);
+      expect(Date.now() - started).toBeLessThan(ABORT_DELAY_MS);
+      expect(await failure).toMatchObject(CANCELED_EXECUTE);
+    } else {
+      await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
+        name: 'RequestFailedError',
+        code: 401002,
+      });
+      await failure;
+    }
+  });
+
+  it('should cancel an async query before it has a query id when the server rejects the abort', async () => {
+    await holdQueryRequest();
+    await stubRequestIdAbort(403, false);
+    const { statement, failure } = await startBeforeQueryId(true);
+
+    if (isRunningNewDriverWithBD('BD#116')) {
+      const started = Date.now();
+      await cancelStatementAsync(statement);
+      expect(Date.now() - started).toBeLessThan(ABORT_DELAY_MS);
+      expect(await failure).toMatchObject(CANCELED_EXECUTE);
+    } else {
+      await expect(cancelStatementAsync(statement)).rejects.toMatchObject({
+        name: 'RequestFailedError',
+        code: 401002,
+      });
+      await failure;
+    }
   });
 });

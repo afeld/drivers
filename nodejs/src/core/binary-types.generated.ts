@@ -88,7 +88,7 @@ export declare class Statement {
   hasNext(): boolean
   isMultiStatement(): boolean
   nextResult(): Promise<boolean>
-  cancel(): Promise<void>
+  cancel(): void
 }
 
 export interface ConnectionParams {

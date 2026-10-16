@@ -9,7 +9,7 @@ use crate::session::Session;
 use crate::session_params::KnownSessionParameters;
 use crate::session_state::SessionState;
 use crate::validation_utils::{require_valid_query_id, require_valid_request_id};
-use napi::bindgen_prelude::*;
+use napi::bindgen_prelude::{spawn, *};
 use napi::tokio::sync::MutexGuard;
 use napi_derive::napi;
 use result::{QueryResult, ResultValue, StatementResult};
@@ -68,6 +68,7 @@ pub struct Statement {
     result: StatementResult,
     operation_ctx: Arc<OperationCtx>,
     request_id: Option<uuid::Uuid>,
+    session: Session,
 }
 
 #[napi]
@@ -79,22 +80,25 @@ impl Statement {
         let request_id = resolve_request_id(params.request_id.take(), uuid::Uuid::new_v4)?;
         let operation_ctx = Arc::new(OperationCtx::with_own_token());
         let task_ctx = Arc::clone(&operation_ctx);
+        let task_session = session.clone();
         Ok(Self {
             result: StatementResult::from_future(async move {
-                run_execute(session, params, request_id, &task_ctx).await
+                run_execute(task_session, params, request_id, &task_ctx).await
             }),
             operation_ctx,
             request_id: Some(request_id),
+            session,
         })
     }
 
     pub(crate) fn from_query_id(session: Session, query_id: String) -> Self {
         let operation_ctx = Arc::new(OperationCtx::with_own_token());
         let task_ctx = Arc::clone(&operation_ctx);
+        let task_session = session.clone();
         Self {
             result: StatementResult::from_future(async move {
                 require_valid_query_id(&query_id)?;
-                let ready = session.ready().await?;
+                let ready = task_session.ready().await?;
                 let result = BRIDGE
                     .driver
                     .connection_get_query_result(Some(&task_ctx), ready.connection(), query_id)
@@ -103,6 +107,7 @@ impl Statement {
             }),
             operation_ctx,
             request_id: None,
+            session,
         }
     }
 
@@ -302,12 +307,27 @@ impl Statement {
         })
     }
 
-    // TODO: surface genuine cancel failures (e.g. CancelTimeout) instead of
-    // swallowing the outcome.
     #[napi]
-    pub async fn cancel(&self) -> Result<()> {
-        self.operation_ctx.cancel();
-        Ok(())
+    pub fn cancel(&self) {
+        let Some(Ok(value)) = self.result.get() else {
+            tracing::debug!("cancel before query id is known, cancelling the running execute");
+            self.operation_ctx.cancel();
+            return;
+        };
+        let query_id = value.query_id();
+        let session = self.session.clone();
+        spawn(async move {
+            let Ok(ready) = session.ready().await else {
+                return;
+            };
+            if let Err(error) = BRIDGE
+                .driver
+                .connection_abort_query(ready.connection(), query_id.clone())
+                .await
+            {
+                tracing::warn!(%query_id, ?error, "abort request failed, ignoring");
+            }
+        });
     }
 }
 

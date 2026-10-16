@@ -1985,7 +1985,7 @@ behavior_differences:
       Profile loading is done by the core and matches the other universal-driver wrappers.
 
   104:
-    name: 'Cancel of a finished query is a no-op'
+    name: 'Cancel of a finished query succeeds'
     status: unknown
     type: bugfix
     reviewed: false
@@ -1995,7 +1995,8 @@ behavior_differences:
       statement.cancel() on a finished query throws 000605
       ("Identified SQL statement is not currently executing."), SQLSTATE 01000.
     new_driver_behavior: |
-      statement.cancel() on a finished query succeeds and leaves the query as it is.
+      statement.cancel() on a finished query succeeds and leaves the statement result as it is.
+      The abort request is still sent, and its response, including 000605, is ignored.
     status_rationale: |
       Cancelling after the query has already finished should not be an error.
 
@@ -2234,3 +2235,24 @@ behavior_differences:
     description: |
       The server code tells the application why the session was lost, which 407002 does not.
       isFatal keeps the signal the old driver gives to reconnect.
+
+  116:
+    name: 'statement.cancel() does not report the abort result'
+    status: allowed
+    type: api_incompatibility
+    reviewed: false
+    is_breaking_change: true
+    impact: low
+    old_driver_behavior: |
+      `statement.cancel()` sends the abort request and calls back when that abort request finishes.
+      An abort rejected by server fails `cancel()` with "RequestFailedError 401002".
+      `execute()` finishes when its own query request finishes on the server, and if the abort succeeded it returns with "SQL execution canceled".
+    new_driver_behavior: |
+      `statement.cancel()` returns immediately and does not report the abort result.
+      An abort rejected by the server is ignored, whether `execute()` is still running or the statement already has a query id.
+      While `execute()` is still running, it waits for the abort and then fails with "SQL execution canceled".
+      When that abort is rejected or never answered, `execute()` still fails with 000604, but the query may keep running on the server; the old driver's `execute()` keeps waiting for the real result instead.
+      With `asyncExec`, once the query id is back, `execute()` has already succeeded.
+      `cancel()` does not change that result.
+    status_rationale: |
+      Cancel is non-blocking, as in ODBC SQLCancel. The abort response is not part of cancel().

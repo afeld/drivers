@@ -147,8 +147,8 @@ export class RowStatement {
   }
 
   cancel(callback?: StatementCallback): void {
-    this.#core
-      .cancel()
+    Promise.resolve()
+      .then(() => this.#core.cancel())
       .then(() => callback?.(undefined, this, undefined))
       .catch((err: Error) => callback?.(err as SnowflakeError, this, undefined));
   }
