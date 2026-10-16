@@ -2062,3 +2062,76 @@ behavior_differences:
       Old Node's AuthOauthPAT.updateBody supplied the password as the token.
       sf_core requires token or token_file_path for PROGRAMMATIC_ACCESS_TOKEN.
       This entry stays until core accepts password as the PAT when token is absent.
+
+  112:
+    name: 'Uppercase proxy environment variables win over lowercase ones'
+    status: unknown
+    type: unknown
+    reviewed: false
+    is_breaking_change: true
+    impact: low
+    old_driver_behavior: |
+      When both upper and lowercase environment variable are set, the lowercase one is used:
+      - `http_proxy` wins over `HTTP_PROXY`.
+      - `https_proxy` wins over `HTTPS_PROXY`.
+      - `no_proxy` wins over `NO_PROXY`.
+    new_driver_behavior: |
+      When both upper and lowercase environment variable are set, the uppercase one is used:
+      - `HTTP_PROXY` wins over `http_proxy`.
+      - `HTTPS_PROXY` wins over `https_proxy`.
+      - `NO_PROXY` wins over `no_proxy`.
+    status_rationale: |
+      Every new driver uses the same HTTP client, and that client prefers the
+      uppercase variable. Preferring the uppercase name is the more logical choice.
+
+  113:
+    name: 'NO_PROXY matching follows the HTTP client rules, not shell globs'
+    status: unknown
+    type: api_incompatibility
+    reviewed: false
+    is_breaking_change: true
+    impact: low
+    old_driver_behavior: |
+      - Entries are separated by commas or `|`.
+      - `*` is a glob, and a leading `.` matches any prefix.
+      - A bare domain matches only that host, not a subdomain.
+      - `*.snowflakecomputing.com`, `account.*.com`, and `acc*.*.com` match, including inside a comma list or `localhost|account.*.com`.
+    new_driver_behavior: |
+      - Entries are separated by commas. `|` is not a separator.
+      - `*` is a wildcard only when the whole entry is `*`.
+      - A bare domain matches that domain and its subdomains, so `snowflakecomputing.com` bypasses `account.snowflakecomputing.com`.
+      - `*.snowflakecomputing.com`, `account.*.com`, and `acc*.*.com` do not match, so the login is still sent through the proxy.
+
+  114:
+    name: 'Proxying an HTTP account URL is fixed'
+    status: allowed
+    type: bugfix
+    reviewed: false
+    is_breaking_change: false
+    impact: low
+    old_driver_behavior: |
+      When the account URL protocol is `http`, the old driver uses Node's `HttpAgent`
+      for the proxy:
+      1. The default `proxyProtocol` is `http`, so `HttpAgent` rejects the login.
+         Shown in tests.
+      2. `proxyUser` and `proxyPassword`, and credentials in `HTTP_PROXY`, are not
+         sent as `Proxy-Authorization`. Shown in tests.
+      3. The request line carries only the path, not the full target URL a forward
+         proxy expects. Not shown in tests.
+      4. `proxyProtocol: 'https'` throws before the proxy is contacted. Not shown
+         in tests.
+      5. S3 and GCS requests use `HttpAgent` for `https` endpoints. Not shown in
+         tests.
+    new_driver_behavior: |
+      When the account URL protocol is `http`, the new driver sends the login
+      through the proxy:
+      1. The login is sent. The driver does not reject it.
+      2. The login request carries `Proxy-Authorization`.
+      3. The request line carries the full target URL.
+      4. `proxyProtocol: 'https'` opens TLS to the proxy.
+      5. S3 and GCS requests use the HTTPS proxy path.
+    description: |
+      These differences are one entry because each has low impact. Users almost
+      always connect over HTTPS. An HTTP account URL is used in these tests.
+    status_rationale: |
+      These are bugs in the old driver. The new driver fixes them.

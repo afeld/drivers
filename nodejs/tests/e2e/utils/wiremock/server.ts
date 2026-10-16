@@ -16,7 +16,7 @@ const WIREMOCK_JAR = join(
 );
 const WIREMOCK_MAPPINGS = join(WIREMOCK_ROOT, 'mappings');
 
-interface LoggedRequest {
+export interface LoggedRequest {
   url: string;
   method: string;
   headers: Record<string, string>;
@@ -33,7 +33,13 @@ export class WiremockServer {
   // it is healthy and ready to serve.
   static async spawn(): Promise<WiremockServer> {
     const server = new WiremockServer();
-    await server.#spawn();
+    await server.#spawn([]);
+    return server;
+  }
+
+  static async spawnForwardProxy(): Promise<WiremockServer> {
+    const server = new WiremockServer();
+    await server.#spawn(['--enable-browser-proxying', '--proxy-pass-through', 'false']);
     return server;
   }
 
@@ -113,7 +119,7 @@ export class WiremockServer {
     });
   }
 
-  async #spawn(): Promise<void> {
+  async #spawn(extraArgs: string[]): Promise<void> {
     if (!existsSync(WIREMOCK_JAR)) {
       throw new Error(`WireMock standalone JAR not found at ${WIREMOCK_JAR}`);
     }
@@ -127,6 +133,7 @@ export class WiremockServer {
         String(this.#port),
         '--disable-banner',
         '--local-response-templating',
+        ...extraArgs,
       ],
       { stdio: 'ignore' },
     );

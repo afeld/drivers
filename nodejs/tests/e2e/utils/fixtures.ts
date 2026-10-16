@@ -1,4 +1,4 @@
-import { onTestFinished } from 'vitest';
+import { onTestFinished, vi } from 'vitest';
 import { Connection, ConnectionOptions } from '../../types/sdk-types.js';
 import { TempDir, type TempDirOptions } from './files.js';
 import {
@@ -8,6 +8,13 @@ import {
   snowflake,
   TEST_CONNECTION_OPTIONS,
 } from './index.js';
+
+export function stubEnv(name: string, value: string): void {
+  vi.stubEnv(name, value);
+  onTestFinished(() => {
+    vi.unstubAllEnvs();
+  });
+}
 
 export function createConnection(overrides: Partial<ConnectionOptions> = {}): Connection {
   return snowflake.createConnection({

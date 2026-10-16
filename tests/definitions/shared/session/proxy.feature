@@ -1,4 +1,4 @@
-@python @odbc @jdbc
+@python @odbc @jdbc @nodejs
 Feature: HTTP proxy support
 
   The driver should route requests through an HTTP proxy when configured
@@ -6,27 +6,27 @@ Feature: HTTP proxy support
 
   Scenarios are worded in driver-neutral terms so one scenario covers every
   wrapper that implements the behavior. Each wrapper spells the settings its
-  own way — `proxy_host`/`proxy_port` in Python, `useProxy`/`proxyHost`/
-  `proxyPort` in JDBC, `PROXY` in ODBC — and the per-wrapper spelling lives in
-  the test, not in the scenario name.
+  own way — `proxy_host`/`proxy_port` in Python, `proxyHost`/`proxyPort` in
+  Node.js, `useProxy`/`proxyHost`/`proxyPort` in JDBC, `PROXY` in ODBC — and
+  the per-wrapper spelling lives in the test, not in the scenario name.
 
   # ===========================================================================
   #                    Connection-parameter-driven routing
   # ===========================================================================
 
-  @python_e2e @jdbc_e2e
+  @python_e2e @jdbc_e2e @nodejs_e2e
   Scenario: should route request through proxy when proxy host and port are configured
     Given a forward-proxy WireMock serving a canned login response
     When the driver connects with the proxy host and port pointing at the proxy
     Then the connect succeeds and the proxy received the login request
 
-  @python_e2e @odbc_e2e
+  @python_e2e @odbc_e2e @nodejs_e2e
   Scenario: should route request through proxy when proxy url is configured
     Given a forward-proxy WireMock serving a canned login response
     When the driver connects with the proxy url pointing at the proxy
     Then the connect succeeds and the proxy received the login request
 
-  @python_e2e @jdbc_e2e
+  @python_e2e @jdbc_e2e @nodejs_e2e
   Scenario: should bypass proxy when the target host is excluded from proxying
     Given a forward-proxy WireMock serving a canned login response
     When the driver connects with a proxy and the target host excluded from proxying
@@ -43,14 +43,14 @@ Feature: HTTP proxy support
   #                    Environment-variable-driven routing
   # ===========================================================================
 
-  # Python defaults use_proxy_env to true. ODBC keeps the core default of false.
+  # Python and Node default use_proxy_env / useEnvProxy to true. ODBC keeps the core default of false.
   @python_e2e
   Scenario: should route request through proxy when proxy env vars are set
     Given HTTP_PROXY env var points at a forward-proxy WireMock
     When the driver connects without an explicit proxy
     Then the connect succeeds and the proxy received the login request
 
-  @odbc_e2e
+  @odbc_e2e @nodejs_e2e
   Scenario: should route request through proxy when proxy env vars are enabled
     Given HTTP_PROXY env var points at a forward-proxy WireMock
     When the driver connects with proxy env vars enabled
@@ -62,7 +62,8 @@ Feature: HTTP proxy support
     When the driver connects with env-var proxy detection disabled
     Then the connect fails and the proxy received no requests
 
-  @odbc_e2e
+  # Node defaults useEnvProxy to true, so this default-off case does not apply.
+  @odbc_e2e @nodejs_not_needed
   Scenario: should ignore proxy env vars by default
     Given HTTP_PROXY env var points at a forward-proxy WireMock
     When the driver connects without proxy env vars enabled
@@ -72,7 +73,7 @@ Feature: HTTP proxy support
   #                    Precedence: params vs env vars
   # ===========================================================================
 
-  @python_e2e
+  @python_e2e @nodejs_e2e
   Scenario: should prefer explicit proxy_host over HTTP_PROXY env var
     Given two forward-proxy WireMock instances are running
     And HTTP_PROXY env var points at the second proxy

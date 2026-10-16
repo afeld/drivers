@@ -232,6 +232,46 @@ export type ConnectionOptions = Record<string, unknown> & {
    */
   crlOnDiskCache?: boolean;
   /**
+   * Proxy URL (`[scheme://][user:pass@]host[:port]`). `proxyHost`, `proxyPort`,
+   * `proxyProtocol`, `proxyUser`, and `proxyPassword` override matching URL
+   * components when both are set.
+   */
+  proxy?: string;
+  /**
+   * Hostname of the proxy server. Traffic to Snowflake is sent here instead of
+   * directly to the account host.
+   */
+  proxyHost?: string;
+  /**
+   * Port of the proxy server.
+   */
+  proxyPort?: number;
+  /**
+   * Username for an authenticated proxy server.
+   */
+  proxyUser?: string;
+  /**
+   * Password for the user specified by {@link proxyUser}.
+   */
+  proxyPassword?: string;
+  /**
+   * Protocol used to connect to the proxy server (`http` or `https`).
+   *
+   * @default "http"
+   */
+  proxyProtocol?: string;
+  /**
+   * Hosts the driver connects to directly, bypassing the proxy.
+   *
+   * Separate entries with commas. `*` bypasses every host only when it is the
+   * whole entry. A bare domain matches that host and its subdomains, so
+   * `snowflakecomputing.com` bypasses `account.snowflakecomputing.com`.
+   *
+   * @example
+   * noProxy: 'localhost,snowflakecomputing.com'
+   */
+  noProxy?: string;
+  /**
    * Replaces the system-browser launch used by `EXTERNALBROWSER` SSO and
    * `OAUTH_AUTHORIZATION_CODE`. The driver still binds the loopback
    * listener and waits for the IdP redirect; this function only receives

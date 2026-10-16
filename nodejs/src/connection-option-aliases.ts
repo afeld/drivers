@@ -36,6 +36,13 @@ const CONNECTION_OPTION_ALIASES: Record<string, string> = {
   // Core's Node.js alias resolves this spelling to authentication_timeout (BD#59).
   browserActionTimeout: 'browserActionTimeout',
   useEnvProxy: 'use_proxy_env',
+  proxy: 'proxy',
+  proxyHost: 'proxy_host',
+  proxyPort: 'proxy_port',
+  proxyUser: 'proxy_user',
+  proxyPassword: 'proxy_password',
+  proxyProtocol: 'proxy_scheme',
+  noProxy: 'no_proxy',
   port: 'port',
   protocol: 'protocol',
   queryTag: 'query_tag',
