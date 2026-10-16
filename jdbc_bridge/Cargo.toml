@@ -13,6 +13,9 @@ fips = ["sf_core/fips"]
 [dependencies]
 sf_core = { path = "../sf_core" }
 proto_utils = { path = "../proto_utils" }
+error_trace = { path = "../error_trace" }
+arrow = { version = ">=54.0.0, <59", features = ["ffi"] }
+snafu = "0.8.7"
 tracing-subscriber = { version = "0.3.19", features = ["fmt", "env-filter"] }
 tracing = "0.1.41"
 tokio = { version = "1.50.0", features = ["rt"] }

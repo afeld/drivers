@@ -32,6 +32,7 @@ use sf_core::utils::sync::MutexRecoverExt;
 use sf_core::wrapper_event;
 use tracing::instrument::WithSubscriber;
 
+mod arrow_stream;
 mod native_buffer;
 
 static JDBC_LOG_MANAGER: Mutex<Option<LogManager>> = Mutex::new(None);

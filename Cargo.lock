@@ -2538,9 +2538,12 @@ dependencies = [
 name = "jdbc_bridge"
 version = "0.1.0"
 dependencies = [
+ "arrow",
+ "error_trace",
  "jni 0.21.1",
  "proto_utils",
  "sf_core",
+ "snafu 0.8.9",
  "tokio",
  "tracing",
  "tracing-subscriber",
