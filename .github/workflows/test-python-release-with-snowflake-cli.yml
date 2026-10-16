@@ -1,0 +1,86 @@
+name: Test Python release with Snowflake CLI
+
+on:
+  # Release-branch pushes do not trigger this workflow.
+  # push:
+  #   branches:
+  #     - 'release/python-v*'
+  workflow_dispatch:
+    inputs:
+      ud-branch:
+        description: 'Universal driver branch to test'
+        required: false
+        default: 'main'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-snowflake-cli-tests:
+    # ubuntu-slim jobs are terminated after 15 minutes.
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Run Snowflake CLI UD tests
+        env:
+          GH_TOKEN: ${{ secrets.DRIVER_MIRROR_TOKEN }}
+          UD_BRANCH: ${{ inputs.ud-branch || github.ref_name }}
+        run: |
+          set -euo pipefail
+          repo=snowflakedb/snowflake-cli
+          workflow=ud-manual-tests.yaml
+          dispatch_epoch=$(date -u +%s)
+          since=$(date -u -d "@$((dispatch_epoch - 30))" +%Y-%m-%dT%H:%M:%SZ)
+
+          echo "Triggering Snowflake CLI UD tests for ${UD_BRANCH}"
+          gh workflow run "$workflow" \
+            --repo "$repo" \
+            --ref main \
+            --field "ud-branch=${UD_BRANCH}"
+
+          # gh workflow run returns no run id. This locates the run created after the dispatch.
+          run_id=""
+          run_url=""
+          for _ in $(seq 1 60); do
+            match=$(gh run list \
+              --repo "$repo" \
+              --workflow "$workflow" \
+              --branch main \
+              --event workflow_dispatch \
+              --limit 10 \
+              --json databaseId,createdAt,url \
+              | jq -r --arg since "$since" '
+                  map(select(.createdAt >= $since))
+                  | .[0]
+                  | if . == null then "" else "\(.databaseId)\t\(.url)" end
+                ')
+            if [[ -n "$match" ]]; then
+              run_id=${match%%$'\t'*}
+              run_url=${match#*$'\t'}
+              job_name=$(gh run view "$run_id" --repo "$repo" --json jobs --jq '.jobs[0].name // empty')
+              if [[ -n "$job_name" && "$job_name" == *"($UD_BRANCH)" ]]; then
+                break
+              fi
+              if [[ -n "$job_name" ]]; then
+                run_id=""
+                run_url=""
+              fi
+            fi
+            sleep 10
+          done
+
+          if [[ -z "$run_id" ]]; then
+            echo "::error::Snowflake CLI workflow run for ${UD_BRANCH} did not appear"
+            exit 1
+          fi
+
+          echo "Watching ${run_url}"
+          echo "Snowflake CLI UD tests: ${run_url}" >> "$GITHUB_STEP_SUMMARY"
+          set +e
+          gh run watch "$run_id" --repo "$repo" --interval 30 --exit-status
+          set -e
+          conclusion=$(gh run view "$run_id" --repo "$repo" --json conclusion --jq '.conclusion')
+          echo "Snowflake CLI UD tests concluded: ${conclusion}"
+          echo "Conclusion: ${conclusion}" >> "$GITHUB_STEP_SUMMARY"
+          [[ "$conclusion" == "success" ]]
