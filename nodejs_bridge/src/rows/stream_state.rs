@@ -5,18 +5,18 @@ use arrow::array::RecordBatch;
 use arrow::error::ArrowError;
 use napi::bindgen_prelude::{Array as JsArray, Env};
 use sf_core::apis::database_driver_v1::AsyncArrowBatchFetcher;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use tokio::sync::Mutex as AsyncMutex;
 
 /// Parks one query result's current batch so `next_row` can decode JS values
 /// on the main thread while `fetch_next_batch` awaits the next batch off it.
-pub(super) struct StreamState {
+pub(crate) struct StreamState {
     fetcher: AsyncMutex<AsyncArrowBatchFetcher>,
     batch: Mutex<Option<CurrentBatch>>,
 }
 
 impl StreamState {
-    pub(super) fn new(fetcher: AsyncArrowBatchFetcher) -> Self {
+    pub(crate) fn new(fetcher: AsyncArrowBatchFetcher) -> Self {
         Self {
             fetcher: AsyncMutex::new(fetcher),
             batch: Mutex::new(None),
@@ -29,9 +29,9 @@ impl StreamState {
     /// Skipping zero-row batches here rather than letting them through means a
     /// `true` return always guarantees at least one row, so callers can't spin
     /// between this and [`next_row`](Self::next_row) without making progress.
-    pub(super) async fn fetch_next_batch(
+    pub(crate) async fn fetch_next_batch(
         &self,
-        session_params: &Arc<KnownSessionParameters>,
+        session_params: &KnownSessionParameters,
     ) -> Result<bool, BridgeError> {
         let prepared = {
             let mut fetcher = self.fetcher.lock().await;
@@ -62,7 +62,7 @@ impl StreamState {
     /// Decodes one row of the resident batch into a fresh JS array, or `None`
     /// once that batch is drained and the caller should refill via
     /// [`fetch_next_batch`](Self::fetch_next_batch).
-    pub(super) fn next_row<'env>(&self, env: &'env Env) -> napi::Result<Option<JsArray<'env>>> {
+    pub(crate) fn next_row<'env>(&self, env: &'env Env) -> napi::Result<Option<JsArray<'env>>> {
         match self.batch.lock().unwrap().as_mut() {
             Some(batch) => batch.next_row(env),
             None => Ok(None),
@@ -90,7 +90,7 @@ struct CurrentBatch {
 impl CurrentBatch {
     fn from_batch(
         batch: &RecordBatch,
-        session_params: &Arc<KnownSessionParameters>,
+        session_params: &KnownSessionParameters,
     ) -> Result<Self, ArrowError> {
         let column_readers = batch
             .schema()
@@ -98,7 +98,7 @@ impl CurrentBatch {
             .iter()
             .enumerate()
             .map(|(index, field)| {
-                ColumnReader::for_field(field, batch.column(index), session_params)
+                ColumnReader::for_field(index, field, batch.column(index), session_params)
             })
             .collect::<Result<Vec<_>, _>>()
             .map_err(ArrowError::ComputeError)?;
@@ -115,7 +115,10 @@ impl CurrentBatch {
         }
         let mut row = env.create_array(self.column_readers.len() as u32)?;
         for (index, reader) in self.column_readers.iter().enumerate() {
-            row.set(index as u32, reader.read(self.row_index))?;
+            let cell = reader
+                .read(self.row_index)
+                .map_err(napi::Error::from_reason)?;
+            row.set(index as u32, cell)?;
         }
         self.row_index += 1;
         Ok(Some(row))
@@ -142,8 +145,8 @@ mod tests {
 
     /// BOOLEAN columns ignore the format; `fetch_next_batch` still requires
     /// `KnownSessionParameters` to build the resident batch's column readers.
-    fn session_params() -> Arc<KnownSessionParameters> {
-        Arc::new(KnownSessionParameters::defaults())
+    fn session_params() -> KnownSessionParameters {
+        KnownSessionParameters::defaults()
     }
 
     fn boolean_batch(schema: &Arc<Schema>, values: Vec<bool>) -> RecordBatch {

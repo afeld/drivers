@@ -5,13 +5,16 @@ use std::borrow::Cow;
 use crate::class_constructors::ClassConstructors;
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum DateTimezone<'a> {
+pub(super) enum DateTimezone<'a> {
     Named(&'a str),
     Offset(i32),
 }
 
+/// Lets column readers stay free of `napi::Env`, so they can be unit-tested without a Node runtime
+/// and all N-API code lives in this file.
+/// Strings and bytes borrow from the Arrow batch, so data is copied once (into the JS heap).
 #[derive(Debug, PartialEq)]
-pub(crate) enum JsCell<'a> {
+pub(super) enum JsCell<'a> {
     Null,
     Bool(bool),
     Str(Cow<'a, str>),

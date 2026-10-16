@@ -1,6 +1,6 @@
-use super::stream_state::StreamState;
 use crate::BRIDGE;
 use crate::error::BridgeError;
+use crate::rows::StreamState;
 use crate::session_params::KnownSessionParameters;
 use napi::bindgen_prelude::spawn;
 use napi::tokio::sync::{Mutex, MutexGuard, Notify, OnceCell};

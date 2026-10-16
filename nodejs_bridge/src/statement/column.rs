@@ -12,7 +12,7 @@ pub struct Column {
 }
 
 impl Column {
-    pub(crate) fn from_metadata(index: u32, meta: &ColumnMetadata) -> Self {
+    pub(super) fn from_metadata(index: u32, meta: &ColumnMetadata) -> Self {
         Self {
             name: meta.name.clone(),
             index,
