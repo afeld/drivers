@@ -2013,6 +2013,25 @@ behavior_differences:
       Each of those options errors with `{param} was set but authenticator was not set to
       WORKLOAD_IDENTITY`, citing the snake_case parameter name.
 
+  121:
+    name: 'credentialCacheDir is not a connection option; the system keyring is used when present'
+    status: unknown
+    type: api_incompatibility
+    reviewed: false
+    is_breaking_change: true
+    impact: medium
+    old_driver_behavior: |
+      credentialCacheDir selects the first directory for the JSON credential
+      file on every platform. The file is the credential store.
+    new_driver_behavior: |
+      credentialCacheDir is not accepted. createConnection throws
+      InvalidParameterError "Unknown connection option: credentialCacheDir".
+      Tokens are stored in the system keyring when that store keeps credentials
+      until they are deleted (macOS, Windows, and Linux with a keyring). The
+      JSON file is used only when no such keyring is available. Its directory
+      comes from SF_TEMPORARY_CREDENTIAL_CACHE_DIR when that variable names an
+      existing directory, then the usual platform cache locations.
+
   109:
     name: 'Azure WIF accepts a single-hop impersonation path'
     status: allowed
