@@ -629,9 +629,10 @@ class TestIsValid:
 class TestClientPrefetchThreads:
     """Tests for the client_prefetch_threads connection property."""
 
-    def test_should_return_default_value_of_4(self, connection):
-        """client_prefetch_threads should return 4 when not explicitly configured."""
-        assert connection.client_prefetch_threads == 4
+    @pytest.mark.skip_reference(reason="Reference driver defaults client_prefetch_threads to 4")
+    def test_should_return_none_when_unset(self, connection):
+        """client_prefetch_threads stays unset until the caller sets it."""
+        assert connection.client_prefetch_threads is None
 
     def test_should_return_configured_value_from_connection_kwarg(self, connection_factory):
         """client_prefetch_threads should reflect the value set at connection time."""

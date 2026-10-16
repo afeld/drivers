@@ -381,7 +381,7 @@ class TestClientSessionKeepAliveKwargUnit:
 
         conn = Connection(user="u", account="a")
 
-        assert conn.client_session_keep_alive is False
+        assert conn.client_session_keep_alive is None
         assert conn.client_session_keep_alive_heartbeat_frequency is None
 
     def test_keep_alive_attributes_are_read_only(self, connection):
@@ -1830,8 +1830,8 @@ class TestExpired:
 class TestClientPrefetchThreadsProperty:
     """Unit tests for Connection.client_prefetch_threads getter and setter."""
 
-    def test_should_return_default_value_of_4(self, connection):
-        assert connection.client_prefetch_threads == 4
+    def test_should_return_none_when_unset(self, connection):
+        assert connection.client_prefetch_threads is None
 
     def test_should_return_configured_value(self, mock_db_api):
         conn = Connection(user="test_user", account="test_account", client_prefetch_threads=8)

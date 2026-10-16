@@ -2188,7 +2188,6 @@ static PARAM_DEFS: &[ParamDef] = &[
     ParamDef::builder()
         .canonical_name(param_names::CLIENT_PREFETCH_THREADS.as_str())
         .value_type(ValueType::Int)
-        .default(DefaultValue::Int(4))
         .sensitive(false)
         .auth(false)
         .description("Number of concurrent chunk prefetch threads for result set downloading")
@@ -2210,7 +2209,6 @@ static PARAM_DEFS: &[ParamDef] = &[
     ParamDef::builder()
         .canonical_name(param_names::CLIENT_SESSION_KEEP_ALIVE.as_str())
         .value_type(ValueType::Bool)
-        .default(DefaultValue::Bool(false))
         .sensitive(false)
         .auth(false)
         .description("Keep the session alive with periodic heartbeat requests")
@@ -3672,11 +3670,14 @@ mod tests {
             .expect("CLIENT_SESSION_KEEP_ALIVE should resolve");
         assert_eq!(keep_alive.value_type, ValueType::Bool);
         assert_eq!(keep_alive.scopes, &[ParamScope::Session]);
+        assert!(keep_alive.default.is_none());
+
         let freq = r
             .resolve("CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY")
             .expect("heartbeat frequency param should resolve");
         assert_eq!(freq.value_type, ValueType::Int);
         assert_eq!(freq.scopes, &[ParamScope::Session]);
+        assert!(freq.default.is_none());
     }
 
     #[test]
@@ -4038,6 +4039,9 @@ mod tests {
                 .resolve(key)
                 .unwrap_or_else(|| panic!("expected registry entry for {key}"));
             assert!(d.is_sent_as_session_parameter(), "key {key}");
+            if matches!(key, "CLIENT_PREFETCH_THREADS" | "CLIENT_SESSION_KEEP_ALIVE") {
+                assert!(d.default.is_none(), "key {key}");
+            }
             let wire = match d.send_as_session_parameter {
                 Some(SendAsSessionParameter::Aliased { alias }) => alias.to_ascii_uppercase(),
                 Some(SendAsSessionParameter::Exact | SendAsSessionParameter::Clamped { .. }) => {

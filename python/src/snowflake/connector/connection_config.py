@@ -424,11 +424,11 @@ class ConnectionConfig(ConnectionConfigMixin):
     client_memory_limit: int | None = 1536
     """Memory budget in MB for chunk prefetch buffer (0 = unlimited). Default: 1536"""
 
-    client_prefetch_threads: int | None = 4
-    """Number of concurrent chunk prefetch threads for result set downloading. Default: 4"""
+    client_prefetch_threads: int | None = None
+    """Number of concurrent chunk prefetch threads for result set downloading"""
 
-    client_session_keep_alive: bool | None = False
-    """Keep the session alive with periodic heartbeat requests. Default: False"""
+    client_session_keep_alive: bool | None = None
+    """Keep the session alive with periodic heartbeat requests"""
 
     client_session_keep_alive_heartbeat_frequency: int | None = None
     """Heartbeat frequency in seconds (clamped to interval master_token_validity/16..master_token_validity/4)"""

@@ -627,10 +627,7 @@ class TestToOptions:
     def test_client_session_keep_alive_defaults(self):
         config = ConnectionConfig()
         opts = config.to_options()
-        # Default is False (forwarded so the server sees the explicit choice).
-        assert opts["CLIENT_SESSION_KEEP_ALIVE"] is False
-        # Frequency stays None: the heartbeat scheduler computes the default
-        # from master_token_validity at runtime.
+        assert "CLIENT_SESSION_KEEP_ALIVE" not in opts
         assert "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY" not in opts
 
     def test_proxy_fields_forwarded_with_canonical_names(self):
