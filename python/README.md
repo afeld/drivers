@@ -1,8 +1,5 @@
 # Snowflake Connector for Python
 
-> [!CAUTION]
-> This version of the driver is in public preview and is not ready for use with production data and may be unstable.
-
 This package includes the Snowflake Connector for Python, which conforms to the [Python DB API 2.0](https://www.python.org/dev/peps/pep-0249/) specification.
 
 The Snowflake Connector for Python provides an interface for developing Python
