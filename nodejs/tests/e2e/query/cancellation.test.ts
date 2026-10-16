@@ -88,16 +88,12 @@ describe('Query Cancellation', () => {
 
     await cancelStatementAsync(statement as RowStatement);
 
-    expect(await failure).toMatchObject(
-      isRunningNewDriverWithBD('BD#105')
-        ? { name: 'Error', message: 'Operation was cancelled' }
-        : {
-            name: 'OperationFailedError',
-            code: '000604',
-            sqlState: '57014',
-            message: 'SQL execution canceled',
-          },
-    );
+    expect(await failure).toMatchObject({
+      name: 'OperationFailedError',
+      code: '000604',
+      sqlState: '57014',
+      message: 'SQL execution canceled',
+    });
     expect(
       await waitForStatus(connection, queryId, (status) => !connection.isStillRunning(status)),
     ).toBe('FAILED_WITH_ERROR');

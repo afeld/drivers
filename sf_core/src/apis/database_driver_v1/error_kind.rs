@@ -5,7 +5,7 @@ use crate::compression_types::CompressionTypeError;
 use crate::config::ConfigErrorClass;
 use crate::config::connection_config::ValidationCode;
 use crate::file_manager::FileManagerError;
-use crate::rest::snowflake::RestError;
+use crate::rest::snowflake::{self, RestError};
 
 /// Classification of an [`ApiError`] for wrapper exception mapping.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -63,6 +63,10 @@ impl ApiError {
 
     pub fn reauthentication_required(&self) -> bool {
         reauthentication_required(self)
+    }
+
+    pub fn terminates_session(&self) -> bool {
+        terminates_session(self)
     }
 
     pub fn root_cause(&self) -> Option<String> {
@@ -237,6 +241,24 @@ fn reauthentication_required(error: &ApiError) -> bool {
                 ..
             }
         ),
+        _ => false,
+    }
+}
+
+fn terminates_session(error: &ApiError) -> bool {
+    match error {
+        ApiError::MasterTokenTerminal { .. } => true,
+        ApiError::Query { source, .. } => {
+            matches!(source.as_ref(), RestError::MasterTokenTerminal { .. })
+                || snowflake::reports_session_gone(source)
+        }
+        ApiError::SessionRefresh { source, .. } => match source.as_ref() {
+            RestError::MasterTokenTerminal { .. } => true,
+            RestError::SessionRefreshFailed { code, .. } => {
+                snowflake::is_unrecoverable_session(*code)
+            }
+            _ => false,
+        },
         _ => false,
     }
 }

@@ -52,6 +52,7 @@ New features:
 - Added `RustTransport::database_driver()` so an in-process wrapper can call `result_set_get_async_stream` without boxing the result as a C stream pointer. (snowflakedb/drivers#1949)
 - Added file-level parallelism to PUT and GET: a multi-file transfer now uploads or downloads several files at once instead of one at a time, bounded by the statement's `PARALLEL` value, and result rows keep their original file order. Fail-fast now lets files already in flight (up to `PARALLEL` of them) finish and land on the stage after the first error, instead of stopping after only the current file. (snowflakedb/drivers#1451)
 - Added the `FILE` (18), `INTERVAL_YEAR_MONTH` (19) and `INTERVAL_DAY_TIME` (20) type codes to the Python type-code table, matching legacy `snowflake-connector-python`. Columns of these types previously reported as `TEXT` in `cursor.description`. (snowflakedb/drivers#1697)
+- Added `ApiError::terminates_session()` so an in-process wrapper can tell from the error alone that `connection_is_usable` now reports the connection as terminated. (snowflakedb/drivers#2696)
 
 Changes:
 

@@ -133,6 +133,17 @@ const MASTER_TOKEN_TERMINAL_CODES: [i32; 3] = [
 pub(crate) fn is_unrecoverable_session(code: i32) -> bool {
     matches!(code, SESSION_GONE | SESSION_CLOSED)
 }
+/// Whether `err` is an ordinary failed query or heartbeat whose GS code means
+/// the session cannot be recovered. Those answers have no `RestError` variant
+/// of their own.
+pub(crate) fn reports_session_gone(err: &RestError) -> bool {
+    let code = match err {
+        RestError::QueryFailed { code, .. } => *code,
+        RestError::Heartbeat { code, .. } => Some(*code),
+        _ => return false,
+    };
+    code.is_some_and(is_unrecoverable_session)
+}
 /// GS error code returned when the OAuth access token presented at login is
 /// invalid. Treated cross-driver as a signal to evict the cached access
 /// token and replay the OAuth flow.

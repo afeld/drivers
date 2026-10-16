@@ -63,13 +63,16 @@ impl ClientError {
         if is_snowflake_unreachable(error) {
             return Self::of_network_unreachable(error.root_cause());
         }
+        if matches!(error.kind(), ErrorKind::Cancelled) {
+            return Self::of_cancelled();
+        }
         Self {
             name: error_name(error),
             message: error.to_string(),
             code: error.vendor_code().map(ErrorCode::Server),
             sql_state: error.sql_state(),
             cause: error.root_cause(),
-            is_fatal: false,
+            is_fatal: error.terminates_session(),
         }
     }
 
@@ -177,6 +180,17 @@ impl ClientError {
             code: Some(ErrorCode::Driver(401001)),
             sql_state: None,
             cause,
+            is_fatal: false,
+        }
+    }
+
+    fn of_cancelled() -> Self {
+        Self {
+            name: Some("OperationFailedError"),
+            message: "SQL execution canceled".to_string(),
+            code: Some(ErrorCode::Server(604)),
+            sql_state: Some("57014".to_string()),
+            cause: None,
             is_fatal: false,
         }
     }

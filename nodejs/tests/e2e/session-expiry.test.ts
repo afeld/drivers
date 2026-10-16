@@ -13,6 +13,13 @@ import {
 const SESSION_TOKEN_EXPIRED = '390112';
 const MASTER_TOKEN_EXPIRED = '390114';
 const SESSION_GONE = '390111';
+const TERMINATED_CONNECTION = {
+  name: 'ClientError',
+  code: 407002,
+  sqlState: '08003',
+  isFatal: true,
+  message: 'Unable to perform operation using terminated connection.',
+};
 
 describe('Session Expiry', () => {
   let wiremock: WiremockServer;
@@ -38,7 +45,16 @@ describe('Session Expiry', () => {
     expect(connection.isUp()).toBe(true);
 
     await expect(executeAsync(connection, 'select 1')).rejects.toMatchObject({
-      error: expect.any(Error),
+      error: isRunningNewDriverWithBD('BD#115')
+        ? {
+            name: 'OperationFailedError',
+            code: MASTER_TOKEN_EXPIRED,
+            sqlState: '08001',
+            isFatal: true,
+            message:
+              'Failed to refresh session: Master token can never be renewed - full re-authentication required (GS code 390114)',
+          }
+        : TERMINATED_CONNECTION,
     });
     expect(connection.isUp()).toBe(false);
   });
@@ -52,7 +68,16 @@ describe('Session Expiry', () => {
     expect(connection.isUp()).toBe(true);
 
     await expect(executeAsync(connection, 'select 1')).rejects.toMatchObject({
-      error: expect.any(Error),
+      error: isRunningNewDriverWithBD('BD#115')
+        ? {
+            name: 'OperationFailedError',
+            code: SESSION_GONE,
+            sqlState: '08001',
+            isFatal: true,
+            message:
+              'Failed to refresh session: Session refresh failed: Session no longer exists. (code: 390111)',
+          }
+        : TERMINATED_CONNECTION,
     });
     expect(connection.isUp()).toBe(false);
   });

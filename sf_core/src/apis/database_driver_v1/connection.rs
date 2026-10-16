@@ -1660,18 +1660,6 @@ pub struct RefreshContext {
     external_session_id: Option<SensitiveString>,
 }
 
-/// Whether `err` is an ordinary failed query or heartbeat whose GS code means
-/// the session cannot be recovered. Those answers have no `RestError` variant
-/// of their own.
-fn reports_session_gone(err: &RestError) -> bool {
-    let code = match err {
-        RestError::QueryFailed { code, .. } => *code,
-        RestError::Heartbeat { code, .. } => Some(*code),
-        _ => return false,
-    };
-    code.is_some_and(snowflake::is_unrecoverable_session)
-}
-
 impl RefreshContext {
     /// Create a `RefreshContext` for a query operation.
     ///
@@ -1770,7 +1758,7 @@ impl RefreshContext {
 
     /// Records a server answer that takes the session away, and reports whether it did.
     fn record_session_gone(&self, err: &RestError) -> bool {
-        if !reports_session_gone(err) {
+        if !snowflake::reports_session_gone(err) {
             return false;
         }
         tracing::error!("Server reported the session no longer exists");
@@ -5100,7 +5088,7 @@ mod tests {
             .expect_err("a gone session leaves nothing to refresh");
 
         assert!(
-            matches!(&err, ApiError::Query { source, .. } if reports_session_gone(source)),
+            matches!(&err, ApiError::Query { source, .. } if snowflake::reports_session_gone(source)),
             "the server's own error must propagate, got {err:?}"
         );
         assert!(session_terminated.load(Ordering::SeqCst));
@@ -5160,6 +5148,93 @@ mod tests {
 
         assert!(!refresh, "a gone session must not be refreshed");
         assert!(session_terminated.load(Ordering::SeqCst));
+    }
+
+    fn reads_terminated(ctx: &RefreshContext) -> bool {
+        ctx.session_terminated.load(Ordering::SeqCst)
+            || ctx.is_master_token_expired.load(Ordering::SeqCst)
+    }
+
+    fn terminated_after(record: impl FnOnce(&RefreshContext)) -> bool {
+        let ctx = session_gone_context(&Arc::new(AtomicBool::new(false)), "http://127.0.0.1:1");
+        record(&ctx);
+        reads_terminated(&ctx)
+    }
+
+    fn master_token_terminal() -> RestError {
+        RestError::MasterTokenTerminal {
+            code: snowflake::MASTER_TOKEN_EXPIRED,
+            location: snafu::Location::default(),
+        }
+    }
+
+    fn server_answers() -> Vec<RestError> {
+        vec![
+            query_failed_with(snowflake::SESSION_GONE),
+            query_failed_with(snowflake::SESSION_CLOSED),
+            query_failed_with(1003),
+            master_token_terminal(),
+            RestError::SessionExpired {
+                location: snafu::Location::default(),
+            },
+        ]
+    }
+
+    #[test]
+    fn should_mark_the_session_terminated_exactly_when_a_query_error_says_so() {
+        use crate::refresh::Refresher;
+
+        for source in server_answers() {
+            let err = ApiError::Query {
+                source: Box::new(source),
+                location: snafu::Location::default(),
+            };
+
+            let terminated = terminated_after(|ctx| {
+                Refresher::<SensitiveString, ApiError>::should_refresh(ctx, &err);
+            });
+
+            assert_eq!(terminated, err.terminates_session(), "{err:?}");
+        }
+    }
+
+    #[tokio::test]
+    async fn should_mark_the_session_terminated_exactly_when_a_refresh_error_says_so() {
+        let answers = server_answers()
+            .into_iter()
+            .filter(|answer| !matches!(answer, RestError::SessionExpired { .. }));
+        for answer in answers {
+            let mut ctx =
+                session_gone_context(&Arc::new(AtomicBool::new(false)), "http://127.0.0.1:1");
+            ctx.refresh_token(None).await.unwrap();
+
+            let err = ctx
+                .refresh_token(Some(answer))
+                .await
+                .expect_err("no answer here leaves a token to retry with");
+
+            assert_eq!(reads_terminated(&ctx), err.terminates_session(), "{err:?}");
+        }
+    }
+
+    #[test]
+    fn should_mark_the_session_terminated_exactly_when_a_renewal_refusal_says_so() {
+        let refusals = [
+            refresh_failed_with(snowflake::SESSION_GONE),
+            refresh_failed_with(snowflake::SESSION_CLOSED),
+            refresh_failed_with(390104),
+            master_token_terminal(),
+        ];
+
+        for source in refusals {
+            let terminated = terminated_after(|ctx| ctx.record_failed_renewal(&source));
+            let err = ApiError::SessionRefresh {
+                source: Box::new(source),
+                location: snafu::Location::default(),
+            };
+
+            assert_eq!(terminated, err.terminates_session(), "{err:?}");
+        }
     }
 
     #[tokio::test]
@@ -5279,7 +5354,7 @@ mod tests {
             .expect_err("a closed session leaves nothing to refresh");
 
         assert!(
-            matches!(&err, ApiError::Query { source, .. } if reports_session_gone(source)),
+            matches!(&err, ApiError::Query { source, .. } if snowflake::reports_session_gone(source)),
             "the server's own error must propagate, got {err:?}"
         );
         assert!(session_terminated.load(Ordering::SeqCst));

@@ -2001,17 +2001,22 @@ behavior_differences:
 
   105:
     name: 'Cancelled query fails with a plain Error'
-    status: todo
+    status: fixed
     type: bug
     reviewed: false
-    is_breaking_change: true
+    is_breaking_change: false
     impact: low
     old_driver_behavior: |
       The cancelled execute fails with OperationFailedError, code 000604,
       SQLSTATE 57014, "SQL execution canceled".
     new_driver_behavior: |
-      The cancelled execute fails with a plain Error "Operation was cancelled",
-      with no code or SQLSTATE.
+      Same as the old driver: the cancelled execute fails with OperationFailedError, code 000604,
+      SQLSTATE 57014, "SQL execution canceled".
+    status_rationale: |
+      The new driver used to fail a cancelled execute with a plain Error "Operation was cancelled"
+      and no code or SQLSTATE; it now reports the server cancellation error.
+    description: |
+      No longer a difference between drivers.
 
   106:
     name: 'WIF validation and OIDC-impersonation error messages use snake_case core wording'
@@ -2208,3 +2213,24 @@ behavior_differences:
       always connect over HTTPS. An HTTP account URL is used in these tests.
     status_rationale: |
       These are bugs in the old driver. The new driver fixes them.
+
+  115:
+    name: 'A query that loses its session fails with the server error and isFatal, not ClientError 407002'
+    status: allowed
+    type: api_incompatibility
+    reviewed: false
+    is_breaking_change: true
+    impact: medium
+    old_driver_behavior: |
+      When a query needs a session renewal and Snowflake refuses it with 390114 (master token
+      expired) or 390111 (session gone), the query fails with ClientError 407002, SQL state 08003,
+      isFatal true, "Unable to perform operation using terminated connection."
+    new_driver_behavior: |
+      The query fails with OperationFailedError carrying the server code ('390114' or '390111'),
+      SQL state 08001, isFatal true, and the core message, for example "Failed to refresh session:
+      Session refresh failed: Session no longer exists. (code: 390111)". The next query fails
+      with ClientError 407002 and isFatal true on both drivers. Refusals that leave the
+      connection up (BD#20) are not fatal.
+    description: |
+      The server code tells the application why the session was lost, which 407002 does not.
+      isFatal keeps the signal the old driver gives to reconnect.
