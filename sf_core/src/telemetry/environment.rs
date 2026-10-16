@@ -44,6 +44,49 @@ impl EnvironmentInfo {
     }
 }
 
+/// Libc the running process is linked against. `None` off Linux, where there
+/// is no glibc or musl.
+pub struct LibcInfo {
+    pub family: Option<String>,
+    pub version: Option<String>,
+}
+
+pub fn detect_libc() -> LibcInfo {
+    #[cfg(all(target_os = "linux", target_env = "gnu"))]
+    {
+        // SAFETY: `gnu_get_libc_version` returns a non-null pointer to a
+        // static NUL-terminated string owned by glibc for the process lifetime.
+        let version = unsafe { std::ffi::CStr::from_ptr(libc::gnu_get_libc_version()) }
+            .to_string_lossy()
+            .trim()
+            .to_string();
+        let version = if version.is_empty() {
+            None
+        } else {
+            Some(version)
+        };
+        LibcInfo {
+            family: Some("glibc".to_string()),
+            version,
+        }
+    }
+    #[cfg(all(target_os = "linux", target_env = "musl"))]
+    {
+        LibcInfo {
+            family: Some("musl".to_string()),
+            version: None,
+        }
+    }
+    #[cfg(not(any(
+        all(target_os = "linux", target_env = "gnu"),
+        all(target_os = "linux", target_env = "musl")
+    )))]
+    LibcInfo {
+        family: None,
+        version: None,
+    }
+}
+
 pub fn detect_os_version() -> String {
     let info = os_info::get();
     let version = info.version().to_string();
@@ -57,6 +100,28 @@ pub fn detect_os_version() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn detect_libc_matches_the_linked_c_library() {
+        let info = detect_libc();
+        #[cfg(all(target_os = "linux", target_env = "gnu"))]
+        {
+            assert_eq!(info.family.as_deref(), Some("glibc"));
+            let version = info.version.expect("glibc version");
+            let major = version.split('.').next().expect("glibc major");
+            assert!(major.chars().all(|c| c.is_ascii_digit()));
+        }
+        #[cfg(all(target_os = "linux", target_env = "musl"))]
+        {
+            assert_eq!(info.family.as_deref(), Some("musl"));
+            assert!(info.version.is_none());
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            assert!(info.family.is_none());
+            assert!(info.version.is_none());
+        }
+    }
 
     #[test]
     fn detect_returns_non_empty_os_fields() {

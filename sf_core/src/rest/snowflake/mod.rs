@@ -487,6 +487,7 @@ pub fn user_agent(client_info: &ClientInfo) -> String {
 }
 
 fn base_auth_request_data(login_parameters: &LoginParameters) -> AuthRequestData {
+    let libc = crate::telemetry::environment::detect_libc();
     AuthRequestData {
         account_name: login_parameters.account_name.clone(),
         client_app_id: login_parameters.client_info.client_app_id.clone(),
@@ -514,6 +515,8 @@ fn base_auth_request_data(login_parameters: &LoginParameters) -> AuthRequestData
             core_version: env!("CARGO_PKG_VERSION").to_string(),
             is_fips: crate::tls::tls_provider_is_fips(),
             application_path: login_parameters.client_info.application_path.clone(),
+            libc_family: libc.family,
+            libc_version: libc.version,
         },
         spcs_token: login_parameters.spcs_token.clone(),
         ..Default::default()
@@ -4540,6 +4543,31 @@ mod tests {
             json["CLIENT_ENVIRONMENT"]["APPLICATION_PATH"],
             "/home/user/app.py"
         );
+    }
+
+    #[test]
+    fn auth_request_sends_libc_on_linux_only() {
+        let login_params = test_login_params();
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let client = reqwest::Client::new();
+        let data = rt
+            .block_on(auth_request_data(
+                &client,
+                &login_params,
+                None,
+                None,
+                None,
+                &RetryPolicy::default(),
+                None,
+                crate::crl::CrlManager::new(),
+                crate::tls::RootStoreProvider::new(),
+            ))
+            .unwrap();
+        let json = serde_json::to_value(&data).unwrap();
+        let env = &json["CLIENT_ENVIRONMENT"];
+        let libc = crate::telemetry::environment::detect_libc();
+        assert_eq!(env["LIBC_FAMILY"].as_str(), libc.family.as_deref());
+        assert_eq!(env["LIBC_VERSION"].as_str(), libc.version.as_deref());
     }
 
     #[test]

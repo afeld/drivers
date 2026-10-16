@@ -63,6 +63,10 @@ pub struct AuthRequestClientEnvironment {
     pub is_fips: bool,
     #[serde(rename = "APPLICATION_PATH")]
     pub application_path: String,
+    #[serde(rename = "LIBC_FAMILY", skip_serializing_if = "Option::is_none")]
+    pub libc_family: Option<String>,
+    #[serde(rename = "LIBC_VERSION", skip_serializing_if = "Option::is_none")]
+    pub libc_version: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Default)]
