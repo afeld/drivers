@@ -1177,10 +1177,6 @@ fn collect_environment_info(info: &ClientInfo) -> Vec<String> {
         lines.push(format!("OS details: {s}"));
     }
 
-    if let Some(mode) = &info.ocsp_mode {
-        lines.push(format!("OCSP mode: {mode}"));
-    }
-
     let mode_str = match info.crl_config.check_mode {
         crate::crl::config::CertRevocationCheckMode::Disabled => "DISABLED",
         crate::crl::config::CertRevocationCheckMode::Enabled => "ENABLED",

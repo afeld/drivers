@@ -510,7 +510,6 @@ fn base_auth_request_data(login_parameters: &LoginParameters) -> AuthRequestData
             application: login_parameters.client_info.application.clone(),
             os: login_parameters.client_info.os.clone(),
             os_version: login_parameters.client_info.os_version.clone(),
-            ocsp_mode: login_parameters.client_info.ocsp_mode.clone(),
             cert_revocation_check_mode: match login_parameters.client_info.crl_config.check_mode {
                 CertRevocationCheckMode::Disabled => "DISABLED",
                 CertRevocationCheckMode::Enabled => "ENABLED",

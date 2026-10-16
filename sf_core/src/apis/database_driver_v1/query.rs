@@ -1229,7 +1229,6 @@ fn stub_ctx() -> StageInfoRefreshContext {
                 version: "0.0.0".into(),
                 os: "linux".into(),
                 os_version: "0".into(),
-                ocsp_mode: None,
                 runtime_name: None,
                 runtime_version: None,
                 compiler: None,

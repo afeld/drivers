@@ -1937,7 +1937,6 @@ fn test_client_info() -> ClientInfo {
         version: "1.0.0".to_string(),
         os: "TestOS".to_string(),
         os_version: "1.0".to_string(),
-        ocsp_mode: Some("FAIL_OPEN".to_string()),
         crl_config: Default::default(),
         tls_config: Default::default(),
         proxy_config: Default::default(),

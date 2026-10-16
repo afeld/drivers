@@ -125,7 +125,6 @@ fn default_client_info() -> ClientInfo {
         version: env!("CARGO_PKG_VERSION").to_string(),
         os: std::env::consts::OS.to_string(),
         os_version: sf_core::telemetry::environment::detect_os_version(),
-        ocsp_mode: Some("FAIL_OPEN".to_string()),
         runtime_name: None,
         runtime_version: None,
         compiler: None,

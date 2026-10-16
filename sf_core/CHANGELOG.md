@@ -147,6 +147,7 @@ Internal changes:
 - Added hot-swappable file logging: `LogManager` exposes a `LogReloadHandle` that re-applies the core and troubleshooting file sinks (log level and destination path) in place, without rebuilding the tracing dispatch, session registry, or negotiated encoding, so a wrapper can re-read its logging configuration at runtime. (snowflakedb/drivers#2588)
 - Moved CRL cache and background refresh onto the driver so the last driver drop cancels and joins the `crl-refresh` thread. (snowflakedb/drivers#2429)
 - Keyed telemetry by connection handle instead of session id and added the session id to span entries at send time, so a connection that adopted session tokens without a session id now sends telemetry. (snowflakedb/drivers#2607)
+- Removed OCSP_MODE from the login CLIENT_ENVIRONMENT payload and from connection diagnostics. The driver does not perform OCSP; certificate revocation continues to be reported as CERT_REVOCATION_CHECK_MODE. (snowflakedb/drivers#2724)
 
 Test improvements:
 

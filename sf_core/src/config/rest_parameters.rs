@@ -130,7 +130,6 @@ pub struct ClientInfo {
     pub version: String,
     pub os: String,
     pub os_version: String,
-    pub ocsp_mode: Option<String>,
     /// Wrapper runtime name (e.g. "CPython", "OpenJDK"). Only set by language wrappers.
     pub runtime_name: Option<String>,
     /// Wrapper runtime version (e.g. "3.11.6", "21.0.1"). Only set by language wrappers.
@@ -178,7 +177,6 @@ impl ClientInfo {
             version,
             os: std::env::consts::OS.to_string(),
             os_version: crate::telemetry::environment::detect_os_version(),
-            ocsp_mode: Some("FAIL_OPEN".to_string()),
             runtime_name: settings
                 .get_string("client_runtime_name")
                 .and_then(|s| if s.trim().is_empty() { None } else { Some(s) }),
@@ -245,7 +243,6 @@ pub mod test_fixtures {
             version: "1.0.0".to_string(),
             os: std::env::consts::OS.to_string(),
             os_version: "1.0".to_string(),
-            ocsp_mode: None,
             runtime_name: None,
             runtime_version: None,
             compiler: None,
