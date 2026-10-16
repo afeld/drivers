@@ -1,8 +1,5 @@
-import { createRequire } from 'node:module';
 import type * as CoreBinary from './binary-types.generated.js';
 import { getLibcDetails } from './libc_details.js';
-
-const require = createRequire(import.meta.url);
 
 // Every `require` below MUST use a string literal: bundlers can only trace
 // (and thus include) native dependencies when the specifier is statically

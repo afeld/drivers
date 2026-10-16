@@ -47,7 +47,7 @@ import { getWrapperIdentity } from './wrapper-identity.js';
 
 registerClassConstructors({ SnowflakeDate });
 
-export { createPool, normalizeConnectionOptions };
+export { createPool, normalizeConnectionOptions, ErrorCode, ocspModes };
 export type { Pool, PoolOptions } from './create-pool.js';
 
 // TODO:

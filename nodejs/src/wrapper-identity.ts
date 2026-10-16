@@ -1,7 +1,5 @@
-import { createRequire } from 'node:module';
 import type { WrapperIdentity } from './core/binary-types.generated.js';
 
-const require = createRequire(import.meta.url);
 const { version } = require('../package.json') as { version: string };
 
 type RuntimeVersions = NodeJS.ProcessVersions & {

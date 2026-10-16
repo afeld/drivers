@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "target": "ES2023",
     "lib": ["ES2023"],
     "sourceMap": true,

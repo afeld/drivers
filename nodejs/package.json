@@ -17,7 +17,7 @@
     "url": "https://www.snowflake.com/"
   },
   "license": "Apache-2.0",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "types:check": "npm run build:sdk && npm run build:link-local && tsc --noEmit -p tsconfig.json",
     "lint:check": "oxlint . --max-warnings=0",
