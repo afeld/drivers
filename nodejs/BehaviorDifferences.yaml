@@ -2042,3 +2042,23 @@ behavior_differences:
     new_driver_behavior: |
       WORKLOAD_IDENTITY to a disallowed host errors with
       `Refusing to send a Workload Identity attestation to '127.0.0.1': host is not snowflakecomputing.com/.cn/.mil (or an SNOWFLAKE_WIF_ALLOWED_HOST_SUFFIXES entry)`
+
+  111:
+    name: 'PROGRAMMATIC_ACCESS_TOKEN does not copy password into the token'
+    status: todo
+    type: bug
+    reviewed: false
+    is_breaking_change: true
+    impact: medium
+    old_driver_behavior: |
+      createConnection with authenticator PROGRAMMATIC_ACCESS_TOKEN and the PAT
+      only in password (no token) copies password into the login TOKEN and the
+      connection succeeds. SELECT 1 returns 1.
+    new_driver_behavior: |
+      The same options do not copy password into token. connect rejects with
+      InvalidParameterError and a message containing
+      "Missing required parameter 'token'".
+    description: |
+      Old Node's AuthOauthPAT.updateBody supplied the password as the token.
+      sf_core requires token or token_file_path for PROGRAMMATIC_ACCESS_TOKEN.
+      This entry stays until core accepts password as the PAT when token is absent.

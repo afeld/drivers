@@ -102,6 +102,30 @@ fn should_fail_pat_authentication_when_invalid_token_provided() {
     client.assert_login_error(result);
 }
 
+#[test]
+fn should_fail_pat_authentication_when_the_username_does_not_match_the_token() {
+    //Given Authentication is set to Programmatic Access Token, a valid PAT is provided, and the username is not the token owner
+    let client = SnowflakeTestClient::with_default_params();
+    let pat_secret = client
+        .parameters
+        .pat
+        .clone()
+        .expect("SNOWFLAKE_TEST_PAT must be set in parameters.json");
+    set_auth_to_programmatic_access_token(&client);
+    set_pat_token(&client, &pat_secret);
+    client.set_connection_option("user", "differentUsername");
+
+    //When Trying to Connect
+    let result = client.connect();
+
+    //Then There is error returned
+    let error_msg = result.expect_err("Expected mismatched PAT username to fail login");
+    assert!(
+        error_msg.contains("Programmatic access token is invalid"),
+        "Error message should contain the invalid PAT text: {error_msg}"
+    );
+}
+
 fn set_auth_to_programmatic_access_token(client: &SnowflakeTestClient) {
     client.set_connection_option("authenticator", "PROGRAMMATIC_ACCESS_TOKEN");
 }

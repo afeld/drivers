@@ -1,19 +1,19 @@
-@core @python @odbc @jdbc @dotnet
+@core @python @odbc @jdbc @dotnet @nodejs
 Feature: Personal Access Token Authentication
 
-  @core_e2e @python_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e
+  @core_e2e @python_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e @nodejs_e2e
   Scenario: should authenticate using PAT as password
     Given Authentication is set to password and valid PAT token is provided
     When Trying to Connect
     Then Login is successful and simple query can be executed
 
-  @core_e2e @python_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e
+  @core_e2e @python_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e @nodejs_e2e
   Scenario: should authenticate using PAT as token
     Given Authentication is set to Programmatic Access Token and valid PAT token is provided
     When Trying to Connect
     Then Login is successful and simple query can be executed
 
-  @core_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e
+  @core_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e @nodejs_e2e
   Scenario: should authenticate using PAT as token with lowercase authenticator
     Given Authentication is set to lowercase programmatic_access_token and valid PAT token is provided
     When Trying to Connect
@@ -25,7 +25,7 @@ Feature: Personal Access Token Authentication
     When Trying to Connect
     Then Login is successful and simple query can be executed
 
-  @core_e2e @python_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e
+  @core_e2e @python_e2e @odbc_e2e @jdbc_e2e @dotnet_e2e @nodejs_e2e
   Scenario: should fail PAT authentication when invalid token provided
     Given Authentication is set to Programmatic Access Token and invalid PAT token is provided
     When Trying to Connect
@@ -40,14 +40,20 @@ Feature: Personal Access Token Authentication
   # SNOW-3647715: token-based authenticators must not require `user` --
   # the principal is encoded in the token and resolved by GS at login
   # time. This wrapper-level scenario asserts the connector does not
-  # reject the connect when `user` is omitted; it currently only exists
-  # for Python (other drivers track parity work separately).
+  # reject the connect when `user` is omitted. Python and Node.js implement
+  # it; other drivers track parity work separately.
 
-  @python_e2e
+  @python_e2e @nodejs_e2e
   Scenario: should authenticate using PAT as token without user
     Given Authentication is set to Programmatic Access Token and valid PAT token is provided
     When Trying to Connect without user
     Then Login is successful and simple query can be executed
+
+  @core_e2e @nodejs_e2e
+  Scenario: should fail PAT authentication when the username does not match the token
+    Given Authentication is set to Programmatic Access Token, a valid PAT is provided, and the username is not the token owner
+    When Trying to Connect
+    Then There is error returned
 
   @python_e2e
   Scenario: should report a PAT with external session as valid
