@@ -14,6 +14,7 @@
 //!
 //!   * `SNOWFLAKE_TEST_WIF_ENTRA_RESOURCE`     — Azure Entra resource URI (AZURE only)
 //!   * `SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH` — comma-separated impersonation chain
+//!   * `SNOWFLAKE_TEST_WIF_USERNAME_IMPERSONATION` — Snowflake user the impersonation login must become
 //!
 //! TODO(SNOW-4232648): add a live `workload_identity_azure_client_id` case after
 //! the Azure WIF VM has a user-assigned identity mapped to a dedicated Snowflake user.
@@ -21,6 +22,7 @@
 //! Scenario step text mirrors `tests/definitions/shared/authentication/workload_identity.feature`
 //! so a single Gherkin definition validates both sf_core and ODBC test methods.
 
+use crate::common::arrow_result_helper::ArrowResultHelper;
 use crate::common::snowflake_test_client::SnowflakeTestClient;
 use sf_core::config::rest_parameters::WifProvider;
 
@@ -80,6 +82,12 @@ fn should_authenticate_with_wif_using_impersonation() {
             return;
         }
     };
+    let expected_user = client
+        .parameters
+        .wif_username_impersonation
+        .clone()
+        .filter(|user| !user.is_empty())
+        .expect("SNOWFLAKE_TEST_WIF_USERNAME_IMPERSONATION not set");
     client.set_connection_option("authenticator", "WORKLOAD_IDENTITY");
     client.set_connection_option("workload_identity_provider", &provider);
     client.set_connection_option("workload_identity_impersonation_path", &impersonation_path);
@@ -89,6 +97,11 @@ fn should_authenticate_with_wif_using_impersonation() {
 
     //Then Login is successful and a simple query can be executed
     client.verify_simple_query(result);
+    let current_user =
+        ArrowResultHelper::from_result(client.execute_query("SELECT CURRENT_USER()"))
+            .transform_into_array::<String>()
+            .expect("CURRENT_USER() should return rows");
+    assert_eq!(current_user, vec![vec![expected_user]]);
 }
 
 #[test]

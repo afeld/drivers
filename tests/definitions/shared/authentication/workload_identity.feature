@@ -13,7 +13,7 @@ Feature: Workload Identity Federation Authentication
     When Trying to Connect
     Then Login is successful and a simple query can be executed
 
-  @core_e2e @odbc_e2e
+  @core_e2e @odbc_e2e @nodejs_e2e
   Scenario: should authenticate with WIF using impersonation
     Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_IMPERSONATION_PATH is configured
     When Trying to Connect

@@ -79,6 +79,8 @@ pub struct Parameters {
     pub wif_account: Option<String>,
     #[serde(default, rename = "SNOWFLAKE_TEST_WIF_USER")]
     pub wif_user: Option<String>,
+    #[serde(default, rename = "SNOWFLAKE_TEST_WIF_USERNAME_IMPERSONATION")]
+    pub wif_username_impersonation: Option<String>,
 }
 
 impl Parameters {

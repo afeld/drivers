@@ -24,9 +24,11 @@ Each test file ends up in one of these buckets:
 
 Deferred work — covered **last**, only once the corresponding feature support lands:
 
-- `auth-workload-identity-e2e.ts` — basic login and the GCP OIDC case are migrated to
+- `auth-workload-identity-e2e.ts` — migrated to
   [`../e2e/authentication/workload-identity.test.ts`](../e2e/authentication/workload-identity.test.ts).
-  `connects using transitive impersonation` stays in this snapshot until #2614.
+  `connects using transitive impersonation` is `should authenticate with WIF using impersonation`.
+  AWS and GCP log in as the impersonated user on both drivers. Azure keeps the old-driver
+  rejection, and the new driver logs in as the impersonated user.
   `connects using GetWebIdentityToken` landed in `a3fe4130` (2026-06-24), after this
   snapshot (`415160294a48087b18b0a70bb09534078fe4afac`, 2026-05-06), so it was not copied.
   It maps to `should authenticate AWS WIF using GetWebIdentityToken when opted in` and
@@ -319,10 +321,10 @@ called out explicitly.
   [`../../../sf_core/src/rest/snowflake/workload_identity/`](../../../sf_core/src/rest/snowflake/workload_identity/)
   and migrated to
   [`../e2e/authentication/workload-identity.test.ts`](../e2e/authentication/workload-identity.test.ts).
-  Azure `throws error when impersonation path is provided` stays in
-  [`./unit/authentication/auth_workload_identity/auth_workload_identity_test.ts`](./unit/authentication/auth_workload_identity/auth_workload_identity_test.ts)
-  until #2614. That follow-up replaces this case and the retained AWS/GCP live impersonation
-  case with `should authenticate with WIF using impersonation`.
+  Azure `throws error when impersonation path is provided` is the live
+  `should authenticate with WIF using impersonation`. AWS and GCP log in as the impersonated
+  user on both drivers. Azure keeps the old-driver rejection, and the new driver logs in as
+  the impersonated user.
 - The WIF cases in `unit/connection/normalize_connection_options_test.ts` — migrated to
   [`../unit/normalize-connection-options.test.ts`](../unit/normalize-connection-options.test.ts).
   `getAuthenticator()` row `workload identity` → `AuthWorkloadIdentity` is retired with that

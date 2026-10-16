@@ -194,13 +194,15 @@ trap cleanup_active_remote EXIT
 # Generate the parameters.json the tests expect (PARAMETER_PATH).
 # Uses jq -n so values are JSON-encoded safely.
 write_parameters_json() {
-  local out="$1" provider="$2" snowflake_host="$3" snowflake_user="$4" impersonation_path="$5"
+  local out="$1" provider="$2" snowflake_host="$3" snowflake_user="$4"
+  local impersonation_path="$5" impersonation_user="$6"
   jq -n \
     --arg account "$SNOWFLAKE_TEST_WIF_ACCOUNT" \
     --arg user "$snowflake_user" \
     --arg host "$snowflake_host" \
     --arg provider "$provider" \
     --arg impersonation_path "$impersonation_path" \
+    --arg impersonation_user "$impersonation_user" \
     '{
       testconnection: {
         SNOWFLAKE_TEST_ACCOUNT: $account,
@@ -209,14 +211,15 @@ write_parameters_json() {
         SNOWFLAKE_TEST_WIF_PROVIDER: $provider,
         SNOWFLAKE_TEST_WIF_ACCOUNT: $account,
         SNOWFLAKE_TEST_WIF_USER: $user,
-        SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH: $impersonation_path
+        SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH: $impersonation_path,
+        SNOWFLAKE_TEST_WIF_USERNAME_IMPERSONATION: $impersonation_user
       }
     }' > "$out"
 }
 
 run_wif_tests() {
   local provider="$1" host="$2" snowflake_host="$3" rsa_key_path="$4"
-  local snowflake_user="$5" impersonation_path="$6"
+  local snowflake_user="$5" impersonation_path="$6" impersonation_user="$7"
 
   local remote_dir="wif_${provider}_${WIF_LANE}_${TIMESTAMP}"
   local ssh_opts scp_opts
@@ -224,7 +227,7 @@ run_wif_tests() {
 
   local params_file test_args_file=""
   params_file="$(mktemp)"
-  write_parameters_json "$params_file" "$provider" "$snowflake_host" "$snowflake_user" "$impersonation_path"
+  write_parameters_json "$params_file" "$provider" "$snowflake_host" "$snowflake_user" "$impersonation_path" "$impersonation_user"
 
   echo "==================================================================="
   echo "WIF tests: ${provider} lane=${WIF_LANE}${SUITE:+ suite=$SUITE} (host=${host}, remote_dir=${remote_dir})"
@@ -298,10 +301,10 @@ EOF
 
 run_tests_and_set_result() {
   local provider="$1" host="$2" snowflake_host="$3" rsa_key_path="$4"
-  local snowflake_user="$5" impersonation_path="$6"
+  local snowflake_user="$5" impersonation_path="$6" impersonation_user="$7"
 
   local provider_started=$SECONDS
-  run_wif_tests "$provider" "$host" "$snowflake_host" "$rsa_key_path" "$snowflake_user" "$impersonation_path"
+  run_wif_tests "$provider" "$host" "$snowflake_host" "$rsa_key_path" "$snowflake_user" "$impersonation_path" "$impersonation_user"
   local status=$?
 
   if [[ $status -ne 0 ]]; then
@@ -364,17 +367,17 @@ is_provider_selected() {
 EXIT_STATUS=0
 set +e  # Don't exit on first failure
 if is_provider_selected AZURE; then
-  run_tests_and_set_result "AZURE" "$HOST_AZURE" "$SNOWFLAKE_TEST_WIF_HOST_AZURE" "$RSA_KEY_PATH_AWS_AZURE" "$SNOWFLAKE_TEST_WIF_USERNAME_AZURE" "$SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH_AZURE"
+  run_tests_and_set_result "AZURE" "$HOST_AZURE" "$SNOWFLAKE_TEST_WIF_HOST_AZURE" "$RSA_KEY_PATH_AWS_AZURE" "$SNOWFLAKE_TEST_WIF_USERNAME_AZURE" "$SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH_AZURE" "$SNOWFLAKE_TEST_WIF_USERNAME_AZURE_IMPERSONATION"
 else
   log "AZURE: not selected; skipping upload and tests"
 fi
 if is_provider_selected AWS; then
-  run_tests_and_set_result "AWS"   "$HOST_AWS"   "$SNOWFLAKE_TEST_WIF_HOST_AWS"   "$RSA_KEY_PATH_AWS_AZURE" "$SNOWFLAKE_TEST_WIF_USERNAME_AWS"   "$SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH_AWS"
+  run_tests_and_set_result "AWS"   "$HOST_AWS"   "$SNOWFLAKE_TEST_WIF_HOST_AWS"   "$RSA_KEY_PATH_AWS_AZURE" "$SNOWFLAKE_TEST_WIF_USERNAME_AWS"   "$SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH_AWS"   "$SNOWFLAKE_TEST_WIF_USERNAME_AWS_IMPERSONATION"
 else
   log "AWS: not selected; skipping upload and tests"
 fi
 if is_provider_selected GCP; then
-  run_tests_and_set_result "GCP"   "$HOST_GCP"   "$SNOWFLAKE_TEST_WIF_HOST_GCP"   "$RSA_KEY_PATH_GCP"       "$SNOWFLAKE_TEST_WIF_USERNAME_GCP"   "$SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH_GCP"
+  run_tests_and_set_result "GCP"   "$HOST_GCP"   "$SNOWFLAKE_TEST_WIF_HOST_GCP"   "$RSA_KEY_PATH_GCP"       "$SNOWFLAKE_TEST_WIF_USERNAME_GCP"   "$SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH_GCP"   "$SNOWFLAKE_TEST_WIF_USERNAME_GCP_IMPERSONATION"
 else
   log "GCP: not selected; skipping upload and tests"
 fi

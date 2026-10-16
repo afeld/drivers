@@ -17,6 +17,7 @@ type WorkloadIdentityProvider = NonNullable<ConnectionOptions['workloadIdentityP
 
 const PROVIDER = getTestParameter('SNOWFLAKE_TEST_WIF_PROVIDER')?.toUpperCase();
 const IS_AWS_PROVIDER = PROVIDER === 'AWS';
+const IS_AZURE_PROVIDER = PROVIDER === 'AZURE';
 const IS_GCP_PROVIDER = PROVIDER === 'GCP';
 // Host check in ensure_allowed_host runs before OIDC JWT parse. Loopback is
 // rejected, so tests that must reach attestation use a recognized suffix.
@@ -264,6 +265,42 @@ describe('tests/definitions/shared/authentication/workload_identity.feature', ()
       await verifySimpleQuery(connection);
       await verifyCurrentUser(connection, expectedUser);
     });
+
+    it.skipIf(IS_AZURE_PROVIDER && !isRunningNewDriverWithBD('BD#109'))(
+      'should authenticate with WIF using impersonation',
+      async () => {
+        // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_IMPERSONATION_PATH is configured
+        const impersonationPath = getTestParameter('SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH', true);
+        const expectedUser = getTestParameter('SNOWFLAKE_TEST_WIF_USERNAME_IMPERSONATION', true);
+        const wifOverrides = {
+          workloadIdentityImpersonationPath: impersonationPath.split(','),
+        };
+
+        // When Trying to Connect
+        const connection = await createLiveWifConnection(wifOverrides);
+
+        // Then Login is successful and a simple query can be executed
+        await verifySimpleQuery(connection);
+        await verifyCurrentUser(connection, expectedUser);
+      },
+    );
+
+    it.skipIf(!IS_AZURE_PROVIDER || isRunningNewDriverWithBD('BD#109'))(
+      'should fail WIF impersonation on Azure with the old driver',
+      async () => {
+        // Given Authentication is set to WORKLOAD_IDENTITY and WORKLOAD_IDENTITY_IMPERSONATION_PATH is configured
+        const impersonationPath = getTestParameter('SNOWFLAKE_TEST_WIF_IMPERSONATION_PATH', true);
+        const connection = createWifConnection({
+          workloadIdentityImpersonationPath: impersonationPath.split(','),
+        });
+
+        // When Trying to Connect
+        await expect(connectAsyncWithErrorBD(connection)).rejects.toMatchObject({
+          name: 'Error',
+          message: 'workloadIdentityImpersonationPath for AZURE is not supported',
+        });
+      },
+    );
 
     describe.skipIf(!IS_AWS_PROVIDER)('AWS workload identity modes', () => {
       const AWS_OUTBOUND_TOKEN_ENV = 'SNOWFLAKE_ENABLE_AWS_WIF_OUTBOUND_TOKEN';
