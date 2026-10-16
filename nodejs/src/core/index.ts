@@ -53,6 +53,7 @@ export const CoreColumn = core.Column;
 export const coreFormatSnowflakeDate = core.formatSnowflakeDate;
 export const CoreSessionState = core.SessionState;
 export const CoreQueryBindingFormat = core.QueryBindingFormat;
+export const CoreSetCustomCredentialManager = core.setCustomCredentialManager;
 
 export type CoreConnectionInstance = InstanceType<typeof CoreConnection>;
 export type CoreStatementInstance = InstanceType<typeof CoreStatement>;

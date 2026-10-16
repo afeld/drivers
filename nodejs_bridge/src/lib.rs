@@ -25,6 +25,7 @@ mod session;
 mod session_params;
 mod session_state;
 mod statement;
+mod token_cache;
 mod validation_utils;
 
 pub use connection::Connection;
@@ -32,15 +33,18 @@ pub use date_format::format_snowflake_date;
 pub use session_params::KnownSessionParameters;
 pub use session_state::SessionState;
 pub use statement::{Column, Statement};
+pub use token_cache::set_custom_credential_manager;
 
 use napi_derive::napi;
 use sf_core::apis::database_driver_v1::{DatabaseDriverV1, DriverProviders, WrapperPresets};
-use std::sync::LazyLock;
+use sf_core::token_cache::TokenCache;
+use std::sync::{Arc, LazyLock};
 
 static BRIDGE: LazyLock<Bridge> = LazyLock::new(Bridge::new);
 
 struct Bridge {
     driver: DatabaseDriverV1,
+    token_cache: Arc<token_cache::NodeTokenCache>,
 }
 
 impl Bridge {
@@ -51,11 +55,14 @@ impl Bridge {
             .with_writer(std::io::stderr)
             .with_max_level(tracing::Level::DEBUG)
             .try_init();
+        let token_cache = Arc::new(token_cache::NodeTokenCache::new());
         Self {
             driver: DatabaseDriverV1::with_providers(DriverProviders {
                 wrapper_presets: WrapperPresets::nodejs(),
+                token_cache: Some(Arc::clone(&token_cache) as Arc<dyn TokenCache>),
                 ..Default::default()
             }),
+            token_cache,
         }
     }
 }

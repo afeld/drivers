@@ -1,7 +1,18 @@
 import { XMLParser, XMLValidator, X2jOptions } from 'fast-xml-parser';
+import ErrorCode from './constants/ErrorCode.js';
+import ErrorMessage from './constants/ErrorMessage.js';
+import { CoreSetCustomCredentialManager } from './core/index.js';
+import { invalidParameterError } from './error.js';
 
 export type CustomParser = (rawColumnValue: string) => any;
 export type XMlParserConfigOption = X2jOptions;
+
+/** Token store; methods may return a value or a Promise that settles within 30 seconds. */
+export interface CustomCredentialManager {
+  read(key: string): string | null | undefined | Promise<string | null | undefined>;
+  write(key: string, token: string): unknown | Promise<unknown>;
+  remove(key: string): unknown | Promise<unknown>;
+}
 
 export interface ConfigureOptions {
   /**
@@ -54,9 +65,20 @@ export interface ConfigureOptions {
    * @default true
    */
   useEnvProxy?: boolean;
+
+  /**
+   * Token store that replaces the OS keyring for cached credentials.
+   *
+   * Once registered, it is used by default for MFA, external browser, and OAuth
+   * Authorization Code logins, because `clientStoreTemporaryCredential` defaults to `true`.
+   * A connection that sets `clientStoreTemporaryCredential: false` never calls it.
+   *
+   * It receives ID tokens, MFA tokens, OAuth access and refresh tokens, and DPoP private keys.
+   */
+  customCredentialManager?: CustomCredentialManager;
 }
 
-type ResolvedConfig = Required<ConfigureOptions>;
+type ResolvedConfig = Required<Omit<ConfigureOptions, 'customCredentialManager'>>;
 
 const buildDefaults = (): ResolvedConfig => ({
   jsonColumnVariantParser: (
@@ -97,10 +119,38 @@ export const GlobalConfig: ResolvedConfig = {
   ...buildDefaults(),
 };
 
-export function updateGlobalConfig(options: Partial<ConfigureOptions>) {
+export function updateGlobalConfig({
+  customCredentialManager,
+  ...options
+}: Partial<ConfigureOptions>) {
+  if (customCredentialManager != null) {
+    setCustomCredentialManager(customCredentialManager);
+  }
   Object.assign(GlobalConfig, options);
+}
+
+function setCustomCredentialManager(manager: CustomCredentialManager) {
+  const isValid =
+    typeof manager === 'object' &&
+    (['read', 'write', 'remove'] as const).every(
+      (method) => Object.hasOwn(manager, method) && typeof manager[method] === 'function',
+    );
+  if (!isValid) {
+    const code = ErrorCode.ERR_GLOBAL_CONFIGURE_INVALID_CUSTOM_CREDENTIAL_MANAGER;
+    throw invalidParameterError(ErrorMessage[code], code);
+  }
+  CoreSetCustomCredentialManager({
+    read: async (key) => manager.read(key),
+    write: async (key, token) => {
+      await manager.write(key, token);
+    },
+    remove: async (key) => {
+      await manager.remove(key);
+    },
+  });
 }
 
 export const resetGlobalConfig = () => {
   Object.assign(GlobalConfig, buildDefaults());
+  CoreSetCustomCredentialManager(null);
 };

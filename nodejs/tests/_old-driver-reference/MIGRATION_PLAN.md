@@ -331,6 +331,9 @@ called out explicitly.
   class. The other rows in that table, except `unknown`, named removed Node authenticator
   classes and are retired with them. `unknown` stays: it is the only assertion that an
   unrecognized authenticator falls back to `AuthDefault`.
+- `unit/authentication/custom_credential_manager_test.js` — migrated to
+  `nodejs/tests/{unit/global-config,e2e/authentication/custom-credential-manager}.test.ts` and
+  deleted.
 - [`unit/authentication/`](./unit/authentication/) — defer until after the beta release and
   revisit when implementing each auth provider, the same way the integration `authentication/`
   folder is handled.

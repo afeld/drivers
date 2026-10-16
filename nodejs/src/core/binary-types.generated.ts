@@ -190,6 +190,8 @@ export type QueryStatus = 'RUNNING' | 'ABORTING' | 'SUCCESS' | 'FAILED_WITH_ERRO
  */
 export declare function registerClassConstructors(constructors: { SnowflakeDate: new (epochMillis: number, nanos: number, scale: number, timezone: string | number, format: string) => unknown }): void
 
+export declare function setCustomCredentialManager(manager: { read: (key: string) => Promise<string | null | undefined>, write: (key: string, token: string) => Promise<void>, remove: (key: string) => Promise<void> } | null): void
+
 export type StatementStatus = 'fetching' | 'complete'
 
 export interface WrapperIdentity {

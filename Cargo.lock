@@ -3060,6 +3060,7 @@ dependencies = [
  "sf_core",
  "sf_output_format",
  "sf_types",
+ "snafu 0.8.9",
  "tokio",
  "tracing",
  "tracing-subscriber",

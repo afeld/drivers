@@ -30,6 +30,7 @@ import {
   GlobalConfig,
   updateGlobalConfig,
   type ConfigureOptions,
+  type CustomCredentialManager,
   type CustomParser,
   type XMlParserConfigOption,
 } from './global-config.js';
@@ -64,6 +65,7 @@ export {
   type FetchRowsOptions,
   type Column,
   type RowMode,
+  type CustomCredentialManager,
   type CustomParser,
   type XMlParserConfigOption,
   type ConfigureOptions,
