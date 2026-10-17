@@ -389,8 +389,26 @@ def test_transaction_statements_split_normally(sql, expected):
         ),
         ("select 1 as begin; select 2;", ["select 1 as begin;", "select 2;"]),
         ("select 1 as begin\n; select 2;", ["select 1 as begin\n;", "select 2;"]),
+        ("select 1 as begin, 2 as x; select 2;", ["select 1 as begin, 2 as x;", "select 2;"]),
+        ("select 1 as begin from t; select 2;", ["select 1 as begin from t;", "select 2;"]),
+        ("select f(a as begin); select 2;", ["select f(a as begin);", "select 2;"]),
+        (
+            "SELECT CASE WHEN a THEN b ELSE begin END FROM t; SELECT 2;",
+            ["SELECT CASE WHEN a THEN b ELSE begin END FROM t;", "SELECT 2;"],
+        ),
+        ("select x$begin, y_begin from t; select 2;", ["select x$begin, y_begin from t;", "select 2;"]),
     ],
-    ids=["case_expression", "identifiers", "alias_begin", "alias_begin_newline"],
+    ids=[
+        "case_expression",
+        "identifiers",
+        "alias_begin",
+        "alias_begin_newline",
+        "alias_begin_comma",
+        "alias_begin_from",
+        "alias_begin_paren",
+        "case_else_column_begin",
+        "begin_suffix",
+    ],
 )
 def test_begin_end_lookalikes_split_normally(sql, expected):
     assert split(sql) == [(s, False) for s in expected]
@@ -415,15 +433,10 @@ def test_execute_immediate_dollar_quoted_block():
 
 
 # ---------------------------------------------------------------------------
-# Unquoted scripting blocks — these currently FAIL (known gap).
-# Marked strict xfail so they document expected-but-broken behavior and will
-# fail loudly (prompting removal of the marker) once BEGIN...END support lands.
+# Unquoted scripting blocks — semicolons inside BEGIN...END don't split
 # ---------------------------------------------------------------------------
 
-begin_end_xfail = pytest.mark.xfail(reason="split_statements does not yet track BEGIN...END depth", strict=True)
 
-
-@begin_end_xfail
 def test_stored_procedure_is_single_statement():
     sql = dedent("""\
         CREATE OR REPLACE PROCEDURE p()
@@ -438,7 +451,6 @@ def test_stored_procedure_is_single_statement():
     assert split(sql) == [(sql.strip(), False)]
 
 
-@begin_end_xfail
 def test_stored_procedure_surrounded_by_statements():
     sql = dedent("""\
         USE DATABASE mydb;
@@ -454,7 +466,6 @@ def test_stored_procedure_surrounded_by_statements():
     ]
 
 
-@begin_end_xfail
 def test_task_with_begin_end_body():
     sql = "CREATE TASK t WAREHOUSE = w SCHEDULE = '1 minute' AS BEGIN INSERT INTO a VALUES (1); END; SELECT 1;"
     assert split_sql(sql) == [
@@ -463,7 +474,6 @@ def test_task_with_begin_end_body():
     ]
 
 
-@begin_end_xfail
 def test_anonymous_begin_end_block():
     sql = dedent("""\
         BEGIN
@@ -474,17 +484,14 @@ def test_anonymous_begin_end_block():
     assert split(sql) == [(sql.strip(), False)]
 
 
-@begin_end_xfail
 def test_anonymous_block_followed_by_statement_on_same_line():
     assert split_sql("BEGIN RETURN 1; END; SELECT 2;") == ["BEGIN RETURN 1; END;", "SELECT 2;"]
 
 
-@begin_end_xfail
 def test_lowercase_begin_end_block():
     assert split_sql("begin\n  let x := 1;\nend;\nselect 1;") == ["begin\n  let x := 1;\nend;", "select 1;"]
 
 
-@begin_end_xfail
 def test_declare_begin_end_block():
     sql = dedent("""\
         DECLARE
@@ -498,7 +505,6 @@ def test_declare_begin_end_block():
     assert split(sql) == [(sql.strip(), False)]
 
 
-@begin_end_xfail
 def test_procedure_with_declare_section():
     sql = dedent("""\
         CREATE OR REPLACE PROCEDURE p()
@@ -514,7 +520,6 @@ def test_procedure_with_declare_section():
     assert split_sql(sql) == [sql.split("CALL")[0].strip(), "CALL p();"]
 
 
-@begin_end_xfail
 def test_nested_begin_end():
     sql = dedent("""\
         BEGIN
@@ -528,7 +533,6 @@ def test_nested_begin_end():
     assert split(sql) == [(sql.strip(), False)]
 
 
-@begin_end_xfail
 def test_end_if_does_not_decrement_depth():
     sql = dedent("""\
         BEGIN
@@ -541,7 +545,6 @@ def test_end_if_does_not_decrement_depth():
     assert split(sql) == [(sql.strip(), False)]
 
 
-@begin_end_xfail
 @pytest.mark.parametrize(
     "loop",
     [
@@ -558,7 +561,6 @@ def test_compound_end_keywords_do_not_decrement_depth(loop):
     assert split_sql(sql) == [sql.rsplit("\n", 1)[0], "SELECT 1;"]
 
 
-@begin_end_xfail
 @pytest.mark.parametrize("opener", ["THEN", "ELSE", "DO"])
 def test_begin_after_block_opener_keyword_is_nested(opener):
     body = {
@@ -570,7 +572,6 @@ def test_begin_after_block_opener_keyword_is_nested(opener):
     assert split_sql(sql) == [f"BEGIN {body} RETURN 1; END;", "SELECT 1;"]
 
 
-@begin_end_xfail
 def test_exception_handler_inside_block():
     sql = dedent("""\
         BEGIN
@@ -584,24 +585,55 @@ def test_exception_handler_inside_block():
     assert split_sql(sql) == [sql.split("SELECT 1;")[0].strip(), "SELECT 1;"]
 
 
-@begin_end_xfail
 def test_begin_transaction_inside_block_is_not_a_nested_block():
     sql = "BEGIN BEGIN TRANSACTION; INSERT INTO t VALUES (1); COMMIT; END; SELECT 1;"
     assert split_sql(sql) == ["BEGIN BEGIN TRANSACTION; INSERT INTO t VALUES (1); COMMIT; END;", "SELECT 1;"]
 
 
-@begin_end_xfail
 def test_quoted_and_commented_end_inside_block_is_ignored():
     sql = "BEGIN\n  LET s := 'END;';\n  -- END;\n  /* END; */\n  RETURN s;\nEND;\nSELECT 1;"
     assert split_sql(sql) == [sql.rsplit("\n", 1)[0], "SELECT 1;"]
 
 
-@begin_end_xfail
 @pytest.mark.parametrize("remove_comments", [True, False])
 def test_block_respects_remove_comments(remove_comments):
     sql = "BEGIN -- start\n  RETURN 1; /* done */\nEND;"
     expected = "BEGIN \n  RETURN 1; \nEND;" if remove_comments else sql
     assert split(sql, remove_comments=remove_comments) == [(expected, False)]
+
+
+def test_consecutive_blocks():
+    sql = "BEGIN RETURN 1; END;\nBEGIN RETURN 2; END;\nSELECT 3;"
+    assert split(sql) == [("BEGIN RETURN 1; END;", False), ("BEGIN RETURN 2; END;", False), ("SELECT 3;", False)]
+
+
+def test_transaction_after_block():
+    sql = "BEGIN RETURN 1; END; BEGIN; SELECT 1; COMMIT;"
+    assert split_sql(sql) == ["BEGIN RETURN 1; END;", "BEGIN;", "SELECT 1;", "COMMIT;"]
+
+
+def test_put_after_block_is_flagged():
+    sql = "BEGIN RETURN 1; END;\nPUT file:///tmp/a.csv @s;"
+    assert split(sql) == [("BEGIN RETURN 1; END;", False), ("PUT file:///tmp/a.csv @s;", True)]
+
+
+def test_procedure_with_execute_as_clause():
+    sql = dedent("""\
+        CREATE OR REPLACE PROCEDURE p()
+        RETURNS INT LANGUAGE SQL
+        EXECUTE AS CALLER
+        AS
+        BEGIN
+          RETURN 1;
+        END;
+        CALL p();
+    """)
+    assert split_sql(sql) == [sql.split("CALL p")[0].strip(), "CALL p();"]
+
+
+def test_block_with_double_slash_comment_removed():
+    sql = "BEGIN // c\n  RETURN 1;\nEND;\nSELECT 1;"
+    assert split_sql(sql, remove_comments=True) == ["BEGIN \n  RETURN 1;\nEND;", "SELECT 1;"]
 
 
 @pytest.mark.xfail(

@@ -12,6 +12,15 @@ INLINE_COMMENT_PREFIXES = ("--", "//")
 
 _VALUES_CLAUSE_RE = re.compile(r"\bVALUES\s*\(", re.IGNORECASE)
 
+# Snowflake Scripting support: semicolons inside BEGIN...END blocks don't end the statement.
+_WORD_RE = re.compile(r"\w+")
+# Keywords after which BEGIN opens a block (CREATE PROCEDURE ... AS BEGIN, IF ... THEN BEGIN, etc.).
+_BLOCK_OPENERS = frozenset({"AS", "DO", "THEN", "ELSE", "LOOP"})
+# Tokens which, directly following BEGIN, show that it doesn't open a block (BEGIN TRANSACTION, `x AS begin`).
+_NOT_BLOCK_AFTER_BEGIN = frozenset({"TRANSACTION", "WORK", "FROM", ",", ")"})
+# END followed by one of these closes a compound statement rather than a BEGIN block.
+_COMPOUND_END_RE = re.compile(r"\s+(?:IF|LOOP|FOR|WHILE|CASE|REPEAT)\b", re.IGNORECASE)
+
 # Matches only the tokens that affect parser state.  Two-char tokens are
 # listed first so the alternation is greedy and consumes them whole:
 #   $$   — dollar-quote delimiter
@@ -103,6 +112,9 @@ def split_statements(
 ) -> Iterator[tuple[str, bool | None]]:
     """Split a stream into SQL statements (ends with a semicolon) or commands (!...).
 
+    Delimiters inside Snowflake Scripting BEGIN...END blocks (including a preceding DECLARE
+    section) don't split, so a block is returned as a single statement.
+
     Args:
         buf: Unicode data stream.
         remove_comments: Whether or not to remove all comments (Default value = False).
@@ -118,6 +130,12 @@ def split_statements(
     in_comment = False
     in_double_dollars = False
     previous_delimiter = None
+    # BEGIN...END block tracking. A BEGIN is tentatively counted as a block opener and undone
+    # if the next token shows otherwise (e.g. BEGIN; or BEGIN TRANSACTION).
+    begin_depth = 0
+    pending_begin = False
+    last_token = ""  # last significant token in the current statement ("" at statement start)
+    in_declare = False  # inside the DECLARE section that precedes a block's BEGIN
 
     line = buf.readline()
     statement = []
@@ -221,6 +239,16 @@ def split_statements(
                     if col > 0
                     else (RE_START.match(line[col : col + len(sql_delimiter)]))
                 ) and (RE_END.match(line[col : col + len(sql_delimiter) + 1])):
+                    if pending_begin:
+                        # BEGIN; is a transaction, not a block
+                        pending_begin = False
+                        begin_depth -= 1
+                    if begin_depth > 0 or in_declare:
+                        # inside a block: the delimiter ends a nested statement, not this one
+                        last_token = ";"
+                        col += len(sql_delimiter)
+                        continue
+                    last_token = ""
                     statement.append((line[col0:col] + ";", True))
                     col += len(sql_delimiter)
                     try:
@@ -252,12 +280,42 @@ def split_statements(
                         False,
                     )
                     break
+                elif _is_word_start(line, col):
+                    word_match = _WORD_RE.match(line, col)
+                    word = word_match.group().upper()
+                    if pending_begin:
+                        pending_begin = False
+                        if word in _NOT_BLOCK_AFTER_BEGIN:
+                            begin_depth -= 1
+                    if word == "DECLARE" and last_token in ("", ";", "AS"):
+                        in_declare = True
+                    elif word == "BEGIN" and (in_declare or last_token in ("", ";") or last_token in _BLOCK_OPENERS):
+                        begin_depth += 1
+                        pending_begin = not in_declare
+                        in_declare = False
+                    elif word == "END" and begin_depth > 0 and not _COMPOUND_END_RE.match(line, word_match.end()):
+                        begin_depth -= 1
+                    last_token = word
+                    col = word_match.end()
                 else:
+                    if not line[col].isspace():
+                        if pending_begin:
+                            pending_begin = False
+                            if line[col] in _NOT_BLOCK_AFTER_BEGIN:
+                                begin_depth -= 1
+                        last_token = line[col]
                     col += 1
         line = buf.readline()
 
     if len(statement) > 0:
         yield _concatenate_statements(statement)
+
+
+def _is_word_start(line: str, col: int) -> bool:
+    """Whether a word (identifier or keyword) starts at line[col]."""
+    if not (line[col].isalnum() or line[col] == "_"):
+        return False
+    return col == 0 or not (line[col - 1].isalnum() or line[col - 1] in ("_", "$"))
 
 
 def _concatenate_statements(statement_list: list[tuple[str, bool]]) -> tuple[str, bool | None]:
