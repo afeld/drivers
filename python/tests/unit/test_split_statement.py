@@ -646,11 +646,29 @@ def test_block_with_double_slash_comment_removed():
     assert split_sql(sql, remove_comments=True) == ["BEGIN \n  RETURN 1;\nEND;", "SELECT 1;"]
 
 
-@pytest.mark.xfail(
-    reason="CASE expression END inside a block is indistinguishable from block END "
-    "without a full parser; schemachange's splitter has the same limitation",
-    strict=True,
+@pytest.mark.parametrize(
+    "stmt",
+    [
+        "LET y := CASE WHEN TRUE THEN 1 ELSE 2 END;",
+        "LET y := (CASE WHEN TRUE THEN 1 END);",
+        "LET y := CASE WHEN TRUE THEN CASE WHEN FALSE THEN 1 END ELSE 2 END;",
+        "LET y := CASE WHEN TRUE THEN 1 END + CASE WHEN TRUE THEN 2 END;",
+        "CASE (y)\n    WHEN 1 THEN LET z := CASE WHEN TRUE THEN 1 END;\n  END CASE;",
+        "CASE (y)\n    WHEN 1 THEN RETURN 1;\n  END\n  CASE;",
+        "IF (TRUE) THEN LET z := CASE WHEN TRUE THEN 1 END; END IF;",
+        "SELECT CASE WHEN a THEN 1 END INTO :y FROM t;",
+    ],
+    ids=[
+        "simple",
+        "parenthesized",
+        "nested",
+        "two_expressions",
+        "in_case_statement",
+        "end_case_split",
+        "in_if",
+        "select",
+    ],
 )
-def test_case_expression_inside_block():
-    sql = "BEGIN\n  LET y := CASE WHEN TRUE THEN 1 ELSE 2 END;\n  RETURN y;\nEND;\nSELECT 1;"
+def test_case_expression_inside_block(stmt):
+    sql = f"BEGIN\n  LET y INT := 0;\n  {stmt}\n  RETURN y;\nEND;\nSELECT 1;"
     assert split_sql(sql) == [sql.rsplit("\n", 1)[0], "SELECT 1;"]

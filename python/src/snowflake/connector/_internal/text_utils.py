@@ -130,10 +130,12 @@ def split_statements(
     in_comment = False
     in_double_dollars = False
     previous_delimiter = None
-    # BEGIN...END block tracking. A BEGIN is tentatively counted as a block opener and undone
-    # if the next token shows otherwise (e.g. BEGIN; or BEGIN TRANSACTION). Likewise, whether
-    # an END closes a block depends on the next token (END; vs. END IF), which may be on a later line.
-    begin_depth = 0
+    # BEGIN...END block tracking. `blocks` is the stack of open BEGIN blocks and CASEs, since
+    # a CASE expression's END would otherwise close the enclosing BEGIN. A BEGIN is tentatively
+    # counted as a block opener and undone if the next token shows otherwise (e.g. BEGIN; or
+    # BEGIN TRANSACTION). Likewise, what an END closes depends on the next token (END; vs.
+    # END IF), which may be on a later line.
+    blocks: list[str] = []
     pending_begin = False
     pending_end = False
     last_token = ""  # last significant token in the current statement ("" at statement start)
@@ -244,16 +246,17 @@ def split_statements(
                     if pending_begin:
                         # BEGIN; is a transaction, not a block
                         pending_begin = False
-                        begin_depth -= 1
+                        blocks.pop()
                     if pending_end:
                         pending_end = False
-                        begin_depth -= 1
-                    if begin_depth > 0 or in_declare:
+                        blocks.pop()
+                    if "BEGIN" in blocks or in_declare:
                         # inside a block: the delimiter ends a nested statement, not this one
                         last_token = ";"
                         col += len(sql_delimiter)
                         continue
                     last_token = ""
+                    blocks.clear()  # discard any unclosed CASE
                     statement.append((line[col0:col] + ";", True))
                     col += len(sql_delimiter)
                     try:
@@ -288,21 +291,25 @@ def split_statements(
                 elif _is_word_start(line, col):
                     word_match = _WORD_RE.match(line, col)
                     word = word_match.group().upper()
+                    closes_compound = pending_end and word in _COMPOUND_END_KEYWORDS
                     if pending_end:
                         pending_end = False
-                        if word not in _COMPOUND_END_KEYWORDS:
-                            begin_depth -= 1
+                        # END CASE closes a CASE statement; END IF etc. close constructs we don't track
+                        if not closes_compound or word == "CASE":
+                            blocks.pop()
                     if pending_begin:
                         pending_begin = False
                         if word in _NOT_BLOCK_AFTER_BEGIN:
-                            begin_depth -= 1
-                    if word == "DECLARE" and last_token in ("", ";", "AS"):
+                            blocks.pop()
+                    if word == "CASE" and not closes_compound:
+                        blocks.append("CASE")
+                    elif word == "DECLARE" and last_token in ("", ";", "AS"):
                         in_declare = True
                     elif word == "BEGIN" and (in_declare or last_token in ("", ";") or last_token in _BLOCK_OPENERS):
-                        begin_depth += 1
+                        blocks.append("BEGIN")
                         pending_begin = not in_declare
                         in_declare = False
-                    elif word == "END" and begin_depth > 0:
+                    elif word == "END" and blocks:
                         pending_end = True
                     last_token = word
                     col = word_match.end()
@@ -310,11 +317,11 @@ def split_statements(
                     if not line[col].isspace():
                         if pending_end:
                             pending_end = False
-                            begin_depth -= 1
+                            blocks.pop()
                         if pending_begin:
                             pending_begin = False
                             if line[col] in _NOT_BLOCK_AFTER_BEGIN:
-                                begin_depth -= 1
+                                blocks.pop()
                         last_token = line[col]
                     col += 1
         line = buf.readline()
