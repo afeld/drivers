@@ -561,6 +561,16 @@ def test_compound_end_keywords_do_not_decrement_depth(loop):
     assert split_sql(sql) == [sql.rsplit("\n", 1)[0], "SELECT 1;"]
 
 
+@pytest.mark.parametrize(
+    "separator",
+    ["\n", "\n\n  ", " -- done\n", " /* done */ ", "/*\n*/"],
+    ids=["newline", "blank_line", "line_comment", "block_comment", "multiline_comment"],
+)
+def test_compound_end_keyword_on_later_line(separator):
+    sql = f"BEGIN\n  IF (TRUE) THEN\n    LET x := 1;\n  END{separator}IF;\n  RETURN 1;\nEND;\nSELECT 1;"
+    assert split_sql(sql) == [sql.rsplit("\n", 1)[0], "SELECT 1;"]
+
+
 @pytest.mark.parametrize("opener", ["THEN", "ELSE", "DO"])
 def test_begin_after_block_opener_keyword_is_nested(opener):
     body = {
