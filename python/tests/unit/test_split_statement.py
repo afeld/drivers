@@ -672,3 +672,72 @@ def test_block_with_double_slash_comment_removed():
 def test_case_expression_inside_block(stmt):
     sql = f"BEGIN\n  LET y INT := 0;\n  {stmt}\n  RETURN y;\nEND;\nSELECT 1;"
     assert split_sql(sql) == [sql.rsplit("\n", 1)[0], "SELECT 1;"]
+
+
+# ---------------------------------------------------------------------------
+# Unclosed blocks — fall back to splitting the rest of the input as if
+# BEGIN...END weren't tracked, rather than swallowing it into one statement
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("sql", "expected"),
+    [
+        ("BEGIN\n  SELECT 1;\nSELECT 2;", [("BEGIN\n  SELECT 1;", False), ("SELECT 2;", False)]),
+        ("DECLARE\n  x INT;\nSELECT 1;", [("DECLARE\n  x INT;", False), ("SELECT 1;", False)]),
+        (
+            "select 1;\nselect 1 as begin order by 1;\nselect 2;",
+            [("select 1;", False), ("select 1 as begin order by 1;", False), ("select 2;", False)],
+        ),
+        (
+            "select 1; select 1 as begin order by 1; select 2;",
+            [("select 1;", False), ("select 1 as begin order by 1;", False), ("select 2;", False)],
+        ),
+        (
+            "BEGIN RETURN 1; END;\nselect 1 as begin order by 1;\nselect 2;",
+            [("BEGIN RETURN 1; END;", False), ("select 1 as begin order by 1;", False), ("select 2;", False)],
+        ),
+        (
+            "select 1 as begin order by 1;\nput file:///tmp/a.csv @s;",
+            [("select 1 as begin order by 1;", False), ("put file:///tmp/a.csv @s;", True)],
+        ),
+        (
+            "!set x=1\nselect 1 as begin order by 1;\nselect 2;",
+            [("!set x=1", False), ("select 1 as begin order by 1;", False), ("select 2;", False)],
+        ),
+        (
+            "select 1; -- c\nselect 1 as begin order by 1; -- d\nselect 2;",
+            [("select 1; -- c", False), ("select 1 as begin order by 1; -- d", False), ("select 2;", False)],
+        ),
+        ("select 1 as begin order by 1", [("select 1 as begin order by 1", False)]),
+    ],
+    ids=[
+        "anonymous_block",
+        "declare",
+        "misdetected_begin",
+        "misdetected_begin_mid_line",
+        "after_closed_block",
+        "put_flag",
+        "after_bang_command",
+        "trailing_comments",
+        "no_delimiter",
+    ],
+)
+def test_unclosed_block_falls_back_to_plain_splitting(sql, expected):
+    assert split(sql) == expected
+
+
+def test_unclosed_block_falls_back_with_remove_comments():
+    sql = "select 1 as begin /* x */ order by 1; -- c\nselect // y\n 2;"
+    assert split(sql, remove_comments=True) == [
+        ("select 1 as begin  order by 1;", False),
+        ("select \n 2;", False),
+    ]
+
+
+def test_unclosed_block_falls_back_with_custom_delimiter():
+    sql = "select 1 as begin order by 1 GO\nselect 2 GO\n"
+    assert split(sql, delimiter=SQLDelimiter("GO")) == [
+        ("select 1 as begin order by 1 ;", False),
+        ("select 2 ;", False),
+    ]

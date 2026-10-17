@@ -113,7 +113,9 @@ def split_statements(
     """Split a stream into SQL statements (ends with a semicolon) or commands (!...).
 
     Delimiters inside Snowflake Scripting BEGIN...END blocks (including a preceding DECLARE
-    section) don't split, so a block is returned as a single statement.
+    section) don't split, so a block is returned as a single statement. If a block is still open
+    at the end of the input, the text from the start of that statement is split as if blocks
+    weren't tracked.
 
     Args:
         buf: Unicode data stream.
@@ -125,6 +127,16 @@ def split_statements(
     """
     if delimiter is None:
         delimiter = SQLDelimiter()  # Use default delimiter if none was given.
+    yield from _split_statements(buf, remove_comments, delimiter, track_blocks=True)
+
+
+def _split_statements(
+    buf: StringIO,
+    remove_comments: bool,
+    delimiter: SQLDelimiter,
+    track_blocks: bool,
+) -> Iterator[tuple[str, bool | None]]:
+    """Split statements as split_statements does, optionally without BEGIN...END tracking."""
     in_quote = False
     ch_quote = None
     in_comment = False
@@ -140,10 +152,14 @@ def split_statements(
     pending_end = False
     last_token = ""  # last significant token in the current statement ("" at statement start)
     in_declare = False  # inside the DECLARE section that precedes a block's BEGIN
+    # Source text of the current top-level statement, so it can be re-split if a block is never closed
+    raw_lines: list[str] = []
+    raw_start = 0
 
     line = buf.readline()
     statement = []
     while line != "":
+        raw_lines.append(line)
         col = 0
         col0 = 0
         len_line = len(line)
@@ -275,6 +291,8 @@ def split_statements(
                     yield _concatenate_statements(statement)
                     col0 = col
                     statement = []
+                    raw_lines = [line]
+                    raw_start = col
                 elif col == 0 and line[col] == "!":  # command
                     if len(statement) > 0:
                         yield _concatenate_statements(statement)
@@ -287,8 +305,10 @@ def split_statements(
                         ).strip(),
                         False,
                     )
+                    raw_lines = []
+                    raw_start = 0
                     break
-                elif _is_word_start(line, col):
+                elif track_blocks and _is_word_start(line, col):
                     word_match = _WORD_RE.match(line, col)
                     word = word_match.group().upper()
                     closes_compound = pending_end and word in _COMPOUND_END_KEYWORDS
@@ -326,7 +346,12 @@ def split_statements(
                     col += 1
         line = buf.readline()
 
-    if len(statement) > 0:
+    if ("BEGIN" in blocks or in_declare) and len(statement) > 0:
+        # The block was never closed (malformed, or a BEGIN that wasn't a block opener after all),
+        # so split the rest of the input as if blocks weren't tracked rather than swallowing it.
+        remainder = StringIO("".join(raw_lines)[raw_start:])
+        yield from _split_statements(remainder, remove_comments, delimiter, track_blocks=False)
+    elif len(statement) > 0:
         yield _concatenate_statements(statement)
 
 
